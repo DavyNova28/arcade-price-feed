@@ -229,17 +229,19 @@
       const separator =
         SCHEDULE_FEED_URL.includes("?") ? "&" : "?";
 
-      script.src =
-        `${SCHEDULE_FEED_URL}` +
-        `${separator}callback=updateSignageSchedule` +
-        `&_=${Date.now()}` +
-        `&request=${feedRequestNumber}`;
+     script.src =
+  `${SCHEDULE_FEED_URL}` +
+  `${separator}callback=updateSignageSchedule` +
+  `&screen=${encodeURIComponent(SCREEN_NAME)}` +
+  `&_=${Date.now()}` +
+  `&request=${feedRequestNumber}`;
 
       script.async = true;
 
       script.onerror = function() {
         setStatus(
-          "Could not load the Google Sheets schedule."
+          `${SCREEN_NAME} — ${currentTime} — ${activeItem.image}`
+          );
         );
       };
 
