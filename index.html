@@ -139,6 +139,8 @@
 
     const queryParameters =
       new URLSearchParams(window.location.search);
+    const SCREEN_NAME =
+          queryParameters.get("screen") || "Schedule";
 
     if (queryParameters.get("debug") === "1") {
       document.body.classList.add("debug");
