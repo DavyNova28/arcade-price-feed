@@ -30,26 +30,17 @@
     .signage-image {
       position: absolute;
       inset: 0;
+
       width: 100%;
       height: 100%;
 
-      /*
-       * Use "contain" if the entire Canva design must always
-       * remain visible.
-       *
-       * Use "cover" if filling the screen is more important
-       * and minor edge cropping is acceptable.
-       */
       object-fit: contain;
 
       opacity: 0;
+
       transition-property: opacity;
       transition-timing-function: ease-in-out;
 
-      /*
-       * Helps some lower-powered players render opacity
-       * transitions more smoothly.
-       */
       transform: translateZ(0);
       will-change: opacity;
     }
@@ -62,13 +53,15 @@
       position: absolute;
       left: 12px;
       bottom: 12px;
-      z-index: 10;
+      z-index: 100;
 
-      padding: 8px 10px;
-      border-radius: 5px;
+      max-width: calc(100% - 44px);
+      padding: 10px;
 
       color: white;
-      background: rgba(0, 0, 0, 0.75);
+      background: rgba(0, 0, 0, 0.85);
+
+      border-radius: 5px;
 
       font-family: Arial, sans-serif;
       font-size: 14px;
@@ -76,9 +69,6 @@
       display: none;
     }
 
-    /*
-     * Add ?debug=1 to the website address to display status.
-     */
     body.debug #status {
       display: block;
     }
@@ -99,77 +89,111 @@
       alt=""
     >
 
-    <div id="status">Starting…</div>
+    <div id="status">Starting signage…</div>
   </main>
 
   <script>
     /*
-     * REQUIRED:
-     * Replace this with your deployed Apps Script /exec URL.
+     * Paste your existing Apps Script /exec URL here.
      */
     const SCHEDULE_FEED_URL =
       "https://script.google.com/macros/s/AKfycbwUINP9DCEUywwCU1YMjfnPT3H8ZUq1lsGVk8ShACrTp2EZIqMYrChADlk_uEh2F-DGXw/exec";
 
-    /*
-     * How often the webpage checks Google Sheets.
-     *
-     * 30 seconds means Sheet edits normally reach the sign
-     * within approximately 30 seconds.
-     */
     const SCHEDULE_REFRESH_MS = 30000;
+    const CLOCK_CHECK_MS = 1000;
+    const DEFAULT_FADE_MS = 1500;
 
     /*
-     * How often the current time is checked.
+     * Read the screen name from the GitHub Pages URL.
      *
-     * This allows changes to happen immediately when the
-     * scheduled minute begins.
+     * Example:
+     * ?screen=Arcade
      */
-    const CLOCK_CHECK_MS = 1000;
+    const queryParameters =
+      new URLSearchParams(window.location.search);
 
-    const DEFAULT_FADE_MS = 1500;
+    const SCREEN_NAME =
+      queryParameters.get("screen") || "Schedule";
+
+    const DEBUG_MODE =
+      queryParameters.get("debug") === "1";
+
+    if (DEBUG_MODE) {
+      document.body.classList.add("debug");
+    }
 
     let schedule = [];
     let currentImageName = null;
     let visibleLayer = "A";
     let feedRequestNumber = 0;
 
-    const imageA = document.getElementById("imageA");
-    const imageB = document.getElementById("imageB");
-    const statusElement = document.getElementById("status");
+    const imageA =
+      document.getElementById("imageA");
 
-    const queryParameters =
-      new URLSearchParams(window.location.search);
-    const SCREEN_NAME =
-          queryParameters.get("screen") || "Schedule";
+    const imageB =
+      document.getElementById("imageB");
 
-    if (queryParameters.get("debug") === "1") {
-      document.body.classList.add("debug");
-    }
+    const statusElement =
+      document.getElementById("status");
 
-    /**
-     * Apps Script calls this function after loading the feed.
+    window.onerror = function(
+      message,
+      source,
+      lineNumber
+    ) {
+      showError(
+        `JavaScript error: ${message}, line ${lineNumber}`
+      );
+    };
+
+    /*
+     * Apps Script calls this function after returning the
+     * selected Google Sheets tab.
      */
     window.updateSignageSchedule = function(payload) {
-      if (
-        !payload ||
-        payload.success !== true ||
-        !Array.isArray(payload.schedule)
-      ) {
-        setStatus("Schedule feed returned invalid data.");
+      if (!payload) {
+        showError(
+          "Apps Script returned no information."
+        );
+        return;
+      }
+
+      if (payload.success !== true) {
+        showError(
+          payload.error ||
+          "Apps Script returned an error."
+        );
+        return;
+      }
+
+      if (!Array.isArray(payload.schedule)) {
+        showError(
+          "The schedule is not in the expected format."
+        );
         return;
       }
 
       schedule = payload.schedule
         .filter(isValidScheduleItem)
         .map(item => ({
-          time: item.time,
-          image: item.image,
+          time: String(item.time).trim(),
+          image: String(item.image).trim(),
           fade: normalizeFade(item.fade)
         }))
-        .sort((a, b) => a.time.localeCompare(b.time));
+        .sort((a, b) =>
+          a.time.localeCompare(b.time)
+        );
+
+      if (schedule.length === 0) {
+        showError(
+          `The tab "${SCREEN_NAME}" has no valid schedule rows.`
+        );
+        return;
+      }
 
       setStatus(
-        `Schedule loaded: ${schedule.length} item(s)`
+        `Screen: ${SCREEN_NAME} — ` +
+        `${schedule.length} schedule item(s)`
       );
 
       preloadScheduleImages();
@@ -179,6 +203,7 @@
     function isValidScheduleItem(item) {
       return (
         item &&
+        typeof item.time === "string" &&
         /^\d{2}:\d{2}$/.test(item.time) &&
         typeof item.image === "string" &&
         item.image.trim() !== ""
@@ -195,12 +220,6 @@
       return Math.min(fade, 10000);
     }
 
-    /**
-     * Loads the Apps Script feed using a script element.
-     *
-     * This JSONP-style method avoids common cross-origin
-     * restrictions between GitHub Pages and Apps Script.
-     */
     function loadScheduleFeed() {
       if (
         !SCHEDULE_FEED_URL ||
@@ -208,44 +227,52 @@
           "PASTE_YOUR_APPS_SCRIPT"
         )
       ) {
-        setStatus(
-          "Apps Script URL has not been configured."
+        showError(
+          "The Apps Script URL has not been entered."
         );
         return;
       }
 
       feedRequestNumber += 1;
 
-      const oldScript =
-        document.getElementById("schedule-feed-script");
+      const previousScript =
+        document.getElementById(
+          "schedule-feed-script"
+        );
 
-      if (oldScript) {
-        oldScript.remove();
+      if (previousScript) {
+        previousScript.remove();
       }
 
-      const script = document.createElement("script");
+      const script =
+        document.createElement("script");
+
       script.id = "schedule-feed-script";
-
-      const separator =
-        SCHEDULE_FEED_URL.includes("?") ? "&" : "?";
-
-     script.src =
-  `${SCHEDULE_FEED_URL}` +
-  `${separator}callback=updateSignageSchedule` +
-  `&screen=${encodeURIComponent(SCREEN_NAME)}` +
-  `&_=${Date.now()}` +
-  `&request=${feedRequestNumber}`;
-
       script.async = true;
 
+      const separator =
+        SCHEDULE_FEED_URL.includes("?")
+          ? "&"
+          : "?";
+
+      script.src =
+        `${SCHEDULE_FEED_URL}` +
+        `${separator}callback=updateSignageSchedule` +
+        `&screen=${encodeURIComponent(SCREEN_NAME)}` +
+        `&_=${Date.now()}` +
+        `&request=${feedRequestNumber}`;
+
       script.onerror = function() {
-        setStatus(
-          `${SCREEN_NAME} — ${currentTime} — ${activeItem.image}`
-          );
+        showError(
+          `Could not load the schedule for "${SCREEN_NAME}".`
         );
       };
 
       document.head.appendChild(script);
+
+      setStatus(
+        `Loading schedule for: ${SCREEN_NAME}`
+      );
     }
 
     function getCurrentHHMM() {
@@ -260,20 +287,16 @@
       return `${hours}:${minutes}`;
     }
 
-    /**
-     * Returns the latest scheduled entry whose start time
-     * is less than or equal to the current time.
-     *
-     * Before the first entry of the day, it returns the last
-     * entry. This allows the final evening image to continue
-     * overnight until the first morning entry begins.
-     */
     function getActiveScheduleItem(currentTime) {
       if (schedule.length === 0) {
         return null;
       }
 
-      let activeItem = schedule[schedule.length - 1];
+      /*
+       * Use the final entry as the overnight default.
+       */
+      let activeItem =
+        schedule[schedule.length - 1];
 
       for (const item of schedule) {
         if (item.time <= currentTime) {
@@ -287,22 +310,32 @@
     }
 
     function evaluateSchedule() {
-      const currentTime = getCurrentHHMM();
+      if (schedule.length === 0) {
+        return;
+      }
+
+      const currentTime =
+        getCurrentHHMM();
+
       const activeItem =
         getActiveScheduleItem(currentTime);
 
       if (!activeItem) {
-        setStatus(
-          `No schedule entries — ${currentTime}`
+        showError(
+          `No active image at ${currentTime}.`
         );
         return;
       }
 
       setStatus(
-        `${currentTime} — ${activeItem.image}`
+        `${SCREEN_NAME} — ` +
+        `${currentTime} — ` +
+        `${activeItem.image}`
       );
 
-      if (activeItem.image !== currentImageName) {
+      if (
+        activeItem.image !== currentImageName
+      ) {
         crossfadeTo(
           activeItem.image,
           activeItem.fade
@@ -314,26 +347,33 @@
 
     function getImageUrl(filename) {
       /*
-       * Because the images and index.html are in the same
-       * GitHub repository, a filename such as image1.jpg
-       * resolves automatically beside index.html.
+       * This supports images in the same repository folder
+       * as index.html.
+       *
+       * Examples:
+       * image1.jpg
+       * arcade/image1.jpg
        */
       return encodeURI(filename);
     }
 
-    function crossfadeTo(filename, fadeDuration) {
+    function crossfadeTo(
+      filename,
+      fadeDuration
+    ) {
       const incoming =
-        visibleLayer === "A" ? imageB : imageA;
+        visibleLayer === "A"
+          ? imageB
+          : imageA;
 
       const outgoing =
-        visibleLayer === "A" ? imageA : imageB;
+        visibleLayer === "A"
+          ? imageA
+          : imageB;
 
-      const imageUrl = getImageUrl(filename);
+      const imageUrl =
+        getImageUrl(filename);
 
-      /*
-       * Do not hide the existing image until the incoming
-       * image has completely loaded.
-       */
       incoming.onload = function() {
         incoming.style.transitionDuration =
           `${fadeDuration}ms`;
@@ -341,30 +381,35 @@
         outgoing.style.transitionDuration =
           `${fadeDuration}ms`;
 
+        /*
+         * Make sure the incoming image is above the old one.
+         */
+        incoming.style.zIndex = "2";
+        outgoing.style.zIndex = "1";
+
         incoming.classList.add("visible");
         outgoing.classList.remove("visible");
 
         visibleLayer =
-          visibleLayer === "A" ? "B" : "A";
+          visibleLayer === "A"
+            ? "B"
+            : "A";
 
         currentImageName = filename;
 
         setStatus(
-          `${getCurrentHHMM()} — ${filename}`
+          `${SCREEN_NAME} — ` +
+          `${getCurrentHHMM()} — ` +
+          `${filename}`
         );
       };
 
       incoming.onerror = function() {
-        setStatus(
-          `Image could not load: ${filename}`
+        showError(
+          `Image not found: ${filename}`
         );
       };
 
-      /*
-       * Adding a changing query value prevents an old image
-       * from remaining permanently cached after you replace
-       * a GitHub file with the same filename.
-       */
       incoming.src =
         `${imageUrl}?version=${Date.now()}`;
     }
@@ -372,7 +417,9 @@
     function preloadScheduleImages() {
       for (const item of schedule) {
         const preloadImage = new Image();
-        preloadImage.src = getImageUrl(item.image);
+
+        preloadImage.src =
+          getImageUrl(item.image);
       }
     }
 
@@ -388,13 +435,15 @@
       }
 
       const nextIndex =
-        (currentIndex + 1) % schedule.length;
+        (currentIndex + 1) %
+        schedule.length;
 
-      const nextItem = schedule[nextIndex];
       const preloadImage = new Image();
 
       preloadImage.src =
-        getImageUrl(nextItem.image);
+        getImageUrl(
+          schedule[nextIndex].image
+        );
     }
 
     function setStatus(message) {
@@ -402,31 +451,25 @@
       console.log(message);
     }
 
-    /*
-     * Initial startup.
-     */
+    function showError(message) {
+      statusElement.textContent = message;
+      statusElement.style.display = "block";
+
+      console.error(message);
+    }
+
     loadScheduleFeed();
 
-    /*
-     * Re-read Google Sheets periodically.
-     */
     setInterval(
       loadScheduleFeed,
       SCHEDULE_REFRESH_MS
     );
 
-    /*
-     * Check the clock every second.
-     */
     setInterval(
       evaluateSchedule,
       CLOCK_CHECK_MS
     );
 
-    /*
-     * Re-check after returning from sleep or when the page
-     * becomes visible again.
-     */
     document.addEventListener(
       "visibilitychange",
       function() {
