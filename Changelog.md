@@ -9,6 +9,17 @@ All notable changes to the Mini Golf Signage project will be documented here.
 - Day-of-week schedules
 - Automatic recovery health check
 
+## [1.5.0] - 2026-07-26
+
+### Added
+
+- Web-based signage control dashboard.
+- Real-time scheduled image previews.
+- Regular and holiday schedule status indicators.
+- Current and next image information.
+- Full-screen and debug-view shortcuts.
+- Automatic dashboard refresh every 30 seconds.
+
 ## [1.4.0] - 2026-07-26
 
 ###Changed
