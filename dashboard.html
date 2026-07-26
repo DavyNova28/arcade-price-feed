@@ -869,6 +869,132 @@
   color: var(--blue);
 }
 
+/*
+ * =====================================================
+ * DASHBOARD 2.5 ANIMATIONS
+ * =====================================================
+ */
+
+@keyframes cardEntrance {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes gentlePulse {
+  0% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.025);
+  }
+
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes refreshRotation {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes valueUpdate {
+  0% {
+    opacity: 0.35;
+    transform: translateY(4px);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.screen-card {
+  animation:
+    cardEntrance 500ms ease both;
+}
+
+.screen-card:nth-child(2) {
+  animation-delay: 80ms;
+}
+
+.screen-card:nth-child(3) {
+  animation-delay: 160ms;
+}
+
+.screen-card:nth-child(4) {
+  animation-delay: 240ms;
+}
+
+.screen-card:nth-child(5) {
+  animation-delay: 320ms;
+}
+
+.summary-card,
+.operation-item {
+  transition:
+    transform 180ms ease,
+    border-color 180ms ease,
+    background 180ms ease;
+}
+
+.summary-card:hover,
+.operation-item:hover {
+  transform: translateY(-2px);
+
+  border-color: var(--blue);
+}
+
+.value-updated {
+  animation:
+    valueUpdate 300ms ease;
+}
+
+.refreshing {
+  animation:
+    refreshRotation 800ms linear infinite;
+}
+
+.status-badge {
+  transition:
+    background 250ms ease,
+    color 250ms ease,
+    transform 250ms ease;
+}
+
+.status-badge:hover {
+  transform: scale(1.04);
+}
+
+.health-dot {
+  animation:
+    gentlePulse 2.4s ease-in-out infinite;
+}
+
+.preview-image {
+  transition:
+    opacity 300ms ease,
+    transform 350ms ease;
+}
+
+.screen-card:hover .preview-image {
+  transform: scale(1.012);
+}
+    
 @media (max-width: 1250px) {
   .operations-grid {
     grid-template-columns:
@@ -972,15 +1098,18 @@
     <div class="brand">
       <div class="brand-logo">
     <img
+        id="dashboardLogo"
         src="JurassiqueBanner.png"
         alt="Mini Golf Logo"
     >
 </div>
 
       <div>
-        <h1>Jurassique Golf Screens</h1>
+        <h1 id="dashboardTitle">Jurassique Golf Screens</h1>
 
-        <div class="subtitle">
+        <div
+          id="dashboardSubtitle"
+          class="subtitle">
           Digital Signage Control Center
         </div>
       </div>
@@ -1340,6 +1469,23 @@
      * GitHub signage player page.
      */
     const SIGNAGE_PAGE = "index.html";
+    /*
+ * =====================================================
+ * DASHBOARD BRAND SETTINGS
+ * =====================================================
+ */
+
+const DASHBOARD_BRAND = {
+  title: "Jurassique Golf Dashboard Screens",
+  subtitle: "Digital Signage Control Center",
+
+  primaryColor: "#5fa8ff",
+  secondaryColor: "#36c987",
+  holidayColor: "#f2aa3f",
+  errorColor: "#ff6868",
+
+  logoFile: "JurassiqueBanner.png"
+};
 
 
     /*
@@ -1350,6 +1496,21 @@
 
     const screenGrid =
       document.getElementById("screenGrid");
+    
+    const dashboardTitle =
+  document.getElementById(
+    "dashboardTitle"
+  );
+
+const dashboardSubtitle =
+  document.getElementById(
+    "dashboardSubtitle"
+  );
+
+const dashboardLogo =
+  document.getElementById(
+    "dashboardLogo"
+  );
 
     const upcomingList =
       document.getElementById("upcomingList");
@@ -1659,6 +1820,9 @@ const operationsNextDetail =
      */
 
     function refreshDashboard() {
+      refreshButton.classList.add(
+  "refreshing"
+);
       requestGeneration += 1;
 
       const currentGeneration =
@@ -1877,6 +2041,9 @@ const operationsNextDetail =
 
       lastRefreshElement.textContent =
         `Last refreshed: ${formatLocalClock(new Date())}`;
+      refreshButton.classList.remove(
+  "refreshing"
+);
     }
 
 
@@ -2398,6 +2565,9 @@ const operationsNextDetail =
         message;
 
       updateDashboardSummary();
+      refreshButton.classList.remove(
+  "refreshing"
+);
     }
 
 
@@ -2455,6 +2625,22 @@ const operationsNextDetail =
 
       errorCountElement.textContent =
         String(errors);
+
+      animateValueUpdate(
+  loadedCountElement
+);
+
+animateValueUpdate(
+  regularCountElement
+);
+
+animateValueUpdate(
+  holidayCountElement
+);
+
+animateValueUpdate(
+  errorCountElement
+);
 
       updateHealthBanner(
         loaded,
@@ -2951,7 +3137,61 @@ function updateNextOperationChange(
       next.targetDate - now
     )}`;
 }
+/*
+ * =====================================================
+ * BRAND SETTINGS
+ * =====================================================
+ */
 
+function applyDashboardBrand() {
+  dashboardTitle.textContent =
+    DASHBOARD_BRAND.title;
+
+  dashboardSubtitle.textContent =
+    DASHBOARD_BRAND.subtitle;
+
+  dashboardLogo.src =
+    DASHBOARD_BRAND.logoFile;
+
+  document.documentElement.style.setProperty(
+    "--blue",
+    DASHBOARD_BRAND.primaryColor
+  );
+
+  document.documentElement.style.setProperty(
+    "--regular",
+    DASHBOARD_BRAND.secondaryColor
+  );
+
+  document.documentElement.style.setProperty(
+    "--holiday",
+    DASHBOARD_BRAND.holidayColor
+  );
+
+  document.documentElement.style.setProperty(
+    "--error",
+    DASHBOARD_BRAND.errorColor
+  );
+
+  document.title =
+    `${DASHBOARD_BRAND.title} Control Center`;
+}
+
+    function animateValueUpdate(element) {
+  if (!element) {
+    return;
+  }
+
+  element.classList.remove(
+    "value-updated"
+  );
+
+  void element.offsetWidth;
+
+  element.classList.add(
+    "value-updated"
+  );
+}
     /*
      * =====================================================
      * STARTUP
@@ -2963,6 +3203,7 @@ function updateNextOperationChange(
       refreshDashboard
     );
 
+    applyDashboardBrand();
     createScreenCards();
     refreshDashboard();
     updateOperationsPanel();
