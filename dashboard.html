@@ -8,11 +8,36 @@
     content="width=device-width, initial-scale=1.0"
   >
 
-  <title>Mini Golf Signage Dashboard</title>
+  <title>Mini Golf Signage Control Center</title>
 
   <style>
     :root {
+      --background: #0c0f14;
+      --surface: #151a22;
+      --surface-light: #1c2330;
+      --surface-hover: #232c3a;
+
+      --border: #2b3545;
+      --text: #f4f7fb;
+      --muted: #98a4b7;
+
+      --regular: #36c987;
+      --regular-dark: #174b38;
+
+      --holiday: #f2aa3f;
+      --holiday-dark: #654518;
+
+      --error: #ff6868;
+      --error-dark: #672828;
+
+      --warning: #f2cf53;
+      --blue: #5fa8ff;
+
+      --radius: 16px;
+      --shadow: 0 18px 45px rgba(0, 0, 0, 0.28);
+
       font-family:
+        Inter,
         Arial,
         Helvetica,
         sans-serif;
@@ -31,8 +56,19 @@
     }
 
     body {
-      background: #111;
-      color: #f5f5f5;
+      background:
+        radial-gradient(
+          circle at top,
+          #172235 0%,
+          var(--background) 44%
+        );
+
+      color: var(--text);
+    }
+
+    button,
+    a {
+      font: inherit;
     }
 
     header {
@@ -41,170 +77,358 @@
       z-index: 100;
 
       display: flex;
-      align-items: center;
       justify-content: space-between;
-      gap: 20px;
+      align-items: center;
+      gap: 24px;
 
-      padding: 18px 24px;
+      padding: 20px 28px;
 
-      background: rgba(17, 17, 17, 0.96);
-      border-bottom: 1px solid #333;
-      backdrop-filter: blur(10px);
+      background: rgba(12, 15, 20, 0.93);
+      border-bottom: 1px solid var(--border);
+
+      backdrop-filter: blur(14px);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .brand-icon {
+      display: grid;
+      place-items: center;
+
+      width: 48px;
+      height: 48px;
+
+      border-radius: 14px;
+
+      font-size: 25px;
+
+      background:
+        linear-gradient(
+          135deg,
+          #2d8cff,
+          #36c987
+        );
+
+      box-shadow:
+        0 10px 25px rgba(45, 140, 255, 0.28);
     }
 
     h1 {
       margin: 0;
-      font-size: clamp(22px, 3vw, 34px);
+
+      font-size:
+        clamp(22px, 3vw, 34px);
+
+      line-height: 1.1;
     }
 
     .subtitle {
       margin-top: 5px;
-      color: #aaa;
+
+      color: var(--muted);
       font-size: 14px;
     }
 
-    .header-controls {
+    .header-actions {
       display: flex;
       align-items: center;
-      gap: 12px;
-      flex-wrap: wrap;
       justify-content: flex-end;
+      flex-wrap: wrap;
+      gap: 12px;
     }
 
     #lastRefresh {
-      color: #bbb;
-      font-size: 14px;
-    }
-
-    button,
-    .button-link {
-      border: 1px solid #555;
-      border-radius: 7px;
-
-      padding: 10px 14px;
-
-      color: white;
-      background: #292929;
-
-      font: inherit;
-      text-decoration: none;
-
-      cursor: pointer;
-    }
-
-    button:hover,
-    .button-link:hover {
-      background: #3a3a3a;
-    }
-
-    main {
-      width: min(1600px, 100%);
-      margin: 0 auto;
-      padding: 24px;
-    }
-
-    #summary {
-      display: flex;
-      gap: 12px;
-      flex-wrap: wrap;
-
-      margin-bottom: 22px;
-    }
-
-    .summary-box {
-      min-width: 150px;
-      padding: 14px 16px;
-
-      background: #1d1d1d;
-      border: 1px solid #333;
-      border-radius: 9px;
-    }
-
-    .summary-label {
-      color: #aaa;
+      color: var(--muted);
       font-size: 13px;
     }
 
-    .summary-value {
-      margin-top: 5px;
-      font-size: 24px;
-      font-weight: bold;
+    .button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+
+      min-height: 42px;
+      padding: 10px 15px;
+
+      border: 1px solid var(--border);
+      border-radius: 10px;
+
+      color: var(--text);
+      background: var(--surface-light);
+
+      text-decoration: none;
+      cursor: pointer;
+
+      transition:
+        transform 150ms ease,
+        background 150ms ease,
+        border-color 150ms ease;
     }
 
-    #screenGrid {
+    .button:hover {
+      transform: translateY(-1px);
+
+      background: var(--surface-hover);
+      border-color: #48566d;
+    }
+
+    .button-primary {
+      border-color: #377dce;
+      background: #245f9e;
+    }
+
+    .button-primary:hover {
+      background: #2e73ba;
+    }
+
+    main {
+      width: min(1740px, 100%);
+      margin: 0 auto;
+      padding: 28px;
+    }
+
+    .system-banner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+      flex-wrap: wrap;
+
+      margin-bottom: 22px;
+      padding: 18px 20px;
+
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+
+      background:
+        linear-gradient(
+          120deg,
+          rgba(54, 201, 135, 0.12),
+          rgba(95, 168, 255, 0.08)
+        );
+
+      box-shadow: var(--shadow);
+    }
+
+    .system-health {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .health-dot {
+      width: 13px;
+      height: 13px;
+
+      border-radius: 50%;
+      background: var(--regular);
+
+      box-shadow:
+        0 0 0 5px rgba(54, 201, 135, 0.14),
+        0 0 18px rgba(54, 201, 135, 0.55);
+    }
+
+    .health-dot.warning {
+      background: var(--warning);
+
+      box-shadow:
+        0 0 0 5px rgba(242, 207, 83, 0.14),
+        0 0 18px rgba(242, 207, 83, 0.5);
+    }
+
+    .health-dot.error {
+      background: var(--error);
+
+      box-shadow:
+        0 0 0 5px rgba(255, 104, 104, 0.14),
+        0 0 18px rgba(255, 104, 104, 0.5);
+    }
+
+    .health-title {
+      font-size: 18px;
+      font-weight: 700;
+    }
+
+    .health-description {
+      margin-top: 3px;
+
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .global-next {
+      text-align: right;
+    }
+
+    .global-next-label {
+      color: var(--muted);
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.09em;
+    }
+
+    .global-next-value {
+      margin-top: 4px;
+
+      font-size: 20px;
+      font-weight: 700;
+    }
+
+    .summary-grid {
       display: grid;
       grid-template-columns:
-        repeat(auto-fit, minmax(320px, 1fr));
-      gap: 22px;
+        repeat(5, minmax(150px, 1fr));
+      gap: 14px;
+
+      margin-bottom: 28px;
+    }
+
+    .summary-card {
+      padding: 18px;
+
+      border: 1px solid var(--border);
+      border-radius: 14px;
+
+      background: var(--surface);
+
+      box-shadow:
+        0 10px 28px rgba(0, 0, 0, 0.18);
+    }
+
+    .summary-label {
+      color: var(--muted);
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .summary-value {
+      margin-top: 7px;
+
+      font-size: 29px;
+      font-weight: 750;
+    }
+
+    .summary-small {
+      margin-top: 5px;
+
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .screen-grid {
+      display: grid;
+      grid-template-columns:
+        repeat(auto-fit, minmax(440px, 1fr));
+      gap: 24px;
     }
 
     .screen-card {
       overflow: hidden;
 
-      background: #1c1c1c;
-      border: 1px solid #343434;
-      border-radius: 12px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
 
-      box-shadow:
-        0 8px 25px rgba(0, 0, 0, 0.25);
+      background: var(--surface);
+
+      box-shadow: var(--shadow);
+
+      transition:
+        transform 180ms ease,
+        border-color 180ms ease;
+    }
+
+    .screen-card:hover {
+      transform: translateY(-2px);
+      border-color: #43516a;
+    }
+
+    .screen-card.holiday-card {
+      border-color:
+        rgba(242, 170, 63, 0.65);
+    }
+
+    .screen-card.error-card {
+      border-color:
+        rgba(255, 104, 104, 0.72);
     }
 
     .card-header {
       display: flex;
-      align-items: center;
       justify-content: space-between;
-      gap: 12px;
+      align-items: center;
+      gap: 16px;
 
-      padding: 15px 17px;
+      padding: 18px 20px;
 
-      border-bottom: 1px solid #333;
+      border-bottom: 1px solid var(--border);
     }
 
-    .screen-title {
+    .screen-name {
       margin: 0;
-      font-size: 21px;
+
+      font-size: 23px;
+    }
+
+    .screen-state {
+      margin-top: 4px;
+
+      color: var(--muted);
+      font-size: 13px;
     }
 
     .status-badge {
-      padding: 6px 9px;
+      flex: 0 0 auto;
+
+      padding: 7px 11px;
+
       border-radius: 999px;
 
       font-size: 12px;
-      font-weight: bold;
+      font-weight: 750;
+
       text-transform: uppercase;
+      letter-spacing: 0.05em;
     }
 
     .status-loading {
-      color: #ddd;
-      background: #444;
+      color: #d8dfeb;
+      background: #3b4657;
     }
 
     .status-regular {
-      color: #cffff0;
-      background: #185d42;
+      color: #caffea;
+      background: var(--regular-dark);
     }
 
     .status-holiday {
-      color: #fff0ce;
-      background: #79500f;
+      color: #fff0cf;
+      background: var(--holiday-dark);
     }
 
     .status-error {
-      color: #ffd7d7;
-      background: #7d2424;
+      color: #ffd6d6;
+      background: var(--error-dark);
     }
 
-    .preview-wrapper {
+    .preview-container {
       position: relative;
 
       aspect-ratio: 16 / 9;
 
+      overflow: hidden;
+
       background:
         repeating-conic-gradient(
-          #202020 0% 25%,
-          #292929 0% 50%
+          #171c24 0% 25%,
+          #202733 0% 50%
         )
-        50% / 24px 24px;
+        50% / 28px 28px;
     }
 
     .preview-image {
@@ -217,7 +441,7 @@
       background: #000;
     }
 
-    .preview-loading {
+    .preview-overlay {
       position: absolute;
       inset: 0;
 
@@ -225,102 +449,366 @@
       align-items: center;
       justify-content: center;
 
-      color: #bbb;
-      background: #181818;
+      padding: 18px;
+
+      color: var(--muted);
+      background: rgba(10, 12, 17, 0.86);
+
+      text-align: center;
     }
 
-    .card-details {
-      padding: 17px;
+    .preview-overlay.hidden {
+      display: none;
     }
 
-    .detail-row {
-      display: grid;
-      grid-template-columns: 115px 1fr;
-      gap: 12px;
-
-      padding: 7px 0;
-
-      border-bottom: 1px solid #2e2e2e;
+    .preview-overlay.error {
+      color: #ffc1c1;
     }
 
-    .detail-row:last-of-type {
-      border-bottom: 0;
+    .card-body {
+      padding: 20px;
     }
 
-    .detail-label {
-      color: #aaa;
+    .current-image-block {
+      margin-bottom: 18px;
     }
 
-    .detail-value {
+    .eyebrow {
+      color: var(--muted);
+
+      font-size: 11px;
+      font-weight: 700;
+
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+
+    .current-image-name {
+      margin-top: 7px;
+
+      font-size: 18px;
+      font-weight: 700;
+
       overflow-wrap: anywhere;
     }
 
-    .error-text {
-      color: #ffb6b6;
+    .information-grid {
+      display: grid;
+      grid-template-columns:
+        repeat(2, minmax(0, 1fr));
+      gap: 12px;
+
+      margin-bottom: 20px;
+    }
+
+    .information-box {
+      padding: 14px;
+
+      border: 1px solid var(--border);
+      border-radius: 12px;
+
+      background: var(--surface-light);
+    }
+
+    .information-label {
+      color: var(--muted);
+      font-size: 11px;
+
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .information-value {
+      margin-top: 6px;
+
+      font-size: 16px;
+      font-weight: 700;
+
+      overflow-wrap: anywhere;
+    }
+
+    .countdown {
+      color: var(--blue);
+    }
+
+    .timeline-section {
+      margin-top: 10px;
+      padding-top: 18px;
+
+      border-top: 1px solid var(--border);
+    }
+
+    .timeline-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 14px;
+
+      margin-bottom: 12px;
+    }
+
+    .timeline-title {
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .timeline-note {
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    .timeline {
+      position: relative;
+
+      height: 58px;
+
+      overflow: hidden;
+
+      border: 1px solid var(--border);
+      border-radius: 10px;
+
+      background: #10141b;
+    }
+
+    .timeline-segment {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+
+      display: flex;
+      align-items: center;
+
+      min-width: 2px;
+      padding: 0 8px;
+
+      border-right:
+        1px solid rgba(255, 255, 255, 0.12);
+
+      color: white;
+
+      font-size: 11px;
+      font-weight: 700;
+
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .timeline-segment.regular {
+      background:
+        linear-gradient(
+          90deg,
+          rgba(34, 131, 91, 0.95),
+          rgba(54, 201, 135, 0.78)
+        );
+    }
+
+    .timeline-segment.holiday {
+      background:
+        linear-gradient(
+          90deg,
+          rgba(154, 98, 18, 0.97),
+          rgba(242, 170, 63, 0.83)
+        );
+    }
+
+    .timeline-now {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      z-index: 5;
+
+      width: 2px;
+
+      background: white;
+
+      box-shadow:
+        0 0 9px rgba(255, 255, 255, 0.8);
+    }
+
+    .timeline-now::before {
+      content: "";
+
+      position: absolute;
+      top: 0;
+      left: 50%;
+
+      width: 9px;
+      height: 9px;
+
+      border-radius: 50%;
+      background: white;
+
+      transform:
+        translate(-50%, -50%);
+    }
+
+    .timeline-labels {
+      display: flex;
+      justify-content: space-between;
+
+      margin-top: 7px;
+
+      color: var(--muted);
+      font-size: 10px;
     }
 
     .card-actions {
       display: flex;
-      gap: 10px;
       flex-wrap: wrap;
+      gap: 10px;
 
-      margin-top: 17px;
+      margin-top: 19px;
     }
 
-    .next-changes {
+    .upcoming-panel {
       margin-top: 30px;
-      padding: 20px;
+      padding: 22px;
 
-      background: #1c1c1c;
-      border: 1px solid #343434;
-      border-radius: 12px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+
+      background: var(--surface);
+
+      box-shadow: var(--shadow);
     }
 
-    .next-changes h2 {
-      margin-top: 0;
+    .panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+
+      margin-bottom: 16px;
     }
 
-    #nextChangesList {
+    .panel-header h2 {
+      margin: 0;
+
+      font-size: 21px;
+    }
+
+    .panel-description {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .upcoming-list {
       display: grid;
       gap: 9px;
     }
 
-    .next-change-item {
+    .upcoming-item {
       display: grid;
-      grid-template-columns: 90px 140px 1fr;
-      gap: 14px;
+      grid-template-columns:
+        90px 160px minmax(0, 1fr) 130px;
+      align-items: center;
+      gap: 15px;
 
-      padding: 10px 12px;
+      padding: 12px 14px;
 
-      background: #242424;
-      border-radius: 7px;
+      border: 1px solid #2c3544;
+      border-radius: 10px;
+
+      background: var(--surface-light);
+    }
+
+    .upcoming-time {
+      font-weight: 800;
+    }
+
+    .upcoming-screen {
+      color: #d8e2f2;
+      font-weight: 700;
+    }
+
+    .upcoming-image {
+      color: var(--muted);
+
+      overflow-wrap: anywhere;
+    }
+
+    .upcoming-countdown {
+      color: var(--blue);
+
+      text-align: right;
+      font-weight: 700;
     }
 
     .muted {
-      color: #aaa;
+      color: var(--muted);
     }
 
-    @media (max-width: 650px) {
+    @media (max-width: 1100px) {
+      .summary-grid {
+        grid-template-columns:
+          repeat(3, minmax(150px, 1fr));
+      }
+    }
+
+    @media (max-width: 720px) {
       header {
         position: static;
+
         align-items: flex-start;
         flex-direction: column;
+
+        padding: 18px;
       }
 
-      .header-controls {
+      .header-actions {
         justify-content: flex-start;
       }
 
       main {
-        padding: 15px;
+        padding: 16px;
       }
 
-      .next-change-item {
-        grid-template-columns: 70px 1fr;
+      .summary-grid {
+        grid-template-columns:
+          repeat(2, minmax(130px, 1fr));
       }
 
-      .next-change-image {
+      .screen-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .information-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .global-next {
+        text-align: left;
+      }
+
+      .upcoming-item {
+        grid-template-columns:
+          70px minmax(0, 1fr);
+      }
+
+      .upcoming-image,
+      .upcoming-countdown {
         grid-column: 1 / -1;
+
+        text-align: left;
+      }
+    }
+
+    @media (max-width: 430px) {
+      .summary-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .card-header {
+        align-items: flex-start;
+      }
+
+      .screen-name {
+        font-size: 20px;
+      }
+
+      .card-body {
+        padding: 16px;
       }
     }
   </style>
@@ -328,33 +816,78 @@
 
 <body>
   <header>
-    <div>
-      <h1>Mini Golf Signage Dashboard</h1>
+    <div class="brand">
+      <div class="brand-icon">
+        ⛳
+      </div>
 
-      <div class="subtitle">
-        Scheduled content preview
+      <div>
+        <h1>Mini Golf Signage</h1>
+
+        <div class="subtitle">
+          Control Center · Dashboard V2
+        </div>
       </div>
     </div>
 
-    <div class="header-controls">
+    <div class="header-actions">
       <span id="lastRefresh">
-        Not refreshed yet
+        Waiting for first refresh…
       </span>
 
       <button
         id="refreshButton"
+        class="button button-primary"
         type="button"
       >
-        Refresh now
+        ↻ Refresh now
       </button>
     </div>
   </header>
 
   <main>
-    <section id="summary">
-      <div class="summary-box">
+    <section class="system-banner">
+      <div class="system-health">
+        <span
+          id="healthDot"
+          class="health-dot"
+        ></span>
+
+        <div>
+          <div
+            id="healthTitle"
+            class="health-title"
+          >
+            Loading system status
+          </div>
+
+          <div
+            id="healthDescription"
+            class="health-description"
+          >
+            Connecting to Apps Script…
+          </div>
+        </div>
+      </div>
+
+      <div class="global-next">
+        <div class="global-next-label">
+          Next global change
+        </div>
+
+        <div
+          id="globalNextChange"
+          class="global-next-value"
+        >
+          —
+        </div>
+      </div>
+    </section>
+
+    <section class="summary-grid">
+      <article class="summary-card">
         <div class="summary-label">
-          Screens
+          Screens configured
         </div>
 
         <div
@@ -363,9 +896,30 @@
         >
           0
         </div>
-      </div>
 
-      <div class="summary-box">
+        <div class="summary-small">
+          Google Sheet schedule tabs
+        </div>
+      </article>
+
+      <article class="summary-card">
+        <div class="summary-label">
+          Loaded successfully
+        </div>
+
+        <div
+          id="loadedCount"
+          class="summary-value"
+        >
+          0
+        </div>
+
+        <div class="summary-small">
+          Schedules responding
+        </div>
+      </article>
+
+      <article class="summary-card">
         <div class="summary-label">
           Regular schedules
         </div>
@@ -376,9 +930,13 @@
         >
           0
         </div>
-      </div>
 
-      <div class="summary-box">
+        <div class="summary-small">
+          Standard programming
+        </div>
+      </article>
+
+      <article class="summary-card">
         <div class="summary-label">
           Holiday overrides
         </div>
@@ -389,11 +947,15 @@
         >
           0
         </div>
-      </div>
 
-      <div class="summary-box">
+        <div class="summary-small">
+          Temporary schedules active
+        </div>
+      </article>
+
+      <article class="summary-card">
         <div class="summary-label">
-          Errors
+          Warnings or errors
         </div>
 
         <div
@@ -402,17 +964,35 @@
         >
           0
         </div>
-      </div>
+
+        <div class="summary-small">
+          Missing images or feeds
+        </div>
+      </article>
     </section>
 
-    <section id="screenGrid"></section>
+    <section
+      id="screenGrid"
+      class="screen-grid"
+    ></section>
 
-    <section class="next-changes">
-      <h2>Next scheduled changes</h2>
+    <section class="upcoming-panel">
+      <div class="panel-header">
+        <div>
+          <h2>Upcoming changes</h2>
 
-      <div id="nextChangesList">
+          <div class="panel-description">
+            The next scheduled change for every screen
+          </div>
+        </div>
+      </div>
+
+      <div
+        id="upcomingList"
+        class="upcoming-list"
+      >
         <div class="muted">
-          Loading…
+          Loading schedules…
         </div>
       </div>
     </section>
@@ -426,14 +1006,16 @@
      */
 
     /*
-     * Paste your existing deployed Apps Script /exec URL.
+     * Paste the same Apps Script /exec URL used by
+     * index.html.
      */
     const SCHEDULE_FEED_URL =
       "https://script.google.com/macros/s/AKfycbwUINP9DCEUywwCU1YMjfnPT3H8ZUq1lsGVk8ShACrTp2EZIqMYrChADlk_uEh2F-DGXw/exec";
 
     /*
-     * Enter the exact names of your Google Sheets
-     * schedule tabs.
+     * Enter the exact names of your Google Sheet screen tabs.
+     *
+     * Keep a comma after every entry except the last one.
      */
     const SCREEN_NAMES = [
       "Arcade",
@@ -445,39 +1027,43 @@
     ];
 
     /*
-     * How often the dashboard refreshes.
+     * Refresh Apps Script data every 30 seconds.
+     *
+     * Countdown timers and timeline markers update locally
+     * every second without contacting Apps Script.
      */
-    const DASHBOARD_REFRESH_MS = 30000;
+    const DATA_REFRESH_MS = 30000;
+    const LIVE_UPDATE_MS = 1000;
 
     /*
-     * Your main signage page.
-     *
-     * Because dashboard.html and index.html are in the same
-     * GitHub Pages repository, this can stay as index.html.
+     * GitHub signage player page.
      */
     const SIGNAGE_PAGE = "index.html";
 
 
     /*
      * =====================================================
-     * DASHBOARD STATE
+     * PAGE ELEMENTS AND STATE
      * =====================================================
      */
 
     const screenGrid =
       document.getElementById("screenGrid");
 
-    const lastRefreshElement =
-      document.getElementById("lastRefresh");
-
-    const nextChangesList =
-      document.getElementById("nextChangesList");
+    const upcomingList =
+      document.getElementById("upcomingList");
 
     const refreshButton =
       document.getElementById("refreshButton");
 
+    const lastRefreshElement =
+      document.getElementById("lastRefresh");
+
     const screenCountElement =
       document.getElementById("screenCount");
+
+    const loadedCountElement =
+      document.getElementById("loadedCount");
 
     const regularCountElement =
       document.getElementById("regularCount");
@@ -488,35 +1074,60 @@
     const errorCountElement =
       document.getElementById("errorCount");
 
-    const screenStates = new Map();
+    const healthDot =
+      document.getElementById("healthDot");
 
-    let requestNumber = 0;
+    const healthTitle =
+      document.getElementById("healthTitle");
+
+    const healthDescription =
+      document.getElementById("healthDescription");
+
+    const globalNextChange =
+      document.getElementById("globalNextChange");
+
+    const screenStates =
+      new Map();
+
+    let requestGeneration = 0;
 
 
     /*
      * =====================================================
-     * CREATE DASHBOARD CARDS
+     * CREATE SCREEN CARDS
      * =====================================================
      */
 
     function createScreenCards() {
       screenGrid.innerHTML = "";
 
-      SCREEN_NAMES.forEach((screenName, index) => {
+      SCREEN_NAMES.forEach(screenName => {
         const safeId =
           createSafeId(screenName);
 
         const card =
           document.createElement("article");
 
-        card.className = "screen-card";
-        card.id = `card-${safeId}`;
+        card.id =
+          `card-${safeId}`;
+
+        card.className =
+          "screen-card";
 
         card.innerHTML = `
           <div class="card-header">
-            <h2 class="screen-title">
-              ${escapeHtml(screenName)}
-            </h2>
+            <div>
+              <h2 class="screen-name">
+                ${escapeHtml(screenName)}
+              </h2>
+
+              <div
+                id="state-${safeId}"
+                class="screen-state"
+              >
+                Waiting for schedule…
+              </div>
+            </div>
 
             <span
               id="badge-${safeId}"
@@ -526,90 +1137,130 @@
             </span>
           </div>
 
-          <div class="preview-wrapper">
+          <div class="preview-container">
             <img
               id="preview-${safeId}"
               class="preview-image"
-              alt="Preview for ${escapeHtml(screenName)}"
+              alt="Current scheduled preview for ${escapeHtml(screenName)}"
             >
 
             <div
-              id="loading-${safeId}"
-              class="preview-loading"
+              id="preview-overlay-${safeId}"
+              class="preview-overlay"
             >
               Loading preview…
             </div>
           </div>
 
-          <div class="card-details">
-            <div class="detail-row">
-              <div class="detail-label">
+          <div class="card-body">
+            <div class="current-image-block">
+              <div class="eyebrow">
                 Current image
               </div>
 
               <div
-                id="current-${safeId}"
-                class="detail-value"
+                id="current-image-${safeId}"
+                class="current-image-name"
               >
                 Loading…
               </div>
             </div>
 
-            <div class="detail-row">
-              <div class="detail-label">
-                Source
+            <div class="information-grid">
+              <div class="information-box">
+                <div class="information-label">
+                  Source
+                </div>
+
+                <div
+                  id="source-${safeId}"
+                  class="information-value"
+                >
+                  —
+                </div>
               </div>
 
-              <div
-                id="source-${safeId}"
-                class="detail-value"
-              >
-                Loading…
+              <div class="information-box">
+                <div class="information-label">
+                  Current time
+                </div>
+
+                <div
+                  id="current-time-${safeId}"
+                  class="information-value"
+                >
+                  —
+                </div>
+              </div>
+
+              <div class="information-box">
+                <div class="information-label">
+                  Next change
+                </div>
+
+                <div
+                  id="next-change-${safeId}"
+                  class="information-value"
+                >
+                  —
+                </div>
+              </div>
+
+              <div class="information-box">
+                <div class="information-label">
+                  Countdown
+                </div>
+
+                <div
+                  id="countdown-${safeId}"
+                  class="information-value countdown"
+                >
+                  —
+                </div>
               </div>
             </div>
 
-            <div class="detail-row">
-              <div class="detail-label">
-                Current time
-              </div>
-
-              <div
-                id="time-${safeId}"
-                class="detail-value"
-              >
-                —
-              </div>
-            </div>
-
-            <div class="detail-row">
-              <div class="detail-label">
-                Next change
-              </div>
-
-              <div
-                id="next-${safeId}"
-                class="detail-value"
-              >
-                —
-              </div>
-            </div>
-
-            <div class="detail-row">
-              <div class="detail-label">
+            <div class="information-box">
+              <div class="information-label">
                 Next image
               </div>
 
               <div
                 id="next-image-${safeId}"
-                class="detail-value"
+                class="information-value"
               >
                 —
               </div>
             </div>
 
+            <div class="timeline-section">
+              <div class="timeline-header">
+                <div class="timeline-title">
+                  Today's schedule
+                </div>
+
+                <div class="timeline-note">
+                  White marker = current time
+                </div>
+              </div>
+
+              <div
+                id="timeline-${safeId}"
+                class="timeline"
+              ></div>
+
+              <div class="timeline-labels">
+                <span>00:00</span>
+                <span>06:00</span>
+                <span>12:00</span>
+                <span>18:00</span>
+                <span>24:00</span>
+              </div>
+            </div>
+
             <div class="card-actions">
               <a
-                class="button-link"
+                class="button button-primary"
                 href="${SIGNAGE_PAGE}?screen=${encodeURIComponent(screenName)}"
                 target="_blank"
                 rel="noopener noreferrer"
@@ -618,12 +1269,12 @@
               </a>
 
               <a
-                class="button-link"
+                class="button"
                 href="${SIGNAGE_PAGE}?screen=${encodeURIComponent(screenName)}&debug=1"
                 target="_blank"
                 rel="noopener noreferrer"
               >
-                Open debug view
+                Debug view
               </a>
             </div>
           </div>
@@ -639,35 +1290,38 @@
 
     /*
      * =====================================================
-     * LOAD EACH SCREEN SCHEDULE
+     * REFRESH APPS SCRIPT DATA
      * =====================================================
      */
 
     function refreshDashboard() {
-      requestNumber += 1;
+      requestGeneration += 1;
+
+      const currentGeneration =
+        requestGeneration;
+
+      lastRefreshElement.textContent =
+        `Refreshing at ${formatLocalClock(new Date())}`;
 
       SCREEN_NAMES.forEach(
         (screenName, index) => {
           loadScreenSchedule(
             screenName,
             index,
-            requestNumber
+            currentGeneration
           );
         }
       );
-
-      lastRefreshElement.textContent =
-        `Refreshing at ${formatClockTime(new Date())}`;
     }
 
 
     function loadScreenSchedule(
       screenName,
       index,
-      currentRequest
+      generation
     ) {
       const callbackName =
-        `dashboardCallback_${index}_${currentRequest}`;
+        `dashboardV2Callback_${index}_${generation}`;
 
       const scriptId =
         `dashboard-feed-${index}`;
@@ -679,23 +1333,28 @@
         previousScript.remove();
       }
 
-      window[callbackName] = function(payload) {
-        try {
-          handleScreenResponse(
-            screenName,
-            payload
-          );
-        } finally {
-          delete window[callbackName];
+      let callbackCompleted = false;
 
-          const script =
-            document.getElementById(scriptId);
+      window[callbackName] =
+        function(payload) {
+          callbackCompleted = true;
 
-          if (script) {
-            script.remove();
+          try {
+            processScreenPayload(
+              screenName,
+              payload
+            );
+          } finally {
+            delete window[callbackName];
+
+            const script =
+              document.getElementById(scriptId);
+
+            if (script) {
+              script.remove();
+            }
           }
-        }
-      };
+        };
 
       const script =
         document.createElement("script");
@@ -714,31 +1373,51 @@
         `&screen=${encodeURIComponent(screenName)}` +
         `&_=${Date.now()}`;
 
-      script.onerror = function() {
-        delete window[callbackName];
+      script.onerror =
+        function() {
+          callbackCompleted = true;
 
-        showScreenError(
-          screenName,
-          "Could not load the Apps Script schedule."
-        );
-      };
+          delete window[callbackName];
+
+          setScreenError(
+            screenName,
+            "Could not connect to Apps Script."
+          );
+        };
 
       document.head.appendChild(script);
+
+      setTimeout(
+        function() {
+          if (
+            !callbackCompleted &&
+            window[callbackName]
+          ) {
+            delete window[callbackName];
+
+            setScreenError(
+              screenName,
+              "Apps Script did not respond within 12 seconds."
+            );
+          }
+        },
+        12000
+      );
     }
 
 
     /*
      * =====================================================
-     * PROCESS SCREEN DATA
+     * PROCESS SCHEDULE RESPONSE
      * =====================================================
      */
 
-    function handleScreenResponse(
+    function processScreenPayload(
       screenName,
       payload
     ) {
       if (!payload) {
-        showScreenError(
+        setScreenError(
           screenName,
           "No response received."
         );
@@ -747,7 +1426,7 @@
       }
 
       if (payload.success !== true) {
-        showScreenError(
+        setScreenError(
           screenName,
           payload.error ||
           "Apps Script returned an error."
@@ -757,9 +1436,9 @@
       }
 
       if (!Array.isArray(payload.schedule)) {
-        showScreenError(
+        setScreenError(
           screenName,
-          "The schedule is invalid."
+          "Schedule data is invalid."
         );
 
         return;
@@ -769,46 +1448,58 @@
         payload.schedule
           .filter(isValidScheduleItem)
           .map(item => ({
-            time: String(item.time).trim(),
-            image: String(item.image).trim(),
-            fade: Number(item.fade) || 1500
+            time:
+              String(item.time).trim(),
+
+            image:
+              String(item.image).trim(),
+
+            fade:
+              Number(item.fade) || 1500
           }))
           .sort((a, b) =>
             a.time.localeCompare(b.time)
           );
 
       if (schedule.length === 0) {
-        showScreenError(
+        setScreenError(
           screenName,
-          "This screen has no schedule entries."
+          "No valid schedule entries were found."
         );
 
         return;
       }
 
-      const currentTime =
-        getCurrentHHMM();
+      const now =
+        new Date();
 
       const activeItem =
         getActiveScheduleItem(
           schedule,
-          currentTime
+          getCurrentHHMM(now)
         );
 
       const nextItem =
         getNextScheduleItem(
           schedule,
-          currentTime
+          now
         );
 
       const state = {
         screenName,
         source:
-          payload.scheduleSource || "regular",
+          payload.scheduleSource === "holiday"
+            ? "holiday"
+            : "regular",
+
+        activeDate:
+          payload.activeDate || "",
+
         schedule,
-        currentTime,
         activeItem,
         nextItem,
+
+        imageMissing: false,
         error: null
       };
 
@@ -818,11 +1509,10 @@
       );
 
       updateScreenCard(state);
-      updateSummary();
-      updateNextChanges();
+      updateDashboardSummary();
 
       lastRefreshElement.textContent =
-        `Last updated: ${formatClockTime(new Date())}`;
+        `Last refreshed: ${formatLocalClock(new Date())}`;
     }
 
 
@@ -837,15 +1527,11 @@
     }
 
 
-    function getCurrentHHMM() {
-      const now = new Date();
-
-      return [
-        String(now.getHours()).padStart(2, "0"),
-        String(now.getMinutes()).padStart(2, "0")
-      ].join(":");
-    }
-
+    /*
+     * =====================================================
+     * CURRENT AND NEXT SCHEDULE ITEMS
+     * =====================================================
+     */
 
     function getActiveScheduleItem(
       schedule,
@@ -868,21 +1554,67 @@
 
     function getNextScheduleItem(
       schedule,
-      currentTime
+      now
     ) {
+      const currentTime =
+        getCurrentHHMM(now);
+
       for (const item of schedule) {
         if (item.time > currentTime) {
           return {
             ...item,
-            tomorrow: false
+            tomorrow: false,
+            targetDate:
+              createTargetDate(
+                now,
+                item.time,
+                false
+              )
           };
         }
       }
 
+      const firstItem =
+        schedule[0];
+
       return {
-        ...schedule[0],
-        tomorrow: true
+        ...firstItem,
+        tomorrow: true,
+        targetDate:
+          createTargetDate(
+            now,
+            firstItem.time,
+            true
+          )
       };
+    }
+
+
+    function createTargetDate(
+      now,
+      time,
+      tomorrow
+    ) {
+      const parts =
+        time.split(":");
+
+      const target =
+        new Date(now);
+
+      target.setHours(
+        Number(parts[0]),
+        Number(parts[1]),
+        0,
+        0
+      );
+
+      if (tomorrow) {
+        target.setDate(
+          target.getDate() + 1
+        );
+      }
+
+      return target;
     }
 
 
@@ -896,9 +1628,39 @@
       const safeId =
         createSafeId(state.screenName);
 
+      const card =
+        document.getElementById(
+          `card-${safeId}`
+        );
+
       const badge =
         document.getElementById(
           `badge-${safeId}`
+        );
+
+      const screenState =
+        document.getElementById(
+          `state-${safeId}`
+        );
+
+      const currentImage =
+        document.getElementById(
+          `current-image-${safeId}`
+        );
+
+      const source =
+        document.getElementById(
+          `source-${safeId}`
+        );
+
+      const nextChange =
+        document.getElementById(
+          `next-change-${safeId}`
+        );
+
+      const nextImage =
+        document.getElementById(
+          `next-image-${safeId}`
         );
 
       const preview =
@@ -906,29 +1668,269 @@
           `preview-${safeId}`
         );
 
-      const loading =
+      const previewOverlay =
         document.getElementById(
-          `loading-${safeId}`
+          `preview-overlay-${safeId}`
         );
 
-      const currentElement =
+      const isHoliday =
+        state.source === "holiday";
+
+      card.className =
+        isHoliday
+          ? "screen-card holiday-card"
+          : "screen-card";
+
+      badge.className =
+        isHoliday
+          ? "status-badge status-holiday"
+          : "status-badge status-regular";
+
+      badge.textContent =
+        isHoliday
+          ? "Holiday"
+          : "Regular";
+
+      screenState.textContent =
+        isHoliday
+          ? "Holiday override currently active"
+          : "Regular schedule operating normally";
+
+      currentImage.textContent =
+        state.activeItem.image;
+
+      source.textContent =
+        isHoliday
+          ? "Holiday Override"
+          : "Regular Schedule";
+
+      nextChange.textContent =
+        state.nextItem.tomorrow
+          ? `${state.nextItem.time} tomorrow`
+          : state.nextItem.time;
+
+      nextImage.textContent =
+        state.nextItem.image;
+
+      previewOverlay.className =
+        "preview-overlay";
+
+      previewOverlay.textContent =
+        "Loading preview…";
+
+      preview.onload =
+        function() {
+          state.imageMissing = false;
+
+          previewOverlay.classList.add(
+            "hidden"
+          );
+
+          updateDashboardSummary();
+        };
+
+      preview.onerror =
+        function() {
+          state.imageMissing = true;
+
+          previewOverlay.className =
+            "preview-overlay error";
+
+          previewOverlay.textContent =
+            `Missing image: ${state.activeItem.image}`;
+
+          card.classList.add(
+            "error-card"
+          );
+
+          updateDashboardSummary();
+        };
+
+      preview.src =
+        `${buildImageUrl(state.activeItem.image)}` +
+        `?dashboardV2=${Date.now()}`;
+
+      renderTimeline(state);
+      updateLiveScreenInformation(state);
+    }
+
+
+    /*
+     * =====================================================
+     * TIMELINE
+     * =====================================================
+     */
+
+    function renderTimeline(state) {
+      const safeId =
+        createSafeId(state.screenName);
+
+      const timeline =
         document.getElementById(
-          `current-${safeId}`
+          `timeline-${safeId}`
         );
 
-      const sourceElement =
+      timeline.innerHTML = "";
+
+      const schedule =
+        state.schedule;
+
+      schedule.forEach(
+        (item, index) => {
+          const startMinute =
+            timeToMinutes(item.time);
+
+          const nextItem =
+            schedule[index + 1];
+
+          const endMinute =
+            nextItem
+              ? timeToMinutes(nextItem.time)
+              : 1440;
+
+          const left =
+            (startMinute / 1440) * 100;
+
+          const width =
+            Math.max(
+              ((endMinute - startMinute) / 1440) * 100,
+              0.25
+            );
+
+          const segment =
+            document.createElement("div");
+
+          segment.className =
+            `timeline-segment ${state.source}`;
+
+          segment.style.left =
+            `${left}%`;
+
+          segment.style.width =
+            `${width}%`;
+
+          segment.title =
+            `${item.time} — ${item.image}`;
+
+          segment.textContent =
+            item.image;
+
+          timeline.appendChild(segment);
+        }
+      );
+
+      const nowMarker =
+        document.createElement("div");
+
+      nowMarker.id =
+        `timeline-now-${safeId}`;
+
+      nowMarker.className =
+        "timeline-now";
+
+      timeline.appendChild(nowMarker);
+
+      updateTimelineMarker(state.screenName);
+    }
+
+
+    function updateTimelineMarker(screenName) {
+      const safeId =
+        createSafeId(screenName);
+
+      const marker =
         document.getElementById(
-          `source-${safeId}`
+          `timeline-now-${safeId}`
         );
 
-      const timeElement =
+      if (!marker) {
+        return;
+      }
+
+      const now =
+        new Date();
+
+      const minutes =
+        now.getHours() * 60 +
+        now.getMinutes() +
+        now.getSeconds() / 60;
+
+      marker.style.left =
+        `${(minutes / 1440) * 100}%`;
+    }
+
+
+    /*
+     * =====================================================
+     * LIVE COUNTDOWN AND TIME
+     * =====================================================
+     */
+
+    function updateLiveInformation() {
+      screenStates.forEach(state => {
+        if (state.error) {
+          return;
+        }
+
+        /*
+         * Recalculate active and next items locally so the
+         * dashboard changes immediately at the scheduled
+         * time, even between Apps Script refreshes.
+         */
+        const now =
+          new Date();
+
+        const currentTime =
+          getCurrentHHMM(now);
+
+        const newActiveItem =
+          getActiveScheduleItem(
+            state.schedule,
+            currentTime
+          );
+
+        const activeImageChanged =
+          newActiveItem.image !==
+          state.activeItem.image;
+
+        state.activeItem =
+          newActiveItem;
+
+        state.nextItem =
+          getNextScheduleItem(
+            state.schedule,
+            now
+          );
+
+        if (activeImageChanged) {
+          updateScreenCard(state);
+        } else {
+          updateLiveScreenInformation(state);
+          updateTimelineMarker(state.screenName);
+        }
+      });
+
+      updateDashboardSummary();
+    }
+
+
+    function updateLiveScreenInformation(state) {
+      const safeId =
+        createSafeId(state.screenName);
+
+      const currentTimeElement =
         document.getElementById(
-          `time-${safeId}`
+          `current-time-${safeId}`
         );
 
-      const nextElement =
+      const countdownElement =
         document.getElementById(
-          `next-${safeId}`
+          `countdown-${safeId}`
+        );
+
+      const nextChangeElement =
+        document.getElementById(
+          `next-change-${safeId}`
         );
 
       const nextImageElement =
@@ -936,213 +1938,269 @@
           `next-image-${safeId}`
         );
 
-      const isHoliday =
-        state.source === "holiday";
+      currentTimeElement.textContent =
+        formatLocalClock(new Date());
 
-      badge.textContent =
-        isHoliday
-          ? "Holiday"
-          : "Regular";
-
-      badge.className =
-        `status-badge ` +
-        (
-          isHoliday
-            ? "status-holiday"
-            : "status-regular"
+      countdownElement.textContent =
+        formatDuration(
+          state.nextItem.targetDate -
+          new Date()
         );
 
-      currentElement.textContent =
-        state.activeItem.image;
-
-      sourceElement.textContent =
-        isHoliday
-          ? "Holiday Override"
-          : "Regular Schedule";
-
-      timeElement.textContent =
-        state.currentTime;
-
-      nextElement.textContent =
+      nextChangeElement.textContent =
         state.nextItem.tomorrow
           ? `${state.nextItem.time} tomorrow`
           : state.nextItem.time;
 
       nextImageElement.textContent =
         state.nextItem.image;
-
-      loading.textContent =
-        "Loading image…";
-
-      loading.style.display =
-        "flex";
-
-      preview.onload = function() {
-        loading.style.display = "none";
-      };
-
-      preview.onerror = function() {
-        loading.textContent =
-          `Image not found: ${state.activeItem.image}`;
-
-        loading.classList.add(
-          "error-text"
-        );
-      };
-
-      preview.src =
-        buildImageUrl(
-          state.activeItem.image
-        ) +
-        `?dashboard=${Date.now()}`;
     }
 
 
-    function showScreenError(
+    /*
+     * =====================================================
+     * ERRORS
+     * =====================================================
+     */
+
+    function setScreenError(
       screenName,
       message
     ) {
       const safeId =
         createSafeId(screenName);
 
-      screenStates.set(
-        screenName,
-        {
-          screenName,
-          error: message
-        }
-      );
+      const card =
+        document.getElementById(
+          `card-${safeId}`
+        );
 
       const badge =
         document.getElementById(
           `badge-${safeId}`
         );
 
-      const loading =
+      const screenState =
         document.getElementById(
-          `loading-${safeId}`
+          `state-${safeId}`
         );
 
-      const currentElement =
+      const currentImage =
         document.getElementById(
-          `current-${safeId}`
+          `current-image-${safeId}`
         );
 
-      const sourceElement =
+      const source =
         document.getElementById(
           `source-${safeId}`
         );
 
-      badge.textContent = "Error";
+      const previewOverlay =
+        document.getElementById(
+          `preview-overlay-${safeId}`
+        );
+
+      screenStates.set(
+        screenName,
+        {
+          screenName,
+          error: message,
+          imageMissing: false
+        }
+      );
+
+      card.className =
+        "screen-card error-card";
+
       badge.className =
         "status-badge status-error";
 
-      loading.style.display = "flex";
-      loading.textContent = message;
-      loading.classList.add("error-text");
-
-      currentElement.textContent =
-        message;
-
-      currentElement.classList.add(
-        "error-text"
-      );
-
-      sourceElement.textContent =
+      badge.textContent =
         "Error";
 
-      updateSummary();
-      updateNextChanges();
+      screenState.textContent =
+        message;
+
+      currentImage.textContent =
+        message;
+
+      source.textContent =
+        "Unavailable";
+
+      previewOverlay.className =
+        "preview-overlay error";
+
+      previewOverlay.textContent =
+        message;
+
+      updateDashboardSummary();
     }
 
 
     /*
      * =====================================================
-     * SUMMARY AND NEXT CHANGES
+     * SUMMARY AND UPCOMING CHANGES
      * =====================================================
      */
 
-    function updateSummary() {
-      let regularCount = 0;
-      let holidayCount = 0;
-      let errorCount = 0;
+    function updateDashboardSummary() {
+      let loaded = 0;
+      let regular = 0;
+      let holiday = 0;
+      let errors = 0;
 
-      screenStates.forEach(state => {
-        if (state.error) {
-          errorCount += 1;
-        } else if (
-          state.source === "holiday"
-        ) {
-          holidayCount += 1;
-        } else {
-          regularCount += 1;
-        }
-      });
-
-      regularCountElement.textContent =
-        String(regularCount);
-
-      holidayCountElement.textContent =
-        String(holidayCount);
-
-      errorCountElement.textContent =
-        String(errorCount);
-    }
-
-
-    function updateNextChanges() {
       const upcoming = [];
 
       screenStates.forEach(state => {
         if (
           state.error ||
-          !state.nextItem
+          state.imageMissing
         ) {
-          return;
+          errors += 1;
         }
 
-        upcoming.push({
-          screenName: state.screenName,
-          time: state.nextItem.time,
-          image: state.nextItem.image,
-          tomorrow: state.nextItem.tomorrow
-        });
-      });
+        if (!state.error) {
+          loaded += 1;
 
-      upcoming.sort((a, b) => {
-        if (a.tomorrow !== b.tomorrow) {
-          return a.tomorrow ? 1 : -1;
+          if (state.source === "holiday") {
+            holiday += 1;
+          } else {
+            regular += 1;
+          }
+
+          upcoming.push({
+            screenName: state.screenName,
+            image: state.nextItem.image,
+            time: state.nextItem.time,
+            targetDate:
+              state.nextItem.targetDate,
+            tomorrow:
+              state.nextItem.tomorrow
+          });
         }
-
-        return a.time.localeCompare(b.time);
       });
 
-      if (upcoming.length === 0) {
-        nextChangesList.innerHTML =
-          `<div class="muted">
-             No upcoming changes available.
-           </div>`;
+      loadedCountElement.textContent =
+        String(loaded);
+
+      regularCountElement.textContent =
+        String(regular);
+
+      holidayCountElement.textContent =
+        String(holiday);
+
+      errorCountElement.textContent =
+        String(errors);
+
+      updateHealthBanner(
+        loaded,
+        errors,
+        holiday
+      );
+
+      updateUpcomingChanges(upcoming);
+    }
+
+
+    function updateHealthBanner(
+      loaded,
+      errors,
+      holiday
+    ) {
+      healthDot.className =
+        "health-dot";
+
+      if (errors > 0) {
+        healthDot.classList.add("error");
+
+        healthTitle.textContent =
+          "System requires attention";
+
+        healthDescription.textContent =
+          `${errors} warning or error` +
+          `${errors === 1 ? "" : "s"} detected.`;
 
         return;
       }
 
-      nextChangesList.innerHTML =
-        upcoming.map(item => `
-          <div class="next-change-item">
-            <strong>
-              ${escapeHtml(item.time)}
-            </strong>
+      if (loaded < SCREEN_NAMES.length) {
+        healthDot.classList.add("warning");
 
-            <span>
-              ${escapeHtml(item.screenName)}
-            </span>
+        healthTitle.textContent =
+          "Schedules still loading";
 
-            <span class="next-change-image">
-              ${escapeHtml(item.image)}
-              ${item.tomorrow ? " — tomorrow" : ""}
-            </span>
-          </div>
-        `).join("");
+        healthDescription.textContent =
+          `${loaded} of ${SCREEN_NAMES.length} screens loaded.`;
+
+        return;
+      }
+
+      healthTitle.textContent =
+        "System healthy";
+
+      healthDescription.textContent =
+        holiday > 0
+          ? `${holiday} holiday override` +
+            `${holiday === 1 ? "" : "s"} active.`
+          : "All screens are using regular schedules.";
+    }
+
+
+    function updateUpcomingChanges(upcoming) {
+      upcoming.sort(
+        (a, b) =>
+          a.targetDate - b.targetDate
+      );
+
+      if (upcoming.length === 0) {
+        upcomingList.innerHTML =
+          `<div class="muted">
+             No upcoming schedule changes available.
+           </div>`;
+
+        globalNextChange.textContent =
+          "—";
+
+        return;
+      }
+
+      const first =
+        upcoming[0];
+
+      globalNextChange.textContent =
+        `${first.screenName} · ` +
+        `${first.time} · ` +
+        `${formatDuration(
+          first.targetDate - new Date()
+        )}`;
+
+      upcomingList.innerHTML =
+        upcoming
+          .map(item => `
+            <div class="upcoming-item">
+              <div class="upcoming-time">
+                ${escapeHtml(item.time)}
+              </div>
+
+              <div class="upcoming-screen">
+                ${escapeHtml(item.screenName)}
+              </div>
+
+              <div class="upcoming-image">
+                ${escapeHtml(item.image)}
+                ${item.tomorrow ? " · tomorrow" : ""}
+              </div>
+
+              <div class="upcoming-countdown">
+                ${escapeHtml(
+                  formatDuration(
+                    item.targetDate - new Date()
+                  )
+                )}
+              </div>
+            </div>
+          `)
+          .join("");
     }
 
 
@@ -1152,16 +2210,82 @@
      * =====================================================
      */
 
-    function buildImageUrl(filename) {
-      const encodedPath =
-        String(filename)
-          .split("/")
-          .map(part =>
-            encodeURIComponent(part)
-          )
-          .join("/");
+    function getCurrentHHMM(date) {
+      return (
+        String(date.getHours()).padStart(2, "0") +
+        ":" +
+        String(date.getMinutes()).padStart(2, "0")
+      );
+    }
 
-      return encodedPath;
+
+    function timeToMinutes(time) {
+      const parts =
+        String(time).split(":");
+
+      return (
+        Number(parts[0]) * 60 +
+        Number(parts[1])
+      );
+    }
+
+
+    function formatDuration(milliseconds) {
+      const safeMilliseconds =
+        Math.max(0, milliseconds);
+
+      const totalSeconds =
+        Math.floor(
+          safeMilliseconds / 1000
+        );
+
+      const hours =
+        Math.floor(
+          totalSeconds / 3600
+        );
+
+      const minutes =
+        Math.floor(
+          (totalSeconds % 3600) / 60
+        );
+
+      const seconds =
+        totalSeconds % 60;
+
+      if (hours > 0) {
+        return (
+          `${hours}h ` +
+          `${String(minutes).padStart(2, "0")}m ` +
+          `${String(seconds).padStart(2, "0")}s`
+        );
+      }
+
+      return (
+        `${minutes}m ` +
+        `${String(seconds).padStart(2, "0")}s`
+      );
+    }
+
+
+    function formatLocalClock(date) {
+      return date.toLocaleTimeString(
+        [],
+        {
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit"
+        }
+      );
+    }
+
+
+    function buildImageUrl(filename) {
+      return String(filename)
+        .split("/")
+        .map(part =>
+          encodeURIComponent(part)
+        )
+        .join("/");
     }
 
 
@@ -1183,18 +2307,6 @@
     }
 
 
-    function formatClockTime(date) {
-      return date.toLocaleTimeString(
-        [],
-        {
-          hour: "2-digit",
-          minute: "2-digit",
-          second: "2-digit"
-        }
-      );
-    }
-
-
     /*
      * =====================================================
      * STARTUP
@@ -1211,7 +2323,12 @@
 
     setInterval(
       refreshDashboard,
-      DASHBOARD_REFRESH_MS
+      DATA_REFRESH_MS
+    );
+
+    setInterval(
+      updateLiveInformation,
+      LIVE_UPDATE_MS
     );
   </script>
 </body>
