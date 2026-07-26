@@ -7,8 +7,13 @@ All notable changes to the Mini Golf Signage project will be documented here.
 ### Planned
 
 - Day-of-week schedules
-- Holiday date overrides
 - Automatic recovery health check
+
+## [1.4.0] - 2026-07-26
+
+###Changed
+
+- Improved the reading for the start time in Tab Holiday Overrides
 
 ## [1.3.0] - 2026-07-26
 
