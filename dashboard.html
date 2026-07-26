@@ -594,42 +594,215 @@
       font-size: 11px;
     }
 
-    .timeline {
-      position: relative;
+   .timeline {
+  position: relative;
 
-      height: 58px;
+  height: 86px;
 
-      overflow: hidden;
+  overflow: hidden;
 
-      border: 1px solid var(--border);
-      border-radius: 10px;
+  border: 1px solid var(--border);
+  border-radius: 11px;
 
-      background: #10141b;
-    }
+  background: #10141b;
+}
 
-    .timeline-segment {
-      position: absolute;
-      top: 0;
-      bottom: 0;
+.timeline-segment {
+  position: absolute;
+  top: 0;
+  bottom: 0;
 
-      display: flex;
-      align-items: center;
+  min-width: 3px;
 
-      min-width: 2px;
-      padding: 0 8px;
+  overflow: hidden;
 
-      border-right:
-        1px solid rgba(255, 255, 255, 0.12);
+  border-right:
+    1px solid rgba(255, 255, 255, 0.15);
 
-      color: white;
+  color: white;
 
-      font-size: 11px;
-      font-weight: 700;
+  transition:
+    filter 180ms ease,
+    box-shadow 180ms ease,
+    transform 180ms ease;
+}
 
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
+.timeline-segment.regular {
+  background:
+    linear-gradient(
+      90deg,
+      rgba(34, 131, 91, 0.96),
+      rgba(54, 201, 135, 0.82)
+    );
+}
+
+.timeline-segment.holiday {
+  background:
+    linear-gradient(
+      90deg,
+      rgba(154, 98, 18, 0.97),
+      rgba(242, 170, 63, 0.85)
+    );
+}
+
+.timeline-segment.active {
+  z-index: 4;
+
+  box-shadow:
+    inset 0 0 0 3px rgba(255, 255, 255, 0.95),
+    0 0 18px rgba(255, 255, 255, 0.35);
+
+  filter: brightness(1.12);
+}
+
+.timeline-segment:hover {
+  z-index: 6;
+
+  filter: brightness(1.16);
+}
+
+.timeline-thumbnail {
+  position: absolute;
+  inset: 0;
+
+  width: 100%;
+  height: 100%;
+
+  object-fit: cover;
+
+  opacity: 0.38;
+
+  transform: scale(1.03);
+
+  transition:
+    opacity 180ms ease,
+    transform 220ms ease;
+}
+
+.timeline-segment:hover .timeline-thumbnail,
+.timeline-segment.active .timeline-thumbnail {
+  opacity: 0.52;
+  transform: scale(1.07);
+}
+
+.timeline-thumbnail-fallback {
+  position: absolute;
+  inset: 0;
+
+  display: none;
+  align-items: center;
+  justify-content: center;
+
+  padding: 5px;
+
+  background:
+    linear-gradient(
+      135deg,
+      rgba(255, 104, 104, 0.34),
+      rgba(103, 40, 40, 0.55)
+    );
+
+  color: #ffd7d7;
+
+  font-size: 10px;
+  font-weight: 700;
+
+  text-align: center;
+}
+
+.timeline-thumbnail-fallback.visible {
+  display: flex;
+}
+
+.timeline-content {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+
+  padding: 7px 8px;
+
+  background:
+    linear-gradient(
+      to top,
+      rgba(0, 0, 0, 0.82),
+      rgba(0, 0, 0, 0.08) 72%
+    );
+
+  pointer-events: none;
+}
+
+.timeline-time {
+  font-size: 10px;
+  font-weight: 800;
+
+  text-shadow:
+    0 1px 4px rgba(0, 0, 0, 0.95);
+}
+
+.timeline-image-name {
+  margin-top: 3px;
+
+  font-size: 10px;
+  font-weight: 650;
+
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+
+  text-shadow:
+    0 1px 4px rgba(0, 0, 0, 0.95);
+}
+
+.timeline-segment.narrow .timeline-image-name {
+  display: none;
+}
+
+.timeline-segment.very-narrow .timeline-content {
+  padding: 5px 3px;
+}
+
+.timeline-segment.very-narrow .timeline-time {
+  writing-mode: vertical-rl;
+
+  font-size: 9px;
+}
+
+.timeline-now {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  z-index: 10;
+
+  width: 2px;
+
+  pointer-events: none;
+
+  background: white;
+
+  box-shadow:
+    0 0 10px rgba(255, 255, 255, 0.9);
+}
+
+.timeline-now::before {
+  content: "";
+
+  position: absolute;
+  top: 0;
+  left: 50%;
+
+  width: 10px;
+  height: 10px;
+
+  border-radius: 50%;
+  background: white;
+
+  transform:
+    translate(-50%, -50%);
+}
 
     .timeline-segment.regular {
       background:
@@ -1242,6 +1415,21 @@
   .operation-value {
     font-size: 17px;
   }
+  .timeline {
+  height: 76px;
+}
+
+.timeline-content {
+  padding: 6px;
+}
+
+.timeline-image-name {
+  font-size: 9px;
+}
+
+.timeline-time {
+  font-size: 9px;
+}
 }
     @media (max-width: 480px) {
   header {
@@ -1352,6 +1540,15 @@
   .upcoming-item {
     grid-template-columns: 62px 1fr;
   }
+      .timeline {
+  height: 70px;
+}
+
+.timeline-note {
+  max-width: 165px;
+
+  text-align: right;
+}
 }
 
     @media (max-width: 430px) {
@@ -2046,7 +2243,7 @@ const operationsNextDetail =
                 </div>
 
                 <div class="timeline-note">
-                  White marker = current time
+                  White border = active · White line = current time
                 </div>
               </div>
 
@@ -2054,16 +2251,16 @@ const operationsNextDetail =
                 <div
                     id="timeline-${safeId}"
                       class="timeline"
-  ></div>
+                ></div>
 
-  <div class="timeline-labels">
-    <span>00:00</span>
-    <span>06:00</span>
-    <span>12:00</span>
-    <span>18:00</span>
-    <span>24:00</span>
-  </div>
-</div>
+                <div class="timeline-labels">
+                  <span>00:00</span>
+                  <span>06:00</span>
+                  <span>12:00</span>
+                  <span>18:00</span>
+                  <span>24:00</span>
+                </div>
+              </div>
             </div>
 
             <div class="card-actions">
@@ -2576,76 +2773,258 @@ const operationsNextDetail =
      */
 
     function renderTimeline(state) {
-      const safeId =
-        createSafeId(state.screenName);
+  const safeId =
+    createSafeId(state.screenName);
 
-      const timeline =
-        document.getElementById(
-          `timeline-${safeId}`
+  const timeline =
+    document.getElementById(
+      `timeline-${safeId}`
+    );
+
+  timeline.innerHTML = "";
+
+  const schedule =
+    state.schedule;
+
+  const currentTime =
+    getCurrentHHMM(
+      new Date()
+    );
+
+  const activeItem =
+    getActiveScheduleItem(
+      schedule,
+      currentTime
+    );
+
+  schedule.forEach(
+    (item, index) => {
+      const startMinute =
+        timeToMinutes(item.time);
+
+      const nextItem =
+        schedule[index + 1];
+
+      const endMinute =
+        nextItem
+          ? timeToMinutes(nextItem.time)
+          : 1440;
+
+      const left =
+        (startMinute / 1440) * 100;
+
+      const width =
+        Math.max(
+          (
+            (endMinute - startMinute) /
+            1440
+          ) * 100,
+          0.25
         );
 
-      timeline.innerHTML = "";
-
-      const schedule =
-        state.schedule;
-
-      schedule.forEach(
-        (item, index) => {
-          const startMinute =
-            timeToMinutes(item.time);
-
-          const nextItem =
-            schedule[index + 1];
-
-          const endMinute =
-            nextItem
-              ? timeToMinutes(nextItem.time)
-              : 1440;
-
-          const left =
-            (startMinute / 1440) * 100;
-
-          const width =
-            Math.max(
-              ((endMinute - startMinute) / 1440) * 100,
-              0.25
-            );
-
-          const segment =
-            document.createElement("div");
-
-          segment.className =
-            `timeline-segment ${state.source}`;
-
-          segment.style.left =
-            `${left}%`;
-
-          segment.style.width =
-            `${width}%`;
-
-          segment.title =
-            `${item.time} — ${item.image}`;
-
-          segment.textContent =
-            item.image;
-
-          timeline.appendChild(segment);
-        }
-      );
-
-      const nowMarker =
+      const segment =
         document.createElement("div");
 
-      nowMarker.id =
-        `timeline-now-${safeId}`;
+      segment.className =
+        `timeline-segment ${state.source}`;
 
-      nowMarker.className =
-        "timeline-now";
+      if (
+        activeItem &&
+        activeItem.time === item.time &&
+        activeItem.image === item.image
+      ) {
+        segment.classList.add(
+          "active"
+        );
+      }
 
-      timeline.appendChild(nowMarker);
+      /*
+       * Hide some text when the segment is narrow.
+       */
+      if (width < 9) {
+        segment.classList.add(
+          "narrow"
+        );
+      }
 
-      updateTimelineMarker(state.screenName);
+      if (width < 4) {
+        segment.classList.add(
+          "very-narrow"
+        );
+      }
+
+      segment.style.left =
+        `${left}%`;
+
+      segment.style.width =
+        `${width}%`;
+
+      segment.title =
+        `${item.time} — ${item.image}` +
+        (
+          nextItem
+            ? `\nUntil ${nextItem.time}`
+            : "\nUntil midnight"
+        );
+
+      /*
+       * Timeline thumbnail.
+       */
+      const thumbnail =
+        document.createElement("img");
+
+      thumbnail.className =
+        "timeline-thumbnail";
+
+      thumbnail.alt = "";
+
+      thumbnail.loading =
+        "lazy";
+
+      thumbnail.src =
+        buildImageUrl(item.image);
+
+      /*
+       * Fallback shown when a thumbnail is missing.
+       */
+      const thumbnailFallback =
+        document.createElement("div");
+
+      thumbnailFallback.className =
+        "timeline-thumbnail-fallback";
+
+      thumbnailFallback.textContent =
+        "Image unavailable";
+
+      thumbnail.onerror =
+        function() {
+          thumbnail.style.display =
+            "none";
+
+          thumbnailFallback.classList.add(
+            "visible"
+          );
+        };
+
+      /*
+       * Timeline text.
+       */
+      const content =
+        document.createElement("div");
+
+      content.className =
+        "timeline-content";
+
+      const timeLabel =
+        document.createElement("div");
+
+      timeLabel.className =
+        "timeline-time";
+
+      timeLabel.textContent =
+        item.time;
+
+      const imageLabel =
+        document.createElement("div");
+
+      imageLabel.className =
+        "timeline-image-name";
+
+      imageLabel.textContent =
+        item.image;
+
+      content.appendChild(
+        timeLabel
+      );
+
+      content.appendChild(
+        imageLabel
+      );
+
+      segment.appendChild(
+        thumbnail
+      );
+
+      segment.appendChild(
+        thumbnailFallback
+      );
+
+      segment.appendChild(
+        content
+      );
+
+      timeline.appendChild(
+        segment
+      );
     }
+  );
+
+  const nowMarker =
+    document.createElement("div");
+
+  nowMarker.id =
+    `timeline-now-${safeId}`;
+
+  nowMarker.className =
+    "timeline-now";
+
+  timeline.appendChild(
+    nowMarker
+  );
+
+  updateTimelineMarker(
+    state.screenName
+  );
+}
+    function updateTimelineActiveSegment(
+  state
+) {
+  const safeId =
+    createSafeId(state.screenName);
+
+  const timeline =
+    document.getElementById(
+      `timeline-${safeId}`
+    );
+
+  if (!timeline) {
+    return;
+  }
+
+  const segments =
+    timeline.querySelectorAll(
+      ".timeline-segment"
+    );
+
+  const currentTime =
+    getCurrentHHMM(
+      new Date()
+    );
+
+  const activeItem =
+    getActiveScheduleItem(
+      state.schedule,
+      currentTime
+    );
+
+  segments.forEach(
+    (segment, index) => {
+      const item =
+        state.schedule[index];
+
+      const isActive =
+        activeItem &&
+        item &&
+        item.time === activeItem.time &&
+        item.image === activeItem.image;
+
+      segment.classList.toggle(
+        "active",
+        Boolean(isActive)
+      );
+    }
+  );
+}
 
 
     function updateTimelineMarker(screenName) {
@@ -2716,12 +3095,19 @@ const operationsNextDetail =
             now
           );
 
-        if (activeImageChanged) {
-          updateScreenCard(state);
-        } else {
-          updateLiveScreenInformation(state);
-          updateTimelineMarker(state.screenName);
-        }
+       if (activeImageChanged) {
+  updateScreenCard(state);
+} else {
+  updateLiveScreenInformation(state);
+
+  updateTimelineMarker(
+    state.screenName
+  );
+
+  updateTimelineActiveSegment(
+    state
+  );
+}
       });
 
       updateDashboardSummary();
