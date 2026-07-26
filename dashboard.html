@@ -22,6 +22,45 @@
 
   <style>
     :root {
+  --background: #0c0f14;
+  --surface: #151a22;
+  --surface-light: #1c2330;
+  --surface-hover: #232c3a;
+
+  --border: #2b3545;
+  --text: #f4f7fb;
+  --muted: #98a4b7;
+
+  --header-background:
+    rgba(12, 15, 20, 0.93);
+
+  --timeline-background: #10141b;
+
+  --regular: #36c987;
+  --regular-dark: #174b38;
+
+  --holiday: #f2aa3f;
+  --holiday-dark: #654518;
+
+  --error: #ff6868;
+  --error-dark: #672828;
+
+  --warning: #f2cf53;
+  --blue: #5fa8ff;
+
+  --radius: 16px;
+  --shadow:
+    0 18px 45px rgba(0, 0, 0, 0.28);
+
+  font-family:
+    Inter,
+    Arial,
+    Helvetica,
+    sans-serif;
+
+  color-scheme: dark;
+}
+    :root {
       --background: #0c0f14;
       --surface: #151a22;
       --surface-light: #1c2330;
@@ -54,6 +93,30 @@
 
       color-scheme: dark;
     }
+    html[data-theme="light"] {
+  --background: #eef2f7;
+  --surface: #ffffff;
+  --surface-light: #f5f7fa;
+  --surface-hover: #e9eef5;
+
+  --border: #ccd5e1;
+  --text: #172033;
+  --muted: #647086;
+
+  --header-background:
+    rgba(255, 255, 255, 0.94);
+
+  --timeline-background: #dfe6ef;
+
+  --regular-dark: #c9f1df;
+  --holiday-dark: #fbe4bb;
+  --error-dark: #ffd1d1;
+
+  --shadow:
+    0 16px 38px rgba(45, 58, 78, 0.14);
+
+  color-scheme: light;
+}
 
     * {
       box-sizing: border-box;
@@ -65,16 +128,14 @@
       margin: 0;
     }
 
-    body {
-      background:
-        radial-gradient(
-          circle at top,
-          #172235 0%,
-          var(--background) 44%
-        );
+   body {
+  background: var(--background);
+  color: var(--text);
 
-      color: var(--text);
-    }
+  transition:
+    background 350ms ease,
+    color 250ms ease;
+}
 
     button,
     a {
@@ -93,7 +154,7 @@
 
       padding: 20px 28px;
 
-      background: rgba(12, 15, 20, 0.93);
+      background: var(--header-background);
       border-bottom: 1px solid var(--border);
 
       backdrop-filter: blur(14px);
@@ -604,7 +665,7 @@
   border: 1px solid var(--border);
   border-radius: 11px;
 
-  background: #10141b;
+  background: var(--timeline-background);
 }
 
 .timeline-segment {
@@ -1068,6 +1129,49 @@
 .button {
   touch-action: manipulation;
 }
+    body,
+header,
+.system-banner,
+.operations-panel,
+.summary-card,
+.screen-card,
+.information-box,
+.upcoming-panel,
+.upcoming-item,
+.operation-item,
+.timeline {
+  transition:
+    background-color 300ms ease,
+    border-color 300ms ease,
+    color 250ms ease,
+    box-shadow 300ms ease;
+}
+    html[data-theme="light"] .preview-container {
+  background:
+    repeating-conic-gradient(
+      #dde4ed 0% 25%,
+      #edf1f6 0% 50%
+    )
+    50% / 28px 28px;
+}
+
+html[data-theme="light"] .preview-overlay {
+  color: #526078;
+  background: rgba(239, 243, 248, 0.92);
+}
+
+html[data-theme="light"] .preview-overlay.error {
+  color: #912e2e;
+}
+
+html[data-theme="light"] .timeline-content {
+  background:
+    linear-gradient(
+      to top,
+      rgba(0, 0, 0, 0.72),
+      rgba(0, 0, 0, 0.04) 72%
+    );
+}
 
 @media (hover: none) {
   .screen-card:hover {
@@ -1244,7 +1348,20 @@
           repeat(3, minmax(150px, 1fr));
       }
     }
+@media (min-width: 721px) and (max-width: 1050px) {
 
+    .header-actions {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+    }
+
+    #lastRefresh {
+        grid-column: 1 / -1;
+        text-align: right;
+    }
+
+}
+    
 @media (max-width: 720px) {
   header {
     position: static;
@@ -1597,6 +1714,20 @@
       <span id="lastRefresh">
         Waiting for first refresh…
       </span>
+      <button
+  id="themeButton"
+  class="button"
+  type="button"
+  aria-label="Change dashboard theme"
+>
+  <span id="themeButtonIcon">
+    ◐
+  </span>
+
+  <span id="themeButtonText">
+    Auto theme
+  </span>
+</button>
 
       <button
         id="refreshButton"
@@ -1964,7 +2095,19 @@ const DASHBOARD_BRAND = {
 
   logoFile: "JurassiqueBanner.png"
 };
+/*
+ * =====================================================
+ * THEME SETTINGS
+ * =====================================================
+ */
 
+const DASHBOARD_THEME = {
+  lightModeStartsAt: 7,
+  darkModeStartsAt: 20,
+
+  storageKey:
+    "miniGolfDashboardTheme"
+};
 
     /*
      * =====================================================
@@ -1988,6 +2131,20 @@ const dashboardSubtitle =
 const dashboardLogo =
   document.getElementById(
     "dashboardLogo"
+  );
+    const themeButton =
+  document.getElementById(
+    "themeButton"
+  );
+
+const themeButtonIcon =
+  document.getElementById(
+    "themeButtonIcon"
+  );
+
+const themeButtonText =
+  document.getElementById(
+    "themeButtonText"
   );
 
     const upcomingList =
@@ -3831,6 +3988,125 @@ function applyDashboardBrand() {
     `${DASHBOARD_BRAND.title} Control Center`;
 }
 
+    /*
+ * =====================================================
+ * DASHBOARD THEME
+ * =====================================================
+ */
+
+function getSavedThemePreference() {
+  try {
+    return localStorage.getItem(
+      DASHBOARD_THEME.storageKey
+    ) || "auto";
+  } catch (error) {
+    return "auto";
+  }
+}
+
+
+function saveThemePreference(preference) {
+  try {
+    localStorage.setItem(
+      DASHBOARD_THEME.storageKey,
+      preference
+    );
+  } catch (error) {
+    console.warn(
+      "Theme preference could not be saved."
+    );
+  }
+}
+
+
+function getAutomaticTheme(date) {
+  const hour =
+    date.getHours();
+
+  const isLightHours =
+    hour >=
+      DASHBOARD_THEME.lightModeStartsAt &&
+    hour <
+      DASHBOARD_THEME.darkModeStartsAt;
+
+  return isLightHours
+    ? "light"
+    : "dark";
+}
+
+
+function applyTheme(theme) {
+  document.documentElement.setAttribute(
+    "data-theme",
+    theme
+  );
+}
+
+
+function updateThemeButton(preference) {
+  if (preference === "light") {
+    themeButtonIcon.textContent =
+      "☀";
+
+    themeButtonText.textContent =
+      "Light mode";
+
+    return;
+  }
+
+  if (preference === "dark") {
+    themeButtonIcon.textContent =
+      "☾";
+
+    themeButtonText.textContent =
+      "Dark mode";
+
+    return;
+  }
+
+  themeButtonIcon.textContent =
+    "◐";
+
+  themeButtonText.textContent =
+    "Auto theme";
+}
+
+
+function applyThemePreference() {
+  const preference =
+    getSavedThemePreference();
+
+  const theme =
+    preference === "auto"
+      ? getAutomaticTheme(new Date())
+      : preference;
+
+  applyTheme(theme);
+  updateThemeButton(preference);
+}
+
+
+function cycleThemePreference() {
+  const current =
+    getSavedThemePreference();
+
+  let next =
+    "auto";
+
+  if (current === "auto") {
+    next =
+      "light";
+  } else if (current === "light") {
+    next =
+      "dark";
+  } else {
+    next =
+      "auto";
+  }
+
+  saveThemePreference(next);
+  applyThemePreference();
+}
  
     /*
      * =====================================================
@@ -3842,24 +4118,37 @@ function applyDashboardBrand() {
       "click",
       refreshDashboard
     );
+    themeButton.addEventListener(
+  "click",
+  cycleThemePreference
+);
 
     applyDashboardBrand();
+    applyThemePreference();
+
     createScreenCards();
     refreshDashboard();
-    updateOperationsPanel();
+    updateOperationsPanel();;
 
     setInterval(
       refreshDashboard,
       DATA_REFRESH_MS
     );
 
-    setInterval(
-      function() {
-        updateLiveInformation();
-        updateOperationsPanel();
-      },
-      LIVE_UPDATE_MS
-    );
+   setInterval(
+  function() {
+    updateLiveInformation();
+    updateOperationsPanel();
+
+    if (
+      getSavedThemePreference() ===
+      "auto"
+    ) {
+      applyThemePreference();
+    }
+  },
+  LIVE_UPDATE_MS
+);
     
   </script>
 </body>
