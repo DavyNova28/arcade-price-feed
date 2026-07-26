@@ -9,6 +9,25 @@ All notable changes to the Mini Golf Signage project will be documented here.
 - Day-of-week schedules
 - Automatic recovery health check
 
+## [2.0.0] - 2026-07-26
+
+### Added
+
+- Dashboard V2 control center.
+- Larger real-time scheduled image previews.
+- Live countdowns to the next change.
+- Twenty-four-hour schedule timelines.
+- Current-time markers on each timeline.
+- Global next-change summary.
+- Missing-image detection.
+- System health reporting.
+- Responsive desktop, tablet, and mobile layouts.
+
+### Changed
+
+- Dashboard schedule data refreshes every 30 seconds.
+- Countdown timers and timeline markers update locally every second.
+
 ## [1.5.0] - 2026-07-26
 
 ### Added
