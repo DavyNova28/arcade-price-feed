@@ -1,0 +1,1218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+
+  <title>Mini Golf Signage Dashboard</title>
+
+  <style>
+    :root {
+      font-family:
+        Arial,
+        Helvetica,
+        sans-serif;
+
+      color-scheme: dark;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      min-height: 100%;
+      margin: 0;
+    }
+
+    body {
+      background: #111;
+      color: #f5f5f5;
+    }
+
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+
+      padding: 18px 24px;
+
+      background: rgba(17, 17, 17, 0.96);
+      border-bottom: 1px solid #333;
+      backdrop-filter: blur(10px);
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(22px, 3vw, 34px);
+    }
+
+    .subtitle {
+      margin-top: 5px;
+      color: #aaa;
+      font-size: 14px;
+    }
+
+    .header-controls {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    #lastRefresh {
+      color: #bbb;
+      font-size: 14px;
+    }
+
+    button,
+    .button-link {
+      border: 1px solid #555;
+      border-radius: 7px;
+
+      padding: 10px 14px;
+
+      color: white;
+      background: #292929;
+
+      font: inherit;
+      text-decoration: none;
+
+      cursor: pointer;
+    }
+
+    button:hover,
+    .button-link:hover {
+      background: #3a3a3a;
+    }
+
+    main {
+      width: min(1600px, 100%);
+      margin: 0 auto;
+      padding: 24px;
+    }
+
+    #summary {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+
+      margin-bottom: 22px;
+    }
+
+    .summary-box {
+      min-width: 150px;
+      padding: 14px 16px;
+
+      background: #1d1d1d;
+      border: 1px solid #333;
+      border-radius: 9px;
+    }
+
+    .summary-label {
+      color: #aaa;
+      font-size: 13px;
+    }
+
+    .summary-value {
+      margin-top: 5px;
+      font-size: 24px;
+      font-weight: bold;
+    }
+
+    #screenGrid {
+      display: grid;
+      grid-template-columns:
+        repeat(auto-fit, minmax(320px, 1fr));
+      gap: 22px;
+    }
+
+    .screen-card {
+      overflow: hidden;
+
+      background: #1c1c1c;
+      border: 1px solid #343434;
+      border-radius: 12px;
+
+      box-shadow:
+        0 8px 25px rgba(0, 0, 0, 0.25);
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+
+      padding: 15px 17px;
+
+      border-bottom: 1px solid #333;
+    }
+
+    .screen-title {
+      margin: 0;
+      font-size: 21px;
+    }
+
+    .status-badge {
+      padding: 6px 9px;
+      border-radius: 999px;
+
+      font-size: 12px;
+      font-weight: bold;
+      text-transform: uppercase;
+    }
+
+    .status-loading {
+      color: #ddd;
+      background: #444;
+    }
+
+    .status-regular {
+      color: #cffff0;
+      background: #185d42;
+    }
+
+    .status-holiday {
+      color: #fff0ce;
+      background: #79500f;
+    }
+
+    .status-error {
+      color: #ffd7d7;
+      background: #7d2424;
+    }
+
+    .preview-wrapper {
+      position: relative;
+
+      aspect-ratio: 16 / 9;
+
+      background:
+        repeating-conic-gradient(
+          #202020 0% 25%,
+          #292929 0% 50%
+        )
+        50% / 24px 24px;
+    }
+
+    .preview-image {
+      display: block;
+
+      width: 100%;
+      height: 100%;
+
+      object-fit: contain;
+      background: #000;
+    }
+
+    .preview-loading {
+      position: absolute;
+      inset: 0;
+
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      color: #bbb;
+      background: #181818;
+    }
+
+    .card-details {
+      padding: 17px;
+    }
+
+    .detail-row {
+      display: grid;
+      grid-template-columns: 115px 1fr;
+      gap: 12px;
+
+      padding: 7px 0;
+
+      border-bottom: 1px solid #2e2e2e;
+    }
+
+    .detail-row:last-of-type {
+      border-bottom: 0;
+    }
+
+    .detail-label {
+      color: #aaa;
+    }
+
+    .detail-value {
+      overflow-wrap: anywhere;
+    }
+
+    .error-text {
+      color: #ffb6b6;
+    }
+
+    .card-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+
+      margin-top: 17px;
+    }
+
+    .next-changes {
+      margin-top: 30px;
+      padding: 20px;
+
+      background: #1c1c1c;
+      border: 1px solid #343434;
+      border-radius: 12px;
+    }
+
+    .next-changes h2 {
+      margin-top: 0;
+    }
+
+    #nextChangesList {
+      display: grid;
+      gap: 9px;
+    }
+
+    .next-change-item {
+      display: grid;
+      grid-template-columns: 90px 140px 1fr;
+      gap: 14px;
+
+      padding: 10px 12px;
+
+      background: #242424;
+      border-radius: 7px;
+    }
+
+    .muted {
+      color: #aaa;
+    }
+
+    @media (max-width: 650px) {
+      header {
+        position: static;
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .header-controls {
+        justify-content: flex-start;
+      }
+
+      main {
+        padding: 15px;
+      }
+
+      .next-change-item {
+        grid-template-columns: 70px 1fr;
+      }
+
+      .next-change-image {
+        grid-column: 1 / -1;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <div>
+      <h1>Mini Golf Signage Dashboard</h1>
+
+      <div class="subtitle">
+        Scheduled content preview
+      </div>
+    </div>
+
+    <div class="header-controls">
+      <span id="lastRefresh">
+        Not refreshed yet
+      </span>
+
+      <button
+        id="refreshButton"
+        type="button"
+      >
+        Refresh now
+      </button>
+    </div>
+  </header>
+
+  <main>
+    <section id="summary">
+      <div class="summary-box">
+        <div class="summary-label">
+          Screens
+        </div>
+
+        <div
+          id="screenCount"
+          class="summary-value"
+        >
+          0
+        </div>
+      </div>
+
+      <div class="summary-box">
+        <div class="summary-label">
+          Regular schedules
+        </div>
+
+        <div
+          id="regularCount"
+          class="summary-value"
+        >
+          0
+        </div>
+      </div>
+
+      <div class="summary-box">
+        <div class="summary-label">
+          Holiday overrides
+        </div>
+
+        <div
+          id="holidayCount"
+          class="summary-value"
+        >
+          0
+        </div>
+      </div>
+
+      <div class="summary-box">
+        <div class="summary-label">
+          Errors
+        </div>
+
+        <div
+          id="errorCount"
+          class="summary-value"
+        >
+          0
+        </div>
+      </div>
+    </section>
+
+    <section id="screenGrid"></section>
+
+    <section class="next-changes">
+      <h2>Next scheduled changes</h2>
+
+      <div id="nextChangesList">
+        <div class="muted">
+          Loading…
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    /*
+     * =====================================================
+     * REQUIRED SETTINGS
+     * =====================================================
+     */
+
+    /*
+     * Paste your existing deployed Apps Script /exec URL.
+     */
+    const SCHEDULE_FEED_URL =
+      "https://script.google.com/macros/s/AKfycbwUINP9DCEUywwCU1YMjfnPT3H8ZUq1lsGVk8ShACrTp2EZIqMYrChADlk_uEh2F-DGXw/exec";
+
+    /*
+     * Enter the exact names of your Google Sheets
+     * schedule tabs.
+     */
+    const SCREEN_NAMES = [
+      "Arcade",
+      "ArcadeWeek",
+      "ArcadeSunday"
+      "Golf"
+      "Slush"
+      "infoArcade"
+    ];
+
+    /*
+     * How often the dashboard refreshes.
+     */
+    const DASHBOARD_REFRESH_MS = 30000;
+
+    /*
+     * Your main signage page.
+     *
+     * Because dashboard.html and index.html are in the same
+     * GitHub Pages repository, this can stay as index.html.
+     */
+    const SIGNAGE_PAGE = "index.html";
+
+
+    /*
+     * =====================================================
+     * DASHBOARD STATE
+     * =====================================================
+     */
+
+    const screenGrid =
+      document.getElementById("screenGrid");
+
+    const lastRefreshElement =
+      document.getElementById("lastRefresh");
+
+    const nextChangesList =
+      document.getElementById("nextChangesList");
+
+    const refreshButton =
+      document.getElementById("refreshButton");
+
+    const screenCountElement =
+      document.getElementById("screenCount");
+
+    const regularCountElement =
+      document.getElementById("regularCount");
+
+    const holidayCountElement =
+      document.getElementById("holidayCount");
+
+    const errorCountElement =
+      document.getElementById("errorCount");
+
+    const screenStates = new Map();
+
+    let requestNumber = 0;
+
+
+    /*
+     * =====================================================
+     * CREATE DASHBOARD CARDS
+     * =====================================================
+     */
+
+    function createScreenCards() {
+      screenGrid.innerHTML = "";
+
+      SCREEN_NAMES.forEach((screenName, index) => {
+        const safeId =
+          createSafeId(screenName);
+
+        const card =
+          document.createElement("article");
+
+        card.className = "screen-card";
+        card.id = `card-${safeId}`;
+
+        card.innerHTML = `
+          <div class="card-header">
+            <h2 class="screen-title">
+              ${escapeHtml(screenName)}
+            </h2>
+
+            <span
+              id="badge-${safeId}"
+              class="status-badge status-loading"
+            >
+              Loading
+            </span>
+          </div>
+
+          <div class="preview-wrapper">
+            <img
+              id="preview-${safeId}"
+              class="preview-image"
+              alt="Preview for ${escapeHtml(screenName)}"
+            >
+
+            <div
+              id="loading-${safeId}"
+              class="preview-loading"
+            >
+              Loading preview…
+            </div>
+          </div>
+
+          <div class="card-details">
+            <div class="detail-row">
+              <div class="detail-label">
+                Current image
+              </div>
+
+              <div
+                id="current-${safeId}"
+                class="detail-value"
+              >
+                Loading…
+              </div>
+            </div>
+
+            <div class="detail-row">
+              <div class="detail-label">
+                Source
+              </div>
+
+              <div
+                id="source-${safeId}"
+                class="detail-value"
+              >
+                Loading…
+              </div>
+            </div>
+
+            <div class="detail-row">
+              <div class="detail-label">
+                Current time
+              </div>
+
+              <div
+                id="time-${safeId}"
+                class="detail-value"
+              >
+                —
+              </div>
+            </div>
+
+            <div class="detail-row">
+              <div class="detail-label">
+                Next change
+              </div>
+
+              <div
+                id="next-${safeId}"
+                class="detail-value"
+              >
+                —
+              </div>
+            </div>
+
+            <div class="detail-row">
+              <div class="detail-label">
+                Next image
+              </div>
+
+              <div
+                id="next-image-${safeId}"
+                class="detail-value"
+              >
+                —
+              </div>
+            </div>
+
+            <div class="card-actions">
+              <a
+                class="button-link"
+                href="${SIGNAGE_PAGE}?screen=${encodeURIComponent(screenName)}"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Open full screen
+              </a>
+
+              <a
+                class="button-link"
+                href="${SIGNAGE_PAGE}?screen=${encodeURIComponent(screenName)}&debug=1"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Open debug view
+              </a>
+            </div>
+          </div>
+        `;
+
+        screenGrid.appendChild(card);
+      });
+
+      screenCountElement.textContent =
+        String(SCREEN_NAMES.length);
+    }
+
+
+    /*
+     * =====================================================
+     * LOAD EACH SCREEN SCHEDULE
+     * =====================================================
+     */
+
+    function refreshDashboard() {
+      requestNumber += 1;
+
+      SCREEN_NAMES.forEach(
+        (screenName, index) => {
+          loadScreenSchedule(
+            screenName,
+            index,
+            requestNumber
+          );
+        }
+      );
+
+      lastRefreshElement.textContent =
+        `Refreshing at ${formatClockTime(new Date())}`;
+    }
+
+
+    function loadScreenSchedule(
+      screenName,
+      index,
+      currentRequest
+    ) {
+      const callbackName =
+        `dashboardCallback_${index}_${currentRequest}`;
+
+      const scriptId =
+        `dashboard-feed-${index}`;
+
+      const previousScript =
+        document.getElementById(scriptId);
+
+      if (previousScript) {
+        previousScript.remove();
+      }
+
+      window[callbackName] = function(payload) {
+        try {
+          handleScreenResponse(
+            screenName,
+            payload
+          );
+        } finally {
+          delete window[callbackName];
+
+          const script =
+            document.getElementById(scriptId);
+
+          if (script) {
+            script.remove();
+          }
+        }
+      };
+
+      const script =
+        document.createElement("script");
+
+      script.id = scriptId;
+      script.async = true;
+
+      const separator =
+        SCHEDULE_FEED_URL.includes("?")
+          ? "&"
+          : "?";
+
+      script.src =
+        `${SCHEDULE_FEED_URL}` +
+        `${separator}callback=${callbackName}` +
+        `&screen=${encodeURIComponent(screenName)}` +
+        `&_=${Date.now()}`;
+
+      script.onerror = function() {
+        delete window[callbackName];
+
+        showScreenError(
+          screenName,
+          "Could not load the Apps Script schedule."
+        );
+      };
+
+      document.head.appendChild(script);
+    }
+
+
+    /*
+     * =====================================================
+     * PROCESS SCREEN DATA
+     * =====================================================
+     */
+
+    function handleScreenResponse(
+      screenName,
+      payload
+    ) {
+      if (!payload) {
+        showScreenError(
+          screenName,
+          "No response received."
+        );
+
+        return;
+      }
+
+      if (payload.success !== true) {
+        showScreenError(
+          screenName,
+          payload.error ||
+          "Apps Script returned an error."
+        );
+
+        return;
+      }
+
+      if (!Array.isArray(payload.schedule)) {
+        showScreenError(
+          screenName,
+          "The schedule is invalid."
+        );
+
+        return;
+      }
+
+      const schedule =
+        payload.schedule
+          .filter(isValidScheduleItem)
+          .map(item => ({
+            time: String(item.time).trim(),
+            image: String(item.image).trim(),
+            fade: Number(item.fade) || 1500
+          }))
+          .sort((a, b) =>
+            a.time.localeCompare(b.time)
+          );
+
+      if (schedule.length === 0) {
+        showScreenError(
+          screenName,
+          "This screen has no schedule entries."
+        );
+
+        return;
+      }
+
+      const currentTime =
+        getCurrentHHMM();
+
+      const activeItem =
+        getActiveScheduleItem(
+          schedule,
+          currentTime
+        );
+
+      const nextItem =
+        getNextScheduleItem(
+          schedule,
+          currentTime
+        );
+
+      const state = {
+        screenName,
+        source:
+          payload.scheduleSource || "regular",
+        schedule,
+        currentTime,
+        activeItem,
+        nextItem,
+        error: null
+      };
+
+      screenStates.set(
+        screenName,
+        state
+      );
+
+      updateScreenCard(state);
+      updateSummary();
+      updateNextChanges();
+
+      lastRefreshElement.textContent =
+        `Last updated: ${formatClockTime(new Date())}`;
+    }
+
+
+    function isValidScheduleItem(item) {
+      return (
+        item &&
+        /^\d{2}:\d{2}$/.test(
+          String(item.time || "")
+        ) &&
+        String(item.image || "").trim() !== ""
+      );
+    }
+
+
+    function getCurrentHHMM() {
+      const now = new Date();
+
+      return [
+        String(now.getHours()).padStart(2, "0"),
+        String(now.getMinutes()).padStart(2, "0")
+      ].join(":");
+    }
+
+
+    function getActiveScheduleItem(
+      schedule,
+      currentTime
+    ) {
+      let activeItem =
+        schedule[schedule.length - 1];
+
+      for (const item of schedule) {
+        if (item.time <= currentTime) {
+          activeItem = item;
+        } else {
+          break;
+        }
+      }
+
+      return activeItem;
+    }
+
+
+    function getNextScheduleItem(
+      schedule,
+      currentTime
+    ) {
+      for (const item of schedule) {
+        if (item.time > currentTime) {
+          return {
+            ...item,
+            tomorrow: false
+          };
+        }
+      }
+
+      return {
+        ...schedule[0],
+        tomorrow: true
+      };
+    }
+
+
+    /*
+     * =====================================================
+     * UPDATE SCREEN CARD
+     * =====================================================
+     */
+
+    function updateScreenCard(state) {
+      const safeId =
+        createSafeId(state.screenName);
+
+      const badge =
+        document.getElementById(
+          `badge-${safeId}`
+        );
+
+      const preview =
+        document.getElementById(
+          `preview-${safeId}`
+        );
+
+      const loading =
+        document.getElementById(
+          `loading-${safeId}`
+        );
+
+      const currentElement =
+        document.getElementById(
+          `current-${safeId}`
+        );
+
+      const sourceElement =
+        document.getElementById(
+          `source-${safeId}`
+        );
+
+      const timeElement =
+        document.getElementById(
+          `time-${safeId}`
+        );
+
+      const nextElement =
+        document.getElementById(
+          `next-${safeId}`
+        );
+
+      const nextImageElement =
+        document.getElementById(
+          `next-image-${safeId}`
+        );
+
+      const isHoliday =
+        state.source === "holiday";
+
+      badge.textContent =
+        isHoliday
+          ? "Holiday"
+          : "Regular";
+
+      badge.className =
+        `status-badge ` +
+        (
+          isHoliday
+            ? "status-holiday"
+            : "status-regular"
+        );
+
+      currentElement.textContent =
+        state.activeItem.image;
+
+      sourceElement.textContent =
+        isHoliday
+          ? "Holiday Override"
+          : "Regular Schedule";
+
+      timeElement.textContent =
+        state.currentTime;
+
+      nextElement.textContent =
+        state.nextItem.tomorrow
+          ? `${state.nextItem.time} tomorrow`
+          : state.nextItem.time;
+
+      nextImageElement.textContent =
+        state.nextItem.image;
+
+      loading.textContent =
+        "Loading image…";
+
+      loading.style.display =
+        "flex";
+
+      preview.onload = function() {
+        loading.style.display = "none";
+      };
+
+      preview.onerror = function() {
+        loading.textContent =
+          `Image not found: ${state.activeItem.image}`;
+
+        loading.classList.add(
+          "error-text"
+        );
+      };
+
+      preview.src =
+        buildImageUrl(
+          state.activeItem.image
+        ) +
+        `?dashboard=${Date.now()}`;
+    }
+
+
+    function showScreenError(
+      screenName,
+      message
+    ) {
+      const safeId =
+        createSafeId(screenName);
+
+      screenStates.set(
+        screenName,
+        {
+          screenName,
+          error: message
+        }
+      );
+
+      const badge =
+        document.getElementById(
+          `badge-${safeId}`
+        );
+
+      const loading =
+        document.getElementById(
+          `loading-${safeId}`
+        );
+
+      const currentElement =
+        document.getElementById(
+          `current-${safeId}`
+        );
+
+      const sourceElement =
+        document.getElementById(
+          `source-${safeId}`
+        );
+
+      badge.textContent = "Error";
+      badge.className =
+        "status-badge status-error";
+
+      loading.style.display = "flex";
+      loading.textContent = message;
+      loading.classList.add("error-text");
+
+      currentElement.textContent =
+        message;
+
+      currentElement.classList.add(
+        "error-text"
+      );
+
+      sourceElement.textContent =
+        "Error";
+
+      updateSummary();
+      updateNextChanges();
+    }
+
+
+    /*
+     * =====================================================
+     * SUMMARY AND NEXT CHANGES
+     * =====================================================
+     */
+
+    function updateSummary() {
+      let regularCount = 0;
+      let holidayCount = 0;
+      let errorCount = 0;
+
+      screenStates.forEach(state => {
+        if (state.error) {
+          errorCount += 1;
+        } else if (
+          state.source === "holiday"
+        ) {
+          holidayCount += 1;
+        } else {
+          regularCount += 1;
+        }
+      });
+
+      regularCountElement.textContent =
+        String(regularCount);
+
+      holidayCountElement.textContent =
+        String(holidayCount);
+
+      errorCountElement.textContent =
+        String(errorCount);
+    }
+
+
+    function updateNextChanges() {
+      const upcoming = [];
+
+      screenStates.forEach(state => {
+        if (
+          state.error ||
+          !state.nextItem
+        ) {
+          return;
+        }
+
+        upcoming.push({
+          screenName: state.screenName,
+          time: state.nextItem.time,
+          image: state.nextItem.image,
+          tomorrow: state.nextItem.tomorrow
+        });
+      });
+
+      upcoming.sort((a, b) => {
+        if (a.tomorrow !== b.tomorrow) {
+          return a.tomorrow ? 1 : -1;
+        }
+
+        return a.time.localeCompare(b.time);
+      });
+
+      if (upcoming.length === 0) {
+        nextChangesList.innerHTML =
+          `<div class="muted">
+             No upcoming changes available.
+           </div>`;
+
+        return;
+      }
+
+      nextChangesList.innerHTML =
+        upcoming.map(item => `
+          <div class="next-change-item">
+            <strong>
+              ${escapeHtml(item.time)}
+            </strong>
+
+            <span>
+              ${escapeHtml(item.screenName)}
+            </span>
+
+            <span class="next-change-image">
+              ${escapeHtml(item.image)}
+              ${item.tomorrow ? " — tomorrow" : ""}
+            </span>
+          </div>
+        `).join("");
+    }
+
+
+    /*
+     * =====================================================
+     * HELPERS
+     * =====================================================
+     */
+
+    function buildImageUrl(filename) {
+      const encodedPath =
+        String(filename)
+          .split("/")
+          .map(part =>
+            encodeURIComponent(part)
+          )
+          .join("/");
+
+      return encodedPath;
+    }
+
+
+    function createSafeId(value) {
+      return String(value)
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-+|-+$/g, "");
+    }
+
+
+    function escapeHtml(value) {
+      return String(value)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+
+    function formatClockTime(date) {
+      return date.toLocaleTimeString(
+        [],
+        {
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit"
+        }
+      );
+    }
+
+
+    /*
+     * =====================================================
+     * STARTUP
+     * =====================================================
+     */
+
+    refreshButton.addEventListener(
+      "click",
+      refreshDashboard
+    );
+
+    createScreenCards();
+    refreshDashboard();
+
+    setInterval(
+      refreshDashboard,
+      DASHBOARD_REFRESH_MS
+    );
+  </script>
+</body>
+</html>
