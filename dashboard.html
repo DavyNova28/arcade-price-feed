@@ -911,17 +911,7 @@
   }
 }
 
-@keyframes valueUpdate {
-  0% {
-    opacity: 0.35;
-    transform: translateY(4px);
-  }
 
-  100% {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
 
 .screen-card {
   animation:
@@ -959,10 +949,7 @@
   border-color: var(--blue);
 }
 
-.value-updated {
-  animation:
-    valueUpdate 300ms ease;
-}
+
 
 .refreshing {
   animation:
@@ -2626,21 +2613,6 @@ const operationsNextDetail =
       errorCountElement.textContent =
         String(errors);
 
-      animateValueUpdate(
-  loadedCountElement
-);
-
-animateValueUpdate(
-  regularCountElement
-);
-
-animateValueUpdate(
-  holidayCountElement
-);
-
-animateValueUpdate(
-  errorCountElement
-);
 
       updateHealthBanner(
         loaded,
@@ -3177,21 +3149,7 @@ function applyDashboardBrand() {
     `${DASHBOARD_BRAND.title} Control Center`;
 }
 
-    function animateValueUpdate(element) {
-  if (!element) {
-    return;
-  }
-
-  element.classList.remove(
-    "value-updated"
-  );
-
-  void element.offsetWidth;
-
-  element.classList.add(
-    "value-updated"
-  );
-}
+ 
     /*
      * =====================================================
      * STARTUP
