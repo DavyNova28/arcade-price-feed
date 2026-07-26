@@ -757,7 +757,141 @@
     .muted {
       color: var(--muted);
     }
+.operations-panel {
+  margin-bottom: 24px;
+  padding: 22px;
 
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+
+  background:
+    linear-gradient(
+      135deg,
+      rgba(95, 168, 255, 0.11),
+      rgba(54, 201, 135, 0.08)
+    );
+
+  box-shadow: var(--shadow);
+}
+
+.operations-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+  flex-wrap: wrap;
+
+  margin-bottom: 18px;
+}
+
+.operations-greeting {
+  margin: 0;
+
+  font-size: clamp(22px, 3vw, 31px);
+}
+
+.operations-date {
+  margin-top: 6px;
+
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.operations-clock {
+  font-size: 25px;
+  font-weight: 800;
+
+  text-align: right;
+}
+
+.operations-clock-label {
+  margin-bottom: 4px;
+
+  color: var(--muted);
+  font-size: 11px;
+
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+}
+
+.operations-grid {
+  display: grid;
+  grid-template-columns:
+    repeat(6, minmax(130px, 1fr));
+  gap: 12px;
+}
+
+.operation-item {
+  min-width: 0;
+  padding: 15px;
+
+  border: 1px solid var(--border);
+  border-radius: 12px;
+
+  background: rgba(21, 26, 34, 0.82);
+}
+
+.operation-label {
+  color: var(--muted);
+  font-size: 11px;
+
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.operation-value {
+  margin-top: 7px;
+
+  font-size: 19px;
+  font-weight: 750;
+
+  overflow-wrap: anywhere;
+}
+
+.operation-detail {
+  margin-top: 5px;
+
+  color: var(--muted);
+  font-size: 12px;
+
+  overflow-wrap: anywhere;
+}
+
+.operation-value.holiday-active {
+  color: var(--holiday);
+}
+
+.operation-value.system-good {
+  color: var(--regular);
+}
+
+.operation-value.next-change {
+  color: var(--blue);
+}
+
+@media (max-width: 1250px) {
+  .operations-grid {
+    grid-template-columns:
+      repeat(3, minmax(140px, 1fr));
+  }
+}
+
+@media (max-width: 720px) {
+  .operations-grid {
+    grid-template-columns:
+      repeat(2, minmax(130px, 1fr));
+  }
+
+  .operations-clock {
+    text-align: left;
+  }
+}
+
+@media (max-width: 430px) {
+  .operations-grid {
+    grid-template-columns: 1fr;
+  }
+}
     @media (max-width: 1100px) {
       .summary-grid {
         grid-template-columns:
@@ -838,7 +972,7 @@
     <div class="brand">
       <div class="brand-logo">
     <img
-        src="JurassiqueLogo.png"
+        src="JurassiqueBanner.png"
         alt="Mini Golf Logo"
     >
 </div>
@@ -868,6 +1002,151 @@
   </header>
 
   <main>
+    <section class="operations-panel">
+  <div class="operations-heading">
+    <div>
+      <h2
+        id="operationsGreeting"
+        class="operations-greeting"
+      >
+        Welcome
+      </h2>
+
+      <div
+        id="operationsDate"
+        class="operations-date"
+      >
+        Loading today’s information…
+      </div>
+    </div>
+
+    <div class="operations-clock">
+      <div class="operations-clock-label">
+        Local time
+      </div>
+
+      <div id="operationsClock">
+        --:--:--
+      </div>
+    </div>
+  </div>
+
+  <div class="operations-grid">
+    <article class="operation-item">
+      <div class="operation-label">
+        Screens ready
+      </div>
+
+      <div
+        id="operationsScreens"
+        class="operation-value system-good"
+      >
+        0 / 0
+      </div>
+
+      <div class="operation-detail">
+        Successfully loaded
+      </div>
+    </article>
+
+    <article class="operation-item">
+      <div class="operation-label">
+        Holiday status
+      </div>
+
+      <div
+        id="operationsHoliday"
+        class="operation-value"
+      >
+        None
+      </div>
+
+      <div
+        id="operationsHolidayDetail"
+        class="operation-detail"
+      >
+        Regular schedules
+      </div>
+    </article>
+
+    <article class="operation-item">
+      <div class="operation-label">
+        Changes today
+      </div>
+
+      <div
+        id="operationsChanges"
+        class="operation-value"
+      >
+        0
+      </div>
+
+      <div class="operation-detail">
+        Across all screens
+      </div>
+    </article>
+
+    <article class="operation-item">
+      <div class="operation-label">
+        First change
+      </div>
+
+      <div
+        id="operationsFirst"
+        class="operation-value"
+      >
+        —
+      </div>
+
+      <div
+        id="operationsFirstDetail"
+        class="operation-detail"
+      >
+        No schedule loaded
+      </div>
+    </article>
+
+    <article class="operation-item">
+      <div class="operation-label">
+        Last change
+      </div>
+
+      <div
+        id="operationsLast"
+        class="operation-value"
+      >
+        —
+      </div>
+
+      <div
+        id="operationsLastDetail"
+        class="operation-detail"
+      >
+        No schedule loaded
+      </div>
+    </article>
+
+    <article class="operation-item">
+      <div class="operation-label">
+        Next change
+      </div>
+
+      <div
+        id="operationsNext"
+        class="operation-value next-change"
+      >
+        —
+      </div>
+
+      <div
+        id="operationsNextDetail"
+        class="operation-detail"
+      >
+        Waiting for schedules
+      </div>
+    </article>
+  </div>
+</section>
     <section class="system-banner">
       <div class="system-health">
         <span
@@ -1107,7 +1386,70 @@
 
     const globalNextChange =
       document.getElementById("globalNextChange");
+const operationsGreeting =
+  document.getElementById(
+    "operationsGreeting"
+  );
 
+const operationsDate =
+  document.getElementById(
+    "operationsDate"
+  );
+
+const operationsClock =
+  document.getElementById(
+    "operationsClock"
+  );
+
+const operationsScreens =
+  document.getElementById(
+    "operationsScreens"
+  );
+
+const operationsHoliday =
+  document.getElementById(
+    "operationsHoliday"
+  );
+
+const operationsHolidayDetail =
+  document.getElementById(
+    "operationsHolidayDetail"
+  );
+
+const operationsChanges =
+  document.getElementById(
+    "operationsChanges"
+  );
+
+const operationsFirst =
+  document.getElementById(
+    "operationsFirst"
+  );
+
+const operationsFirstDetail =
+  document.getElementById(
+    "operationsFirstDetail"
+  );
+
+const operationsLast =
+  document.getElementById(
+    "operationsLast"
+  );
+
+const operationsLastDetail =
+  document.getElementById(
+    "operationsLastDetail"
+  );
+
+const operationsNext =
+  document.getElementById(
+    "operationsNext"
+  );
+
+const operationsNextDetail =
+  document.getElementById(
+    "operationsNextDetail"
+  );
     const screenStates =
       new Map();
 
@@ -2327,7 +2669,288 @@
         .replace(/"/g, "&quot;")
         .replace(/'/g, "&#039;");
     }
+/*
+ * =====================================================
+ * TODAY'S OPERATIONS
+ * =====================================================
+ */
 
+function updateOperationsPanel() {
+  const now =
+    new Date();
+
+  updateOperationsGreeting(now);
+
+  operationsClock.textContent =
+    formatLocalClock(now);
+
+  operationsDate.textContent =
+    now.toLocaleDateString(
+      [],
+      {
+        weekday: "long",
+        year: "numeric",
+        month: "long",
+        day: "numeric"
+      }
+    );
+
+  let loadedScreens = 0;
+  let holidayScreens = 0;
+  let totalChanges = 0;
+
+  const allChanges = [];
+  const upcomingChanges = [];
+
+  screenStates.forEach(state => {
+    if (
+      state.error ||
+      !Array.isArray(state.schedule)
+    ) {
+      return;
+    }
+
+    loadedScreens += 1;
+
+    if (state.source === "holiday") {
+      holidayScreens += 1;
+    }
+
+    state.schedule.forEach(item => {
+      const targetDate =
+        createTargetDate(
+          now,
+          item.time,
+          false
+        );
+
+      const change = {
+        screenName:
+          state.screenName,
+
+        time:
+          item.time,
+
+        image:
+          item.image,
+
+        targetDate
+      };
+
+      allChanges.push(change);
+      totalChanges += 1;
+
+      if (targetDate > now) {
+        upcomingChanges.push(change);
+      }
+    });
+  });
+
+  allChanges.sort(
+    (a, b) =>
+      a.targetDate - b.targetDate
+  );
+
+  upcomingChanges.sort(
+    (a, b) =>
+      a.targetDate - b.targetDate
+  );
+
+  operationsScreens.textContent =
+    `${loadedScreens} / ${SCREEN_NAMES.length}`;
+
+  operationsChanges.textContent =
+    String(totalChanges);
+
+  updateOperationsHoliday(
+    holidayScreens
+  );
+
+  updateFirstAndLastChanges(
+    allChanges
+  );
+
+  updateNextOperationChange(
+    upcomingChanges,
+    now
+  );
+}
+
+
+function updateOperationsGreeting(now) {
+  const hour =
+    now.getHours();
+
+  let greeting =
+    "Good evening";
+
+  if (hour < 12) {
+    greeting =
+      "Good morning";
+  } else if (hour < 18) {
+    greeting =
+      "Good afternoon";
+  }
+
+  operationsGreeting.textContent =
+    `${greeting} 👋`;
+}
+
+
+function updateOperationsHoliday(
+  holidayScreens
+) {
+  operationsHoliday.classList.remove(
+    "holiday-active"
+  );
+
+  if (holidayScreens === 0) {
+    operationsHoliday.textContent =
+      "None";
+
+    operationsHolidayDetail.textContent =
+      "Regular schedules active";
+
+    return;
+  }
+
+  operationsHoliday.textContent =
+    `${holidayScreens} active`;
+
+  operationsHolidayDetail.textContent =
+    holidayScreens === 1
+      ? "One screen uses an override"
+      : `${holidayScreens} screens use overrides`;
+
+  operationsHoliday.classList.add(
+    "holiday-active"
+  );
+}
+
+
+function updateFirstAndLastChanges(
+  allChanges
+) {
+  if (allChanges.length === 0) {
+    operationsFirst.textContent =
+      "—";
+
+    operationsFirstDetail.textContent =
+      "No schedule loaded";
+
+    operationsLast.textContent =
+      "—";
+
+    operationsLastDetail.textContent =
+      "No schedule loaded";
+
+    return;
+  }
+
+  const first =
+    allChanges[0];
+
+  const last =
+    allChanges[
+      allChanges.length - 1
+    ];
+
+  operationsFirst.textContent =
+    first.time;
+
+  operationsFirstDetail.textContent =
+    `${first.screenName} · ${first.image}`;
+
+  operationsLast.textContent =
+    last.time;
+
+  operationsLastDetail.textContent =
+    `${last.screenName} · ${last.image}`;
+}
+
+
+function updateNextOperationChange(
+  upcomingChanges,
+  now
+) {
+  if (upcomingChanges.length === 0) {
+    /*
+     * When today's changes are finished, find tomorrow's
+     * earliest schedule entry.
+     */
+    const tomorrowChanges = [];
+
+    screenStates.forEach(state => {
+      if (
+        state.error ||
+        !Array.isArray(state.schedule)
+      ) {
+        return;
+      }
+
+      state.schedule.forEach(item => {
+        tomorrowChanges.push({
+          screenName:
+            state.screenName,
+
+          time:
+            item.time,
+
+          image:
+            item.image,
+
+          targetDate:
+            createTargetDate(
+              now,
+              item.time,
+              true
+            )
+        });
+      });
+    });
+
+    tomorrowChanges.sort(
+      (a, b) =>
+        a.targetDate - b.targetDate
+    );
+
+    if (tomorrowChanges.length === 0) {
+      operationsNext.textContent =
+        "—";
+
+      operationsNextDetail.textContent =
+        "No upcoming changes";
+
+      return;
+    }
+
+    const next =
+      tomorrowChanges[0];
+
+    operationsNext.textContent =
+      `${next.time} tomorrow`;
+
+    operationsNextDetail.textContent =
+      `${next.screenName} · ` +
+      `${formatDuration(
+        next.targetDate - now
+      )}`;
+
+    return;
+  }
+
+  const next =
+    upcomingChanges[0];
+
+  operationsNext.textContent =
+    next.time;
+
+  operationsNextDetail.textContent =
+    `${next.screenName} · ` +
+    `${formatDuration(
+      next.targetDate - now
+    )}`;
+}
 
     /*
      * =====================================================
@@ -2342,6 +2965,7 @@
 
     createScreenCards();
     refreshDashboard();
+    updateOperationsPanel();
 
     setInterval(
       refreshDashboard,
@@ -2349,9 +2973,13 @@
     );
 
     setInterval(
-      updateLiveInformation,
+      function() {
+        updateLiveInformation();
+        updateOperationsPanel();
+      },
       LIVE_UPDATE_MS
     );
+    
   </script>
 </body>
 </html>
