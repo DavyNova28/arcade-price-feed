@@ -3096,6 +3096,119 @@
       pointer-events: none;
     }
 
+
+    /*
+     * =====================================================
+     * SCHEDULE SIMULATOR — READ ONLY
+     * =====================================================
+     */
+
+    .schedule-simulator {
+      margin-bottom: 18px;
+      padding: 16px;
+
+      border: 1px solid var(--border);
+      border-radius: 12px;
+
+      background: var(--surface-light);
+    }
+
+    .simulator-toolbar {
+      display: flex;
+      align-items: flex-end;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .simulator-field {
+      display: grid;
+      gap: 7px;
+
+      min-width: 180px;
+    }
+
+    .simulator-result {
+      display: grid;
+      grid-template-columns:
+        repeat(4, minmax(150px, 1fr));
+      gap: 12px;
+
+      margin-top: 16px;
+    }
+
+    .simulator-decision {
+      margin-top: 14px;
+      padding: 13px 14px;
+
+      border: 1px solid var(--border);
+      border-radius: 10px;
+
+      color: var(--muted);
+      background: var(--surface);
+
+      font-size: 13px;
+      line-height: 1.55;
+    }
+
+    .simulator-status {
+      display: inline-flex;
+
+      padding: 5px 8px;
+
+      border-radius: 999px;
+
+      font-size: 10px;
+      font-weight: 800;
+      text-transform: uppercase;
+    }
+
+    .simulator-status-temporary {
+      color: #fff0cf;
+      background: var(--holiday-dark);
+    }
+
+    .simulator-status-persistent {
+      color: #caffea;
+      background: var(--regular-dark);
+    }
+
+    .simulator-status-fallback {
+      color: #d9eaff;
+      background: #234a73;
+    }
+
+    .simulator-status-none {
+      color: #ffd6d6;
+      background: var(--error-dark);
+    }
+
+    @media (max-width: 720px) {
+      .simulator-toolbar {
+        align-items: stretch;
+        flex-direction: column;
+      }
+
+      .simulator-field {
+        width: 100%;
+        min-width: 0;
+      }
+
+      .simulator-toolbar .button {
+        width: 100%;
+      }
+
+      .simulator-result {
+        grid-template-columns:
+          repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 480px) {
+      .simulator-result {
+        grid-template-columns: 1fr;
+      }
+    }
+
     body,
     header,
     .system-banner,
@@ -4029,6 +4142,122 @@
             Read-only
           </div>
         </div>
+
+        <section class="schedule-simulator">
+          <div class="manager-header">
+            <div>
+              <div class="eyebrow">
+                V3.1 simulator
+              </div>
+
+              <h3 style="margin:5px 0 0;">
+                Test schedule at a specific time
+              </h3>
+
+              <p class="manager-description">
+                This preview is read-only and does not change the live clock or Google Sheets.
+              </p>
+            </div>
+
+            <div class="manager-status">
+              Simulation
+            </div>
+          </div>
+
+          <div class="simulator-toolbar">
+            <label class="simulator-field">
+              <span class="manager-label">
+                Test time
+              </span>
+
+              <input
+                id="simulatorTimeInput"
+                class="manager-input"
+                type="text"
+                inputmode="numeric"
+                maxlength="5"
+                placeholder="HH:MM"
+              >
+            </label>
+
+            <button
+              id="simulateScheduleButton"
+              class="button button-primary"
+              type="button"
+            >
+              Run simulation
+            </button>
+
+            <button
+              id="simulateNowButton"
+              class="button"
+              type="button"
+            >
+              Use current time
+            </button>
+          </div>
+
+          <section class="simulator-result">
+            <article class="manager-stat">
+              <div class="manager-stat-label">
+                Selected image
+              </div>
+
+              <div
+                id="simulatorSelectedImage"
+                class="manager-stat-value manager-filename"
+              >
+                —
+              </div>
+            </article>
+
+            <article class="manager-stat">
+              <div class="manager-stat-label">
+                Start time
+              </div>
+
+              <div
+                id="simulatorStartTime"
+                class="manager-stat-value"
+              >
+                —
+              </div>
+            </article>
+
+            <article class="manager-stat">
+              <div class="manager-stat-label">
+                End time
+              </div>
+
+              <div
+                id="simulatorEndTime"
+                class="manager-stat-value"
+              >
+                —
+              </div>
+            </article>
+
+            <article class="manager-stat">
+              <div class="manager-stat-label">
+                Selection type
+              </div>
+
+              <div
+                id="simulatorSelectionType"
+                class="manager-stat-value"
+              >
+                —
+              </div>
+            </article>
+          </section>
+
+          <div
+            id="simulatorDecision"
+            class="simulator-decision"
+          >
+            Choose a time and run the simulation.
+          </div>
+        </section>
 
         <div class="manager-toolbar">
           <label class="manager-field">
@@ -6301,6 +6530,46 @@
         "managerScheduleBody"
       );
 
+    const simulatorTimeInput =
+      document.getElementById(
+        "simulatorTimeInput"
+      );
+
+    const simulateScheduleButton =
+      document.getElementById(
+        "simulateScheduleButton"
+      );
+
+    const simulateNowButton =
+      document.getElementById(
+        "simulateNowButton"
+      );
+
+    const simulatorSelectedImage =
+      document.getElementById(
+        "simulatorSelectedImage"
+      );
+
+    const simulatorStartTime =
+      document.getElementById(
+        "simulatorStartTime"
+      );
+
+    const simulatorEndTime =
+      document.getElementById(
+        "simulatorEndTime"
+      );
+
+    const simulatorSelectionType =
+      document.getElementById(
+        "simulatorSelectionType"
+      );
+
+    const simulatorDecision =
+      document.getElementById(
+        "simulatorDecision"
+      );
+
     const managerModeStatus =
       document.getElementById(
         "managerModeStatus"
@@ -8432,6 +8701,7 @@
           hideManagerSaveMessage();
           updateManagerEditingControls();
           updateScheduleDraftRecoveryBanner();
+          resetScheduleSimulation();
           updateScheduleManager();
         }
       );
@@ -8476,6 +8746,33 @@
       managerScheduleBody.addEventListener(
         "click",
         handleManagerTableClick
+      );
+
+      simulatorTimeInput.addEventListener(
+        "input",
+        function() {
+          simulatorTimeInput.value =
+            formatManagerTimeInput(
+              simulatorTimeInput.value
+            );
+        }
+      );
+
+      simulateScheduleButton.addEventListener(
+        "click",
+        runScheduleSimulation
+      );
+
+      simulateNowButton.addEventListener(
+        "click",
+        function() {
+          simulatorTimeInput.value =
+            getCurrentHHMM(
+              new Date()
+            );
+
+          runScheduleSimulation();
+        }
       );
 
       restoreScheduleDraftButton.addEventListener(
@@ -8998,6 +9295,271 @@
 
       managerSaveMessage.className =
         "manager-save-message";
+    }
+
+    /*
+     * =====================================================
+     * SCHEDULE SIMULATOR
+     * =====================================================
+     */
+
+    function runScheduleSimulation() {
+      const screenName =
+        managerScreenSelect.value;
+
+      const state =
+        screenStates.get(
+          screenName
+        );
+
+      const testTime =
+        String(
+          simulatorTimeInput.value || ""
+        ).trim();
+
+      if (
+        !/^([01]\d|2[0-3]):[0-5]\d$/
+          .test(testTime)
+      ) {
+        simulatorSelectedImage.textContent =
+          "—";
+
+        simulatorStartTime.textContent =
+          "—";
+
+        simulatorEndTime.textContent =
+          "—";
+
+        simulatorSelectionType.innerHTML =
+          `<span class="simulator-status simulator-status-none">
+             Invalid time
+           </span>`;
+
+        simulatorDecision.textContent =
+          "Enter a valid time in HH:MM format.";
+
+        return;
+      }
+
+      if (
+        !state ||
+        state.error ||
+        !Array.isArray(
+          state.schedule
+        )
+      ) {
+        simulatorSelectedImage.textContent =
+          "—";
+
+        simulatorStartTime.textContent =
+          "—";
+
+        simulatorEndTime.textContent =
+          "—";
+
+        simulatorSelectionType.innerHTML =
+          `<span class="simulator-status simulator-status-none">
+             No schedule
+           </span>`;
+
+        simulatorDecision.textContent =
+          "The selected screen schedule has not loaded.";
+
+        return;
+      }
+
+      const schedule =
+        managerDrafts.get(
+          screenName
+        ) ||
+        state.schedule;
+
+      const result =
+        simulateScheduleSelection(
+          schedule,
+          testTime
+        );
+
+      if (!result.item) {
+        simulatorSelectedImage.textContent =
+          "—";
+
+        simulatorStartTime.textContent =
+          "—";
+
+        simulatorEndTime.textContent =
+          "—";
+
+        simulatorSelectionType.innerHTML =
+          `<span class="simulator-status simulator-status-none">
+             No result
+           </span>`;
+
+        simulatorDecision.textContent =
+          result.reason;
+
+        return;
+      }
+
+      simulatorSelectedImage.textContent =
+        result.item.image;
+
+      simulatorStartTime.textContent =
+        result.item.time;
+
+      simulatorEndTime.textContent =
+        result.item.endTime || "—";
+
+      simulatorSelectionType.innerHTML =
+        `<span class="simulator-status simulator-status-${result.type}">
+           ${escapeHtml(
+             capitalizeDashboardText(
+               result.type
+             )
+           )}
+         </span>`;
+
+      simulatorDecision.textContent =
+        result.reason;
+    }
+
+
+    function simulateScheduleSelection(
+      schedule,
+      testTime
+    ) {
+      let activeItem =
+        null;
+
+      for (const item of schedule) {
+        if (item.time > testTime) {
+          break;
+        }
+
+        if (
+          !item.endTime ||
+          testTime < item.endTime
+        ) {
+          activeItem =
+            item;
+        }
+      }
+
+      if (activeItem) {
+        return {
+          item:
+            activeItem,
+
+          type:
+            activeItem.endTime
+              ? "temporary"
+              : "persistent",
+
+          reason:
+            activeItem.endTime
+              ? `${activeItem.image} started at ${activeItem.time} and remains eligible until ${activeItem.endTime}.`
+              : `${activeItem.image} is the newest persistent item that has started by ${testTime}.`
+        };
+      }
+
+      for (
+        let index =
+          schedule.length - 1;
+        index >= 0;
+        index -= 1
+      ) {
+        const item =
+          schedule[index];
+
+        if (
+          item.time <= testTime &&
+          !item.endTime
+        ) {
+          return {
+            item:
+              item,
+
+            type:
+              "fallback",
+
+            reason:
+              `No temporary item is active at ${testTime}, so the player falls back to the most recent persistent item: ${item.image}.`
+          };
+        }
+      }
+
+      for (
+        let index =
+          schedule.length - 1;
+        index >= 0;
+        index -= 1
+      ) {
+        const item =
+          schedule[index];
+
+        if (!item.endTime) {
+          return {
+            item:
+              item,
+
+            type:
+              "fallback",
+
+            reason:
+              `The test time is before the first eligible item, so the player continues the final persistent image from the previous day: ${item.image}.`
+          };
+        }
+      }
+
+      if (schedule.length > 0) {
+        const item =
+          schedule[
+            schedule.length - 1
+          ];
+
+        return {
+          item:
+            item,
+
+          type:
+            "fallback",
+
+          reason:
+            `Every row is temporary and none is active at ${testTime}. The player keeps a visible image to avoid a black screen; on first startup it uses ${item.image}.`
+        };
+      }
+
+      return {
+        item:
+          null,
+
+        type:
+          "none",
+
+        reason:
+          "The schedule contains no rows."
+      };
+    }
+
+
+    function resetScheduleSimulation() {
+      simulatorTimeInput.value =
+        "";
+
+      simulatorSelectedImage.textContent =
+        "—";
+
+      simulatorStartTime.textContent =
+        "—";
+
+      simulatorEndTime.textContent =
+        "—";
+
+      simulatorSelectionType.textContent =
+        "—";
+
+      simulatorDecision.textContent =
+        "Choose a time and run the simulation.";
     }
 
     /*
@@ -14154,6 +14716,12 @@
 
     createScreenCards();
     setupScheduleManager();
+
+    simulatorTimeInput.value =
+      getCurrentHHMM(
+        new Date()
+      );
+
     setupHolidayManager();
     setupBackupHistory();
     setupImageLibrary();
