@@ -3714,6 +3714,440 @@
       }
     }
 
+
+    /*
+     * =====================================================
+     * REUSABLE SCHEDULE TEMPLATES
+     * =====================================================
+     */
+
+    .schedule-templates {
+      margin-bottom: 18px;
+      padding: 16px;
+
+      border: 1px solid var(--border);
+      border-radius: 12px;
+
+      background: var(--surface-light);
+    }
+
+    .template-toolbar {
+      display: flex;
+      align-items: flex-end;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .template-field {
+      display: grid;
+      gap: 7px;
+
+      min-width: 230px;
+    }
+
+    .template-list {
+      display: grid;
+      gap: 10px;
+
+      margin-top: 16px;
+    }
+
+    .template-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+
+      padding: 12px 13px;
+
+      border: 1px solid var(--border);
+      border-radius: 10px;
+
+      background: var(--surface);
+    }
+
+    .template-item-main {
+      min-width: 0;
+    }
+
+    .template-item-name {
+      font-weight: 800;
+      overflow-wrap: anywhere;
+    }
+
+    .template-item-meta {
+      margin-top: 3px;
+
+      color: var(--muted);
+      font-size: 11px;
+      line-height: 1.4;
+    }
+
+    .template-item-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .template-preview {
+      display: none;
+
+      margin-top: 14px;
+      padding: 13px;
+
+      border: 1px solid var(--border);
+      border-radius: 10px;
+
+      background: var(--surface);
+    }
+
+    .template-preview.visible {
+      display: block;
+    }
+
+    .template-preview pre {
+      max-height: 320px;
+      margin: 10px 0 0;
+      padding: 12px;
+
+      overflow: auto;
+
+      border: 1px solid var(--border);
+      border-radius: 8px;
+
+      color: var(--text);
+      background: var(--surface-light);
+
+      font-family:
+        Consolas,
+        Monaco,
+        monospace;
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    @media (max-width: 720px) {
+      .template-toolbar {
+        align-items: stretch;
+        flex-direction: column;
+      }
+
+      .template-field {
+        width: 100%;
+        min-width: 0;
+      }
+
+      .template-toolbar .button {
+        width: 100%;
+      }
+
+      .template-item-actions {
+        width: 100%;
+      }
+
+      .template-item-actions .button {
+        flex: 1;
+      }
+    }
+
+
+    /*
+     * =====================================================
+     * DAILY SCHEDULE CALENDAR — READ ONLY
+     * =====================================================
+     */
+
+    .daily-schedule-calendar {
+      padding: 23px;
+
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+
+      background: var(--surface);
+      box-shadow: var(--shadow);
+    }
+
+    .daily-calendar-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+
+      margin-bottom: 18px;
+      padding: 14px 16px;
+
+      border: 1px solid var(--border);
+      border-radius: 13px;
+
+      background: var(--surface-light);
+    }
+
+    .daily-calendar-toolbar-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .daily-calendar-wrap {
+      overflow: auto;
+
+      border: 1px solid var(--border);
+      border-radius: 12px;
+
+      background: var(--surface-light);
+    }
+
+    .daily-calendar-grid {
+      position: relative;
+
+      display: grid;
+      grid-template-columns:
+        76px repeat(6, minmax(170px, 1fr));
+
+      min-width: 1100px;
+    }
+
+    .daily-calendar-corner,
+    .daily-calendar-screen-header {
+      position: sticky;
+      top: 0;
+      z-index: 6;
+
+      padding: 11px 10px;
+
+      border-right: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+
+      background: var(--surface-light);
+
+      font-size: 12px;
+      font-weight: 800;
+      text-align: center;
+    }
+
+    .daily-calendar-corner {
+      left: 0;
+      z-index: 8;
+    }
+
+    .daily-calendar-time-label {
+      position: sticky;
+      left: 0;
+      z-index: 4;
+
+      min-height: 48px;
+      padding: 7px 8px;
+
+      border-right: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+
+      color: var(--muted);
+      background: var(--surface-light);
+
+      font-size: 10px;
+      font-weight: 800;
+      text-align: right;
+    }
+
+    .daily-calendar-cell {
+      position: relative;
+
+      min-height: 48px;
+
+      border-right: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+
+      background: var(--surface);
+    }
+
+    .daily-calendar-cell:nth-child(7n) {
+      border-right: 0;
+    }
+
+    .daily-calendar-column {
+      position: relative;
+    }
+
+    .daily-calendar-block {
+      position: absolute;
+      left: 6px;
+      right: 6px;
+      z-index: 3;
+
+      min-height: 24px;
+      padding: 7px 8px;
+
+      overflow: hidden;
+
+      border: 1px solid rgba(95, 168, 255, 0.42);
+      border-radius: 8px;
+
+      color: #d9eaff;
+      background: rgba(35, 74, 115, 0.86);
+
+      cursor: pointer;
+
+      font-size: 10px;
+      line-height: 1.35;
+    }
+
+    .daily-calendar-block.temporary {
+      color: #fff0cf;
+      border-color: rgba(242, 170, 63, 0.55);
+      background: rgba(101, 69, 24, 0.9);
+    }
+
+    .daily-calendar-block.persistent {
+      color: #caffea;
+      border-color: rgba(54, 201, 135, 0.5);
+      background: rgba(23, 75, 56, 0.9);
+    }
+
+    .daily-calendar-block.fallback {
+      color: #d9eaff;
+      border-style: dashed;
+      background: rgba(35, 74, 115, 0.62);
+    }
+
+    .daily-calendar-block.overlap {
+      box-shadow:
+        inset 0 0 0 2px rgba(255, 104, 104, 0.72);
+    }
+
+    .daily-calendar-block-title {
+      font-weight: 800;
+      overflow-wrap: anywhere;
+    }
+
+    .daily-calendar-block-meta {
+      margin-top: 3px;
+      opacity: 0.84;
+    }
+
+    .daily-calendar-now-line {
+      position: absolute;
+      left: 76px;
+      right: 0;
+      z-index: 5;
+
+      height: 2px;
+
+      background: #ff6b6b;
+
+      pointer-events: none;
+    }
+
+    .daily-calendar-now-label {
+      position: absolute;
+      left: 4px;
+      top: -9px;
+
+      padding: 2px 5px;
+
+      border-radius: 5px;
+
+      color: white;
+      background: #b34242;
+
+      font-size: 9px;
+      font-weight: 800;
+    }
+
+    .daily-calendar-details {
+      margin-top: 18px;
+      padding: 16px;
+
+      border: 1px solid var(--border);
+      border-radius: 12px;
+
+      background: var(--surface-light);
+    }
+
+    .daily-calendar-details.hidden {
+      display: none;
+    }
+
+    .daily-calendar-details-grid {
+      display: grid;
+      grid-template-columns:
+        repeat(4, minmax(150px, 1fr));
+      gap: 12px;
+
+      margin-top: 14px;
+    }
+
+    .daily-calendar-legend {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+
+      margin-top: 12px;
+    }
+
+    .daily-calendar-legend span {
+      display: inline-flex;
+
+      padding: 5px 8px;
+
+      border-radius: 999px;
+
+      font-size: 10px;
+      font-weight: 800;
+    }
+
+    .daily-calendar-legend .persistent {
+      color: #caffea;
+      background: var(--regular-dark);
+    }
+
+    .daily-calendar-legend .temporary {
+      color: #fff0cf;
+      background: var(--holiday-dark);
+    }
+
+    .daily-calendar-legend .fallback {
+      color: #d9eaff;
+      background: #234a73;
+    }
+
+    .daily-calendar-legend .overlap {
+      color: #ffd6d6;
+      background: var(--error-dark);
+    }
+
+    @media (max-width: 720px) {
+      .daily-schedule-calendar {
+        padding: 15px;
+      }
+
+      .daily-calendar-toolbar {
+        align-items: stretch;
+        flex-direction: column;
+      }
+
+      .daily-calendar-toolbar-group {
+        width: 100%;
+      }
+
+      .daily-calendar-toolbar-group .button {
+        flex: 1;
+      }
+
+      .daily-calendar-details-grid {
+        grid-template-columns:
+          repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 480px) {
+      .daily-calendar-details-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
     body,
     header,
     .system-banner,
@@ -4323,6 +4757,14 @@
       >
         V3.1 Audit
       </button>
+
+      <button
+        id="dailyScheduleCalendarTab"
+        class="workspace-tab"
+        type="button"
+      >
+        Daily Schedule
+      </button>
     </nav>
 
     <section
@@ -4655,6 +5097,88 @@
             Read-only
           </div>
         </div>
+
+        <section class="schedule-templates">
+          <div class="manager-header">
+            <div>
+              <div class="eyebrow">
+                V3.1 templates
+              </div>
+
+              <h3 style="margin:5px 0 0;">
+                Reusable schedule templates
+              </h3>
+
+              <p class="manager-description">
+                Save a live schedule or local draft as a reusable browser template.
+                Applying a template creates an unsaved draft only.
+              </p>
+            </div>
+
+            <div class="manager-status">
+              Local only
+            </div>
+          </div>
+
+          <div class="template-toolbar">
+            <label class="template-field">
+              <span class="manager-label">
+                Template name
+              </span>
+
+              <input
+                id="scheduleTemplateNameInput"
+                class="manager-input"
+                type="text"
+                maxlength="80"
+                placeholder="Example: Arcade closing schedule"
+              >
+            </label>
+
+            <button
+              id="saveScheduleTemplateButton"
+              class="button"
+              type="button"
+            >
+              Save current as template
+            </button>
+          </div>
+
+          <div
+            id="scheduleTemplateList"
+            class="template-list"
+          ></div>
+
+          <section
+            id="scheduleTemplatePreview"
+            class="template-preview"
+          >
+            <div class="manager-header">
+              <div>
+                <div class="eyebrow">
+                  Template preview
+                </div>
+
+                <div
+                  id="scheduleTemplatePreviewTitle"
+                  class="manager-stat-value"
+                >
+                  —
+                </div>
+              </div>
+
+              <button
+                id="closeScheduleTemplatePreviewButton"
+                class="button"
+                type="button"
+              >
+                Close preview
+              </button>
+            </div>
+
+            <pre id="scheduleTemplatePreviewJson"></pre>
+          </section>
+        </section>
 
         <section class="manager-github-scan">
           <div
@@ -6351,6 +6875,187 @@
         </div>
       </section>
     </section>
+
+    <section
+      id="dailyScheduleCalendarWorkspace"
+      class="workspace"
+    >
+      <section class="daily-schedule-calendar">
+        <div class="manager-header">
+          <div>
+            <div class="eyebrow">
+              Dashboard V3.1
+            </div>
+
+            <h2 class="manager-title">
+              Daily Schedule Calendar
+            </h2>
+
+            <p class="manager-description">
+              Compare every screen across a full day. This view is read-only.
+            </p>
+          </div>
+
+          <div class="manager-status">
+            Read-only
+          </div>
+        </div>
+
+        <div class="daily-calendar-toolbar">
+          <div class="daily-calendar-toolbar-group">
+            <button
+              id="dailyCalendarNowButton"
+              class="button"
+              type="button"
+            >
+              Jump to current time
+            </button>
+
+            <button
+              id="dailyCalendarReloadButton"
+              class="button"
+              type="button"
+            >
+              ↻ Reload schedules
+            </button>
+          </div>
+
+          <div class="daily-calendar-toolbar-group">
+            <label class="manager-label">
+              Start hour
+            </label>
+
+            <select
+              id="dailyCalendarStartHour"
+              class="manager-select"
+            >
+              <option value="0">00:00</option>
+              <option value="6">06:00</option>
+              <option value="8">08:00</option>
+              <option value="9" selected>09:00</option>
+              <option value="10">10:00</option>
+              <option value="12">12:00</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="daily-calendar-legend">
+          <span class="persistent">
+            Persistent
+          </span>
+
+          <span class="temporary">
+            Temporary
+          </span>
+
+          <span class="fallback">
+            Fallback period
+          </span>
+
+          <span class="overlap">
+            Overlap
+          </span>
+        </div>
+
+        <div
+          id="dailyCalendarWrap"
+          class="daily-calendar-wrap"
+        >
+          <div
+            id="dailyCalendarGrid"
+            class="daily-calendar-grid"
+          ></div>
+        </div>
+
+        <section
+          id="dailyCalendarDetails"
+          class="daily-calendar-details hidden"
+        >
+          <div class="manager-header">
+            <div>
+              <div class="eyebrow">
+                Selected schedule block
+              </div>
+
+              <div
+                id="dailyCalendarDetailsTitle"
+                class="manager-stat-value"
+              >
+                —
+              </div>
+            </div>
+
+            <button
+              id="closeDailyCalendarDetailsButton"
+              class="button"
+              type="button"
+            >
+              Close details
+            </button>
+          </div>
+
+          <section class="daily-calendar-details-grid">
+            <article class="manager-stat">
+              <div class="manager-stat-label">
+                Screen
+              </div>
+
+              <div
+                id="dailyCalendarDetailsScreen"
+                class="manager-stat-value manager-filename"
+              >
+                —
+              </div>
+            </article>
+
+            <article class="manager-stat">
+              <div class="manager-stat-label">
+                Start
+              </div>
+
+              <div
+                id="dailyCalendarDetailsStart"
+                class="manager-stat-value"
+              >
+                —
+              </div>
+            </article>
+
+            <article class="manager-stat">
+              <div class="manager-stat-label">
+                End
+              </div>
+
+              <div
+                id="dailyCalendarDetailsEnd"
+                class="manager-stat-value"
+              >
+                —
+              </div>
+            </article>
+
+            <article class="manager-stat">
+              <div class="manager-stat-label">
+                Type
+              </div>
+
+              <div
+                id="dailyCalendarDetailsType"
+                class="manager-stat-value"
+              >
+                —
+              </div>
+            </article>
+          </section>
+
+          <div
+            id="dailyCalendarDetailsDescription"
+            class="manager-description"
+            style="margin-top:14px;"
+          ></div>
+        </section>
+      </section>
+    </section>
   </main>
 
   <iframe
@@ -6525,7 +7230,7 @@
      */
 
     const SCHEDULE_FEED_URL =
-      "https://script.google.com/macros/s/AKfycbwUINP9DCEUywwCU1YMjfnPT3H8ZUq1lsGVk8ShACrTp2EZIqMYrChADlk_uEh2F-DGXw/exec";
+      "PASTE_YOUR_APPS_SCRIPT_EXEC_URL_HERE";
 
     const SCREEN_NAMES = [
       "Arcade",
@@ -6557,6 +7262,9 @@
       holidayKey:
         "miniGolfHolidayDraft"
     };
+
+    const SCHEDULE_TEMPLATE_STORAGE_KEY =
+      "miniGolfScheduleTemplates";
 
     /*
      * =====================================================
@@ -7246,6 +7954,81 @@
         "compatibilityAuditList"
       );
 
+    const dailyScheduleCalendarTab =
+      document.getElementById(
+        "dailyScheduleCalendarTab"
+      );
+
+    const dailyScheduleCalendarWorkspace =
+      document.getElementById(
+        "dailyScheduleCalendarWorkspace"
+      );
+
+    const dailyCalendarNowButton =
+      document.getElementById(
+        "dailyCalendarNowButton"
+      );
+
+    const dailyCalendarReloadButton =
+      document.getElementById(
+        "dailyCalendarReloadButton"
+      );
+
+    const dailyCalendarStartHour =
+      document.getElementById(
+        "dailyCalendarStartHour"
+      );
+
+    const dailyCalendarWrap =
+      document.getElementById(
+        "dailyCalendarWrap"
+      );
+
+    const dailyCalendarGrid =
+      document.getElementById(
+        "dailyCalendarGrid"
+      );
+
+    const dailyCalendarDetails =
+      document.getElementById(
+        "dailyCalendarDetails"
+      );
+
+    const dailyCalendarDetailsTitle =
+      document.getElementById(
+        "dailyCalendarDetailsTitle"
+      );
+
+    const dailyCalendarDetailsScreen =
+      document.getElementById(
+        "dailyCalendarDetailsScreen"
+      );
+
+    const dailyCalendarDetailsStart =
+      document.getElementById(
+        "dailyCalendarDetailsStart"
+      );
+
+    const dailyCalendarDetailsEnd =
+      document.getElementById(
+        "dailyCalendarDetailsEnd"
+      );
+
+    const dailyCalendarDetailsType =
+      document.getElementById(
+        "dailyCalendarDetailsType"
+      );
+
+    const dailyCalendarDetailsDescription =
+      document.getElementById(
+        "dailyCalendarDetailsDescription"
+      );
+
+    const closeDailyCalendarDetailsButton =
+      document.getElementById(
+        "closeDailyCalendarDetailsButton"
+      );
+
     const createHolidayForDateButton =
       document.getElementById(
         "createHolidayForDateButton"
@@ -7471,6 +8254,41 @@
         "simulatorDecision"
       );
 
+    const scheduleTemplateNameInput =
+      document.getElementById(
+        "scheduleTemplateNameInput"
+      );
+
+    const saveScheduleTemplateButton =
+      document.getElementById(
+        "saveScheduleTemplateButton"
+      );
+
+    const scheduleTemplateList =
+      document.getElementById(
+        "scheduleTemplateList"
+      );
+
+    const scheduleTemplatePreview =
+      document.getElementById(
+        "scheduleTemplatePreview"
+      );
+
+    const scheduleTemplatePreviewTitle =
+      document.getElementById(
+        "scheduleTemplatePreviewTitle"
+      );
+
+    const scheduleTemplatePreviewJson =
+      document.getElementById(
+        "scheduleTemplatePreviewJson"
+      );
+
+    const closeScheduleTemplatePreviewButton =
+      document.getElementById(
+        "closeScheduleTemplatePreviewButton"
+      );
+
     const managerGitHubScanButton =
       document.getElementById(
         "managerGitHubScanButton"
@@ -7662,6 +8480,9 @@
 
     let auditRequestGeneration =
       0;
+
+    let scheduleTemplates =
+      [];
 
     let calendarCursor =
       new Date();
@@ -9529,6 +10350,9 @@
       const showCompatibility =
         workspaceName === "compatibility";
 
+      const showDailyCalendar =
+        workspaceName === "dailyCalendar";
+
       controlCenterTab.classList.toggle(
         "active",
         showControl
@@ -9569,6 +10393,11 @@
         showCompatibility
       );
 
+      dailyScheduleCalendarTab.classList.toggle(
+        "active",
+        showDailyCalendar
+      );
+
       controlCenterWorkspace.classList.toggle(
         "active",
         showControl
@@ -9607,6 +10436,11 @@
       compatibilityAuditWorkspace.classList.toggle(
         "active",
         showCompatibility
+      );
+
+      dailyScheduleCalendarWorkspace.classList.toggle(
+        "active",
+        showDailyCalendar
       );
 
       if (showManager) {
@@ -9651,6 +10485,10 @@
 
       if (showCompatibility) {
         runCompatibilityAudit();
+      }
+
+      if (showDailyCalendar) {
+        renderDailyScheduleCalendar();
       }
     }
 
@@ -9777,6 +10615,21 @@
       managerGitHubScanButton.addEventListener(
         "click",
         scanGitHubImagesFromScheduleManager
+      );
+
+      saveScheduleTemplateButton.addEventListener(
+        "click",
+        saveCurrentScheduleAsTemplate
+      );
+
+      scheduleTemplateList.addEventListener(
+        "click",
+        handleScheduleTemplateAction
+      );
+
+      closeScheduleTemplatePreviewButton.addEventListener(
+        "click",
+        closeScheduleTemplatePreview
       );
 
       openImageLibraryButton.addEventListener(
@@ -10986,6 +11839,8 @@
      */
 
     function updateScheduleManager() {
+      renderScheduleTemplates();
+
       if (
         repositoryImages.length > 0
       ) {
@@ -17440,6 +18295,993 @@
 
     /*
      * =====================================================
+     * REUSABLE SCHEDULE TEMPLATES
+     * =====================================================
+     */
+
+    function initializeScheduleTemplates() {
+      scheduleTemplates =
+        readScheduleTemplates();
+
+      renderScheduleTemplates();
+    }
+
+
+    function readScheduleTemplates() {
+      try {
+        const raw =
+          localStorage.getItem(
+            SCHEDULE_TEMPLATE_STORAGE_KEY
+          );
+
+        if (!raw) {
+          return [];
+        }
+
+        const parsed =
+          JSON.parse(raw);
+
+        return Array.isArray(parsed)
+          ? parsed.filter(
+              item =>
+                item &&
+                typeof item.name === "string" &&
+                Array.isArray(item.rows)
+            )
+          : [];
+
+      } catch (error) {
+        return [];
+      }
+    }
+
+
+    function persistScheduleTemplates() {
+      try {
+        localStorage.setItem(
+          SCHEDULE_TEMPLATE_STORAGE_KEY,
+          JSON.stringify(
+            scheduleTemplates
+          )
+        );
+      } catch (error) {
+        showManagerSaveMessage(
+          "The browser could not store the schedule template.",
+          "error"
+        );
+      }
+    }
+
+
+    function saveCurrentScheduleAsTemplate() {
+      const screenName =
+        managerScreenSelect.value;
+
+      const state =
+        screenStates.get(
+          screenName
+        );
+
+      if (
+        !state ||
+        state.error ||
+        !Array.isArray(
+          state.schedule
+        )
+      ) {
+        showManagerSaveMessage(
+          "The selected schedule is not available.",
+          "error"
+        );
+
+        return;
+      }
+
+      const name =
+        String(
+          scheduleTemplateNameInput.value || ""
+        ).trim();
+
+      if (!name) {
+        showManagerSaveMessage(
+          "Enter a template name first.",
+          "error"
+        );
+
+        scheduleTemplateNameInput.focus();
+        return;
+      }
+
+      const rows =
+        (
+          managerDrafts.get(
+            screenName
+          ) ||
+          state.schedule
+        )
+          .map(item => ({
+            time:
+              String(item.time || ""),
+
+            endTime:
+              String(item.endTime || ""),
+
+            image:
+              String(item.image || ""),
+
+            fade:
+              Number(item.fade) || 1500
+          }));
+
+      const existingIndex =
+        scheduleTemplates.findIndex(
+          template =>
+            template.name.toLowerCase() ===
+            name.toLowerCase()
+        );
+
+      const template = {
+        id:
+          existingIndex >= 0
+            ? scheduleTemplates[
+                existingIndex
+              ].id
+            : createSaveRequestId(),
+
+        name:
+          name,
+
+        sourceScreen:
+          screenName,
+
+        savedAt:
+          new Date()
+            .toISOString(),
+
+        rows:
+          rows
+      };
+
+      if (existingIndex >= 0) {
+        const overwrite =
+          window.confirm(
+            `Replace the existing template "${scheduleTemplates[existingIndex].name}"?`
+          );
+
+        if (!overwrite) {
+          return;
+        }
+
+        scheduleTemplates[
+          existingIndex
+        ] = template;
+
+      } else {
+        scheduleTemplates.push(
+          template
+        );
+      }
+
+      scheduleTemplates.sort(
+        (a, b) =>
+          a.name.localeCompare(
+            b.name
+          )
+      );
+
+      persistScheduleTemplates();
+      renderScheduleTemplates();
+
+      scheduleTemplateNameInput.value =
+        "";
+
+      showManagerSaveMessage(
+        `Template "${name}" saved locally.`,
+        "success"
+      );
+    }
+
+
+    function renderScheduleTemplates() {
+      if (!scheduleTemplateList) {
+        return;
+      }
+
+      if (
+        scheduleTemplates.length === 0
+      ) {
+        scheduleTemplateList.innerHTML = `
+          <div class="manager-empty">
+            No local schedule templates have been saved.
+          </div>
+        `;
+
+        return;
+      }
+
+      scheduleTemplateList.innerHTML =
+        scheduleTemplates
+          .map(template => {
+            const savedAt =
+              template.savedAt
+                ? new Date(
+                    template.savedAt
+                  ).toLocaleString()
+                : "Unknown time";
+
+            return `
+              <article class="template-item">
+                <div class="template-item-main">
+                  <div class="template-item-name">
+                    ${escapeHtml(template.name)}
+                  </div>
+
+                  <div class="template-item-meta">
+                    ${template.rows.length}
+                    row${template.rows.length === 1 ? "" : "s"}
+                    · Source:
+                    ${escapeHtml(template.sourceScreen || "Unknown")}
+                    · Saved:
+                    ${escapeHtml(savedAt)}
+                  </div>
+                </div>
+
+                <div class="template-item-actions">
+                  <button
+                    class="button"
+                    type="button"
+                    data-template-action="preview"
+                    data-template-id="${escapeHtml(template.id)}"
+                  >
+                    Preview
+                  </button>
+
+                  <button
+                    class="button button-primary"
+                    type="button"
+                    data-template-action="apply"
+                    data-template-id="${escapeHtml(template.id)}"
+                  >
+                    Apply to selected screen
+                  </button>
+
+                  <button
+                    class="button"
+                    type="button"
+                    data-template-action="delete"
+                    data-template-id="${escapeHtml(template.id)}"
+                  >
+                    Delete
+                  </button>
+                </div>
+              </article>
+            `;
+          })
+          .join("");
+    }
+
+
+    function handleScheduleTemplateAction(
+      event
+    ) {
+      const button =
+        event.target.closest(
+          "[data-template-action]"
+        );
+
+      if (!button) {
+        return;
+      }
+
+      const template =
+        scheduleTemplates.find(
+          item =>
+            item.id ===
+            button.dataset.templateId
+        );
+
+      if (!template) {
+        return;
+      }
+
+      const action =
+        button.dataset.templateAction;
+
+      if (action === "preview") {
+        openScheduleTemplatePreview(
+          template
+        );
+
+        return;
+      }
+
+      if (action === "apply") {
+        applyScheduleTemplate(
+          template
+        );
+
+        return;
+      }
+
+      if (action === "delete") {
+        deleteScheduleTemplate(
+          template
+        );
+      }
+    }
+
+
+    function openScheduleTemplatePreview(
+      template
+    ) {
+      scheduleTemplatePreviewTitle.textContent =
+        template.name;
+
+      scheduleTemplatePreviewJson.textContent =
+        JSON.stringify(
+          template.rows,
+          null,
+          2
+        );
+
+      scheduleTemplatePreview.classList.add(
+        "visible"
+      );
+
+      scheduleTemplatePreview.scrollIntoView({
+        behavior:
+          "smooth",
+
+        block:
+          "nearest"
+      });
+    }
+
+
+    function closeScheduleTemplatePreview() {
+      scheduleTemplatePreview.classList.remove(
+        "visible"
+      );
+
+      scheduleTemplatePreviewTitle.textContent =
+        "—";
+
+      scheduleTemplatePreviewJson.textContent =
+        "";
+    }
+
+
+    function applyScheduleTemplate(
+      template
+    ) {
+      const screenName =
+        managerScreenSelect.value;
+
+      const confirmed =
+        window.confirm(
+          `Apply template "${template.name}" to "${screenName}"?\n\n` +
+          `This creates an unsaved local draft with ${template.rows.length} row(s).`
+        );
+
+      if (!confirmed) {
+        return;
+      }
+
+      const rows =
+        template.rows.map(
+          item => ({
+            time:
+              String(item.time || ""),
+
+            endTime:
+              String(item.endTime || ""),
+
+            image:
+              String(item.image || ""),
+
+            fade:
+              Number(item.fade) || 1500
+          })
+        );
+
+      managerDrafts.set(
+        screenName,
+        rows
+      );
+
+      managerEditingEnabled =
+        true;
+
+      persistScheduleDraft(
+        screenName,
+        rows
+      );
+
+      updateManagerEditingControls();
+      updateScheduleDraftRecoveryBanner();
+      updateScheduleManager();
+
+      showManagerSaveMessage(
+        `Template "${template.name}" applied as an unsaved draft.`,
+        "success"
+      );
+    }
+
+
+    function deleteScheduleTemplate(
+      template
+    ) {
+      const confirmed =
+        window.confirm(
+          `Delete the local template "${template.name}"?`
+        );
+
+      if (!confirmed) {
+        return;
+      }
+
+      scheduleTemplates =
+        scheduleTemplates.filter(
+          item =>
+            item.id !==
+            template.id
+        );
+
+      persistScheduleTemplates();
+      renderScheduleTemplates();
+      closeScheduleTemplatePreview();
+    }
+
+    /*
+     * =====================================================
+     * DAILY SCHEDULE CALENDAR — READ ONLY
+     * =====================================================
+     */
+
+    function setupDailyScheduleCalendar() {
+      dailyCalendarNowButton.addEventListener(
+        "click",
+        function() {
+          renderDailyScheduleCalendar();
+
+          setTimeout(
+            scrollDailyCalendarToNow,
+            50
+          );
+        }
+      );
+
+      dailyCalendarReloadButton.addEventListener(
+        "click",
+        function() {
+          refreshDashboard();
+
+          setTimeout(
+            renderDailyScheduleCalendar,
+            700
+          );
+        }
+      );
+
+      dailyCalendarStartHour.addEventListener(
+        "change",
+        renderDailyScheduleCalendar
+      );
+
+      dailyCalendarGrid.addEventListener(
+        "click",
+        function(event) {
+          const block =
+            event.target.closest(
+              "[data-daily-calendar-block]"
+            );
+
+          if (!block) {
+            return;
+          }
+
+          openDailyCalendarDetails({
+            screen:
+              block.dataset.screen,
+
+            image:
+              block.dataset.image,
+
+            start:
+              block.dataset.start,
+
+            end:
+              block.dataset.end,
+
+            type:
+              block.dataset.type,
+
+            reason:
+              block.dataset.reason
+          });
+        }
+      );
+
+      closeDailyCalendarDetailsButton.addEventListener(
+        "click",
+        closeDailyCalendarDetails
+      );
+    }
+
+
+    function renderDailyScheduleCalendar() {
+      const startHour =
+        Number(
+          dailyCalendarStartHour.value
+        );
+
+      const startMinute =
+        startHour * 60;
+
+      const endMinute =
+        24 * 60;
+
+      const totalMinutes =
+        endMinute -
+        startMinute;
+
+      const rowHeight =
+        48;
+
+      const hourCount =
+        Math.ceil(
+          totalMinutes / 60
+        );
+
+      dailyCalendarGrid.style.gridTemplateRows =
+        `48px repeat(${hourCount}, ${rowHeight}px)`;
+
+      let html =
+        `<div class="daily-calendar-corner">Time</div>`;
+
+      SCREEN_NAMES.forEach(
+        screenName => {
+          html += `
+            <div class="daily-calendar-screen-header">
+              ${escapeHtml(screenName)}
+            </div>
+          `;
+        }
+      );
+
+      for (
+        let hour = startHour;
+        hour < 24;
+        hour += 1
+      ) {
+        html += `
+          <div class="daily-calendar-time-label">
+            ${String(hour).padStart(2, "0")}:00
+          </div>
+        `;
+
+        SCREEN_NAMES.forEach(
+          () => {
+            html += `
+              <div class="daily-calendar-cell"></div>
+            `;
+          }
+        );
+      }
+
+      dailyCalendarGrid.innerHTML =
+        html;
+
+      SCREEN_NAMES.forEach(
+        (screenName, screenIndex) => {
+          const state =
+            screenStates.get(
+              screenName
+            );
+
+          if (
+            !state ||
+            state.error ||
+            !Array.isArray(
+              state.schedule
+            )
+          ) {
+            return;
+          }
+
+          const segments =
+            buildDailyCalendarSegments(
+              state.schedule
+            );
+
+          segments.forEach(
+            segment => {
+              const segmentStart =
+                Math.max(
+                  timeToMinutes(
+                    segment.start
+                  ),
+                  startMinute
+                );
+
+              const segmentEnd =
+                Math.min(
+                  segment.end === "24:00"
+                    ? 1440
+                    : timeToMinutes(
+                        segment.end
+                      ),
+                  endMinute
+                );
+
+              if (
+                segmentEnd <=
+                segmentStart
+              ) {
+                return;
+              }
+
+              const top =
+                48 +
+                (
+                  (
+                    segmentStart -
+                    startMinute
+                  ) /
+                  60
+                ) *
+                rowHeight;
+
+              const height =
+                Math.max(
+                  24,
+                  (
+                    (
+                      segmentEnd -
+                      segmentStart
+                    ) /
+                    60
+                  ) *
+                  rowHeight -
+                  4
+                );
+
+              const leftColumn =
+                screenIndex + 2;
+
+              const block =
+                document.createElement(
+                  "div"
+                );
+
+              block.className =
+                `daily-calendar-block ${segment.type}` +
+                (
+                  segment.overlap
+                    ? " overlap"
+                    : ""
+                );
+
+              block.style.gridColumn =
+                String(leftColumn);
+
+              block.style.top =
+                `${top}px`;
+
+              block.style.height =
+                `${height}px`;
+
+              block.dataset.dailyCalendarBlock =
+                "1";
+
+              block.dataset.screen =
+                screenName;
+
+              block.dataset.image =
+                segment.image;
+
+              block.dataset.start =
+                segment.start;
+
+              block.dataset.end =
+                segment.end;
+
+              block.dataset.type =
+                segment.type;
+
+              block.dataset.reason =
+                segment.reason;
+
+              block.innerHTML = `
+                <div class="daily-calendar-block-title">
+                  ${escapeHtml(segment.image)}
+                </div>
+
+                <div class="daily-calendar-block-meta">
+                  ${escapeHtml(segment.start)}
+                  →
+                  ${escapeHtml(segment.end)}
+                </div>
+              `;
+
+              dailyCalendarGrid.appendChild(
+                block
+              );
+            }
+          );
+        }
+      );
+
+      addDailyCalendarNowLine(
+        startMinute,
+        endMinute,
+        rowHeight
+      );
+    }
+
+
+    function buildDailyCalendarSegments(
+      schedule
+    ) {
+      const sorted =
+        schedule
+          .map(item => ({
+            ...item,
+
+            time:
+              String(item.time || ""),
+
+            endTime:
+              String(
+                item.endTime || ""
+              )
+          }))
+          .sort((a, b) =>
+            a.time.localeCompare(
+              b.time
+            )
+          );
+
+      const segments = [];
+
+      sorted.forEach(
+        (item, index) => {
+          const next =
+            sorted[index + 1];
+
+          const end =
+            item.endTime ||
+            (
+              next
+                ? next.time
+                : "24:00"
+            );
+
+          const overlap =
+            Boolean(
+              next &&
+              next.time <
+                end
+            );
+
+          segments.push({
+            image:
+              item.image,
+
+            start:
+              item.time,
+
+            end:
+              end,
+
+            type:
+              item.endTime
+                ? "temporary"
+                : "persistent",
+
+            overlap:
+              overlap,
+
+            reason:
+              item.endTime
+                ? `Temporary row active from ${item.time} until ${item.endTime}.`
+                : `Persistent row active from ${item.time} until another row replaces it.`
+          });
+
+          if (
+            item.endTime &&
+            next &&
+            item.endTime <
+              next.time
+          ) {
+            const fallback =
+              findPersistentFallbackAtTime(
+                sorted,
+                item.endTime
+              );
+
+            if (fallback) {
+              segments.push({
+                image:
+                  fallback.image,
+
+                start:
+                  item.endTime,
+
+                end:
+                  next.time,
+
+                type:
+                  "fallback",
+
+                overlap:
+                  false,
+
+                reason:
+                  `No temporary row is active. The player falls back to ${fallback.image}.`
+              });
+            }
+          }
+        }
+      );
+
+      return segments;
+    }
+
+
+    function addDailyCalendarNowLine(
+      startMinute,
+      endMinute,
+      rowHeight
+    ) {
+      const now =
+        new Date();
+
+      const currentMinute =
+        now.getHours() * 60 +
+        now.getMinutes();
+
+      if (
+        currentMinute <
+          startMinute ||
+        currentMinute >
+          endMinute
+      ) {
+        return;
+      }
+
+      const top =
+        48 +
+        (
+          (
+            currentMinute -
+            startMinute
+          ) /
+          60
+        ) *
+        rowHeight;
+
+      const line =
+        document.createElement(
+          "div"
+        );
+
+      line.className =
+        "daily-calendar-now-line";
+
+      line.style.top =
+        `${top}px`;
+
+      line.innerHTML = `
+        <span class="daily-calendar-now-label">
+          Now ${getCurrentHHMM(now)}
+        </span>
+      `;
+
+      dailyCalendarGrid.appendChild(
+        line
+      );
+    }
+
+
+    function scrollDailyCalendarToNow() {
+      const startHour =
+        Number(
+          dailyCalendarStartHour.value
+        );
+
+      const now =
+        new Date();
+
+      const currentMinute =
+        now.getHours() * 60 +
+        now.getMinutes();
+
+      const startMinute =
+        startHour * 60;
+
+      const offset =
+        Math.max(
+          0,
+          (
+            (
+              currentMinute -
+              startMinute
+            ) /
+            60
+          ) *
+          48 -
+          120
+        );
+
+      dailyCalendarWrap.scrollTop =
+        offset;
+    }
+
+
+    function openDailyCalendarDetails(
+      item
+    ) {
+      dailyCalendarDetailsTitle.textContent =
+        item.image;
+
+      dailyCalendarDetailsScreen.textContent =
+        item.screen;
+
+      dailyCalendarDetailsStart.textContent =
+        item.start;
+
+      dailyCalendarDetailsEnd.textContent =
+        item.end;
+
+      dailyCalendarDetailsType.textContent =
+        capitalizeDashboardText(
+          item.type
+        );
+
+      dailyCalendarDetailsDescription.textContent =
+        item.reason;
+
+      dailyCalendarDetails.classList.remove(
+        "hidden"
+      );
+
+      dailyCalendarDetails.scrollIntoView({
+        behavior:
+          "smooth",
+
+        block:
+          "nearest"
+      });
+    }
+
+
+    function closeDailyCalendarDetails() {
+      dailyCalendarDetails.classList.add(
+        "hidden"
+      );
+
+      dailyCalendarDetailsTitle.textContent =
+        "—";
+
+      dailyCalendarDetailsScreen.textContent =
+        "—";
+
+      dailyCalendarDetailsStart.textContent =
+        "—";
+
+      dailyCalendarDetailsEnd.textContent =
+        "—";
+
+      dailyCalendarDetailsType.textContent =
+        "—";
+
+      dailyCalendarDetailsDescription.textContent =
+        "";
+    }
+
+    /*
+     * =====================================================
      * GENERAL HELPERS
      * =====================================================
      */
@@ -17652,6 +19494,15 @@
       }
     );
 
+    dailyScheduleCalendarTab.addEventListener(
+      "click",
+      function() {
+        openWorkspace(
+          "dailyCalendar"
+        );
+      }
+    );
+
     reloadManagerButton.addEventListener(
       "click",
       function() {
@@ -17682,7 +19533,9 @@
     setupAuditLog();
     setupHolidayCalendar();
     setupCompatibilityAudit();
+    setupDailyScheduleCalendar();
     initializeDraftRecovery();
+    initializeScheduleTemplates();
 
     refreshDashboard();
     updateOperationsPanel();
