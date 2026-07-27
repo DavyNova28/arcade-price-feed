@@ -3495,6 +3495,53 @@
       text-align: center;
     }
 
+
+    /*
+     * =====================================================
+     * SCHEDULE MANAGER GITHUB SCAN SHORTCUT
+     * =====================================================
+     */
+
+    .manager-github-scan {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+
+      margin-bottom: 16px;
+      padding: 12px 14px;
+
+      border: 1px solid var(--border);
+      border-radius: 10px;
+
+      background: var(--surface-light);
+    }
+
+    .manager-github-scan-text {
+      flex: 1;
+      min-width: 220px;
+
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.45;
+    }
+
+    .manager-github-scan-text.success {
+      color: #7de6b7;
+    }
+
+    .manager-github-scan-text.error {
+      color: #ff9b9b;
+    }
+
+    html[data-theme="light"] .manager-github-scan-text.success {
+      color: #1b744f;
+    }
+
+    html[data-theme="light"] .manager-github-scan-text.error {
+      color: #a33a3a;
+    }
+
     body,
     header,
     .system-banner,
@@ -4428,6 +4475,31 @@
             Read-only
           </div>
         </div>
+
+        <section class="manager-github-scan">
+          <div
+            id="managerGitHubScanStatus"
+            class="manager-github-scan-text"
+          >
+            Scan GitHub to validate filenames and load the image picker.
+          </div>
+
+          <button
+            id="managerGitHubScanButton"
+            class="button"
+            type="button"
+          >
+            Scan GitHub images
+          </button>
+
+          <button
+            id="openImageLibraryButton"
+            class="button"
+            type="button"
+          >
+            Open Image Library
+          </button>
+        </section>
 
         <section class="schedule-integrity">
           <div class="manager-header">
@@ -7011,6 +7083,21 @@
         "simulatorDecision"
       );
 
+    const managerGitHubScanButton =
+      document.getElementById(
+        "managerGitHubScanButton"
+      );
+
+    const managerGitHubScanStatus =
+      document.getElementById(
+        "managerGitHubScanStatus"
+      );
+
+    const openImageLibraryButton =
+      document.getElementById(
+        "openImageLibraryButton"
+      );
+
     const runIntegrityCheckButton =
       document.getElementById(
         "runIntegrityCheckButton"
@@ -9255,6 +9342,20 @@
         runScheduleIntegrityChecks
       );
 
+      managerGitHubScanButton.addEventListener(
+        "click",
+        scanGitHubImagesFromScheduleManager
+      );
+
+      openImageLibraryButton.addEventListener(
+        "click",
+        function() {
+          openWorkspace(
+            "images"
+          );
+        }
+      );
+
       restoreScheduleDraftButton.addEventListener(
         "click",
         restoreStoredScheduleDraft
@@ -10424,6 +10525,16 @@
      */
 
     function updateScheduleManager() {
+      if (
+        repositoryImages.length > 0
+      ) {
+        managerGitHubScanStatus.className =
+          "manager-github-scan-text success";
+
+        managerGitHubScanStatus.textContent =
+          `${repositoryImages.length} GitHub image(s) currently loaded.`;
+      }
+
       const screenName =
         managerScreenSelect.value;
 
@@ -13458,7 +13569,15 @@
 
       scanImageHealthButton.addEventListener(
         "click",
-        scanImageHealth
+        async function() {
+          try {
+            await scanImageHealth();
+          } catch (error) {
+            /*
+             * The Image Library already displays the error.
+             */
+          }
+        }
       );
 
       clearImageHealthButton.addEventListener(
@@ -14345,6 +14464,56 @@
      * =====================================================
      */
 
+    async function scanGitHubImagesFromScheduleManager() {
+      managerGitHubScanButton.disabled =
+        true;
+
+      managerGitHubScanButton.textContent =
+        "Scanning…";
+
+      managerGitHubScanStatus.className =
+        "manager-github-scan-text";
+
+      managerGitHubScanStatus.textContent =
+        "Reading exact filenames from the GitHub repository…";
+
+      try {
+        await scanImageHealth();
+
+        if (!imageHealthScanned) {
+          throw new Error(
+            "The GitHub scan did not finish successfully."
+          );
+        }
+
+        managerGitHubScanStatus.className =
+          "manager-github-scan-text success";
+
+        managerGitHubScanStatus.textContent =
+          `${repositoryImages.length} repository image(s) loaded · ` +
+          `${missingReferencedImages.size} missing reference(s) · ` +
+          `${unusedRepositoryImages.size} unused file(s).`;
+
+        updateVisibleImagePickerStatuses();
+
+      } catch (error) {
+        managerGitHubScanStatus.className =
+          "manager-github-scan-text error";
+
+        managerGitHubScanStatus.textContent =
+          error.message ||
+          "The GitHub image scan failed.";
+
+      } finally {
+        managerGitHubScanButton.disabled =
+          false;
+
+        managerGitHubScanButton.textContent =
+          "Scan GitHub images";
+      }
+    }
+
+
     async function scanImageHealth() {
       scanImageHealthButton.disabled =
         true;
@@ -14459,12 +14628,17 @@
           false;
 
       } catch (error) {
+        imageHealthScanned =
+          false;
+
         imageHealthStatus.className =
           "image-health-status error";
 
         imageHealthStatus.textContent =
           error.message ||
           "The GitHub image scan failed.";
+
+        throw error;
 
       } finally {
         scanImageHealthButton.disabled =
