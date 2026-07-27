@@ -4283,6 +4283,56 @@
     @media (max-width:900px) { .health-summary { grid-template-columns:repeat(2,minmax(0,1fr)); } .health-grid { grid-template-columns:1fr; } }
     @media (max-width:480px) { .health-summary { grid-template-columns:1fr; } }
 
+
+    /*
+     * =====================================================
+     * DASHBOARD OFFLINE MODE
+     * =====================================================
+     */
+
+    .offline-mode-banner {
+      display: none;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      flex-wrap: wrap;
+
+      margin-bottom: 18px;
+      padding: 13px 15px;
+
+      border: 1px solid rgba(242, 170, 63, 0.55);
+      border-radius: 11px;
+
+      color: #fff0cf;
+      background: rgba(101, 69, 24, 0.72);
+
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    .offline-mode-banner.visible {
+      display: flex;
+    }
+
+    .offline-mode-banner strong {
+      display: block;
+      margin-bottom: 2px;
+    }
+
+    .offline-mode-age {
+      color: inherit;
+      opacity: 0.82;
+    }
+
+    html[data-theme="light"] .offline-mode-banner {
+      color: #7a5518;
+      background: #fff1d4;
+    }
+
+    .screen-card.offline-card {
+      border-color: rgba(242, 170, 63, 0.5);
+    }
+
     body,
     header,
     .system-banner,
@@ -5059,6 +5109,29 @@
               Waiting for schedules
             </div>
           </article>
+        </div>
+      </section>
+
+
+      <section
+        id="offlineModeBanner"
+        class="offline-mode-banner"
+      >
+        <div>
+          <strong>
+            Offline snapshot mode
+          </strong>
+
+          <div id="offlineModeDescription">
+            Apps Script is unavailable. Showing the last synchronized data.
+          </div>
+        </div>
+
+        <div
+          id="offlineModeAge"
+          class="offline-mode-age"
+        >
+          —
         </div>
       </section>
 
@@ -7480,6 +7553,12 @@
     const GITHUB_IMAGE_INDEX_FILE =
       "image-index.json";
 
+    const DASHBOARD_OFFLINE_STORAGE_KEY =
+      "miniGolfDashboardOfflineSnapshotV1";
+
+    const DASHBOARD_OFFLINE_MAX_AGE_MS =
+      7 * 24 * 60 * 60 * 1000;
+
     const LOCAL_DRAFT_STORAGE = {
       regularPrefix:
         "miniGolfScheduleDraft:",
@@ -7602,6 +7681,21 @@
     const healthDescription =
       document.getElementById(
         "healthDescription"
+      );
+
+    const offlineModeBanner =
+      document.getElementById(
+        "offlineModeBanner"
+      );
+
+    const offlineModeDescription =
+      document.getElementById(
+        "offlineModeDescription"
+      );
+
+    const offlineModeAge =
+      document.getElementById(
+        "offlineModeAge"
       );
 
     const globalNextChange =
@@ -8744,6 +8838,15 @@
     let scheduleTemplates =
       [];
 
+    const offlineScreens =
+      new Set();
+
+    const offlineSections =
+      new Set();
+
+    let dashboardOfflineSnapshot =
+      readDashboardOfflineSnapshot();
+
     let calendarCursor =
       new Date();
 
@@ -9321,6 +9424,16 @@
         state
       );
 
+      offlineScreens.delete(
+        screenName
+      );
+
+      saveScreenOfflineSnapshot(
+        screenName,
+        state
+      );
+
+      updateOfflineModeBanner();
       updateScreenCard(state);
       updateDashboardSummary();
 
@@ -9563,34 +9676,48 @@
         state.source === "holiday";
 
       card.className =
-        isHoliday
-          ? "screen-card holiday-card"
-          : "screen-card";
+        state.offlineSnapshot
+          ? "screen-card offline-card"
+          : isHoliday
+            ? "screen-card holiday-card"
+            : "screen-card";
 
       badge.className =
-        isHoliday
-          ? "status-badge status-holiday"
-          : "status-badge status-regular";
+        state.offlineSnapshot
+          ? "status-badge status-error"
+          : isHoliday
+            ? "status-badge status-holiday"
+            : "status-badge status-regular";
 
       badge.textContent =
-        isHoliday
-          ? "Holiday"
-          : "Regular";
+        state.offlineSnapshot
+          ? "Offline"
+          : isHoliday
+            ? "Holiday"
+            : "Regular";
 
       screenState.textContent =
-        isHoliday
-          ? "Holiday override currently active"
-          : state.activeItem.endTime
-            ? `Temporary item active until ${state.activeItem.endTime}`
-            : "Regular schedule operating normally";
+        state.offlineSnapshot
+          ? `Cached snapshot · ${formatOfflineSnapshotAge(state.snapshotSavedAt)}`
+          : isHoliday
+            ? "Holiday override currently active"
+            : state.activeItem.endTime
+              ? `Temporary item active until ${state.activeItem.endTime}`
+              : "Regular schedule operating normally";
 
       currentImage.textContent =
         state.activeItem.image;
 
       source.textContent =
-        isHoliday
-          ? "Holiday Override"
-          : "Regular Schedule";
+        state.offlineSnapshot
+          ? (
+              isHoliday
+                ? "Cached Holiday Override"
+                : "Cached Regular Schedule"
+            )
+          : isHoliday
+            ? "Holiday Override"
+            : "Regular Schedule";
 
       nextChange.textContent =
         state.nextItem.tomorrow
@@ -10057,6 +10184,21 @@
       screenName,
       message
     ) {
+      if (
+        restoreScreenFromOfflineSnapshot(
+          screenName,
+          message
+        )
+      ) {
+        return;
+      }
+
+      offlineScreens.add(
+        screenName
+      );
+
+      updateOfflineModeBanner();
+
       const safeId =
         createSafeId(screenName);
 
@@ -10968,6 +11110,7 @@
           : { valid: false };
 
       managerSaveButton.disabled =
+        isDashboardOfflineMode() ||
         !hasDraft ||
         !validation.valid ||
         managerSaveInProgress;
@@ -12898,6 +13041,7 @@
         !hasDraft;
 
       holidaySaveButton.disabled =
+        isDashboardOfflineMode() ||
         !hasDraft ||
         !validation.valid ||
         holidaySaveInProgress;
@@ -13177,6 +13321,17 @@
             holidayOverrides =
               payload.overrides;
 
+            offlineSections.delete(
+              "holiday"
+            );
+
+            saveOfflineSnapshotSection(
+              "holidayOverrides",
+              holidayOverrides
+            );
+
+            updateOfflineModeBanner();
+
             if (!holidayDraft) {
               renderHolidayOverrides();
             }
@@ -13198,6 +13353,14 @@
             }
 
           } catch (error) {
+            if (
+              restoreHolidayOverridesFromSnapshot(
+                error.message || error
+              )
+            ) {
+              return;
+            }
+
             holidayTableBody.innerHTML = `
               <tr>
                 <td
@@ -13244,6 +13407,14 @@
       script.onerror =
         function() {
           delete window[callbackName];
+
+          if (
+            restoreHolidayOverridesFromSnapshot(
+              "Could not load Holiday Overrides from Apps Script."
+            )
+          ) {
+            return;
+          }
 
           holidayTableBody.innerHTML = `
             <tr>
@@ -14346,10 +14517,29 @@
             backupHistory =
               payload.backups;
 
+            offlineSections.delete(
+              "backups"
+            );
+
+            saveOfflineSnapshotSection(
+              "backupHistory",
+              backupHistory
+            );
+
+            updateOfflineModeBanner();
+
             closeBackupDetails();
             renderBackupHistory();
 
           } catch (error) {
+            if (
+              restoreBackupHistoryFromSnapshot(
+                error.message || error
+              )
+            ) {
+              return;
+            }
+
             backupTableBody.innerHTML = `
               <tr>
                 <td
@@ -14396,6 +14586,14 @@
       script.onerror =
         function() {
           delete window[callbackName];
+
+          if (
+            restoreBackupHistoryFromSnapshot(
+              "Could not load backup history from Apps Script."
+            )
+          ) {
+            return;
+          }
 
           backupTableBody.innerHTML = `
             <tr>
@@ -17289,9 +17487,27 @@
             auditEntries =
               payload.entries;
 
+            offlineSections.delete(
+              "audit"
+            );
+
+            saveOfflineSnapshotSection(
+              "auditEntries",
+              auditEntries
+            );
+
+            updateOfflineModeBanner();
             renderAuditLog();
 
           } catch (error) {
+            if (
+              restoreAuditLogFromSnapshot(
+                error.message || error
+              )
+            ) {
+              return;
+            }
+
             auditTableBody.innerHTML = `
               <tr>
                 <td
@@ -17338,6 +17554,14 @@
       script.onerror =
         function() {
           delete window[callbackName];
+
+          if (
+            restoreAuditLogFromSnapshot(
+              "Could not load the audit log from Apps Script."
+            )
+          ) {
+            return;
+          }
 
           auditTableBody.innerHTML = `
             <tr>
@@ -20517,6 +20741,438 @@
       healthErrorBox.className = "health-error-box visible";
       healthErrorBox.textContent = message;
     }
+
+    /*
+     * =====================================================
+     * DASHBOARD OFFLINE MODE
+     * =====================================================
+     */
+
+    function readDashboardOfflineSnapshot() {
+      try {
+        const raw =
+          localStorage.getItem(
+            DASHBOARD_OFFLINE_STORAGE_KEY
+          );
+
+        if (!raw) {
+          return {
+            savedAt:
+              "",
+            screens:
+              {}
+          };
+        }
+
+        const parsed =
+          JSON.parse(raw);
+
+        if (
+          !parsed ||
+          typeof parsed !== "object"
+        ) {
+          throw new Error(
+            "Invalid snapshot"
+          );
+        }
+
+        return {
+          savedAt:
+            parsed.savedAt || "",
+          screens:
+            parsed.screens || {},
+          holidayOverrides:
+            Array.isArray(parsed.holidayOverrides)
+              ? parsed.holidayOverrides
+              : [],
+          backupHistory:
+            Array.isArray(parsed.backupHistory)
+              ? parsed.backupHistory
+              : [],
+          auditEntries:
+            Array.isArray(parsed.auditEntries)
+              ? parsed.auditEntries
+              : []
+        };
+
+      } catch (error) {
+        return {
+          savedAt:
+            "",
+          screens:
+            {}
+        };
+      }
+    }
+
+
+    function persistDashboardOfflineSnapshot() {
+      try {
+        dashboardOfflineSnapshot.savedAt =
+          new Date().toISOString();
+
+        localStorage.setItem(
+          DASHBOARD_OFFLINE_STORAGE_KEY,
+          JSON.stringify(
+            dashboardOfflineSnapshot
+          )
+        );
+      } catch (error) {
+        console.warn(
+          "Could not save dashboard offline snapshot.",
+          error
+        );
+      }
+    }
+
+
+    function saveScreenOfflineSnapshot(
+      screenName,
+      state
+    ) {
+      dashboardOfflineSnapshot.screens =
+        dashboardOfflineSnapshot.screens ||
+        {};
+
+      dashboardOfflineSnapshot.screens[
+        screenName
+      ] = {
+        source:
+          state.source,
+        activeDate:
+          state.activeDate || "",
+        schedule:
+          state.schedule,
+        savedAt:
+          new Date().toISOString()
+      };
+
+      persistDashboardOfflineSnapshot();
+    }
+
+
+    function saveOfflineSnapshotSection(
+      key,
+      value
+    ) {
+      dashboardOfflineSnapshot[key] =
+        value;
+
+      persistDashboardOfflineSnapshot();
+    }
+
+
+    function getOfflineScreenSnapshot(
+      screenName
+    ) {
+      const snapshot =
+        dashboardOfflineSnapshot &&
+        dashboardOfflineSnapshot.screens
+          ? dashboardOfflineSnapshot.screens[
+              screenName
+            ]
+          : null;
+
+      if (
+        !snapshot ||
+        !Array.isArray(snapshot.schedule) ||
+        snapshot.schedule.length === 0
+      ) {
+        return null;
+      }
+
+      const savedAt =
+        new Date(
+          snapshot.savedAt ||
+          dashboardOfflineSnapshot.savedAt ||
+          0
+        );
+
+      if (
+        !Number.isFinite(
+          savedAt.getTime()
+        ) ||
+        Date.now() -
+          savedAt.getTime() >
+          DASHBOARD_OFFLINE_MAX_AGE_MS
+      ) {
+        return null;
+      }
+
+      return snapshot;
+    }
+
+
+    function restoreScreenFromOfflineSnapshot(
+      screenName,
+      reason
+    ) {
+      const snapshot =
+        getOfflineScreenSnapshot(
+          screenName
+        );
+
+      if (!snapshot) {
+        return false;
+      }
+
+      const now =
+        new Date();
+
+      const activeItem =
+        getActiveScheduleItem(
+          snapshot.schedule,
+          getCurrentHHMM(now)
+        );
+
+      const nextItem =
+        getNextScheduleItem(
+          snapshot.schedule,
+          now
+        );
+
+      const state = {
+        screenName:
+          screenName,
+
+        source:
+          snapshot.source === "holiday"
+            ? "holiday"
+            : "regular",
+
+        activeDate:
+          snapshot.activeDate || "",
+
+        schedule:
+          snapshot.schedule,
+
+        activeItem:
+          activeItem,
+
+        nextItem:
+          nextItem,
+
+        imageMissing:
+          false,
+
+        error:
+          null,
+
+        offlineSnapshot:
+          true,
+
+        snapshotSavedAt:
+          snapshot.savedAt ||
+          dashboardOfflineSnapshot.savedAt,
+
+        offlineReason:
+          String(reason || "")
+      };
+
+      screenStates.set(
+        screenName,
+        state
+      );
+
+      offlineScreens.add(
+        screenName
+      );
+
+      updateScreenCard(
+        state
+      );
+
+      updateDashboardSummary();
+      updateOfflineModeBanner();
+
+      return true;
+    }
+
+
+    function restoreHolidayOverridesFromSnapshot(
+      reason
+    ) {
+      const rows =
+        dashboardOfflineSnapshot
+          .holidayOverrides;
+
+      if (!Array.isArray(rows)) {
+        return false;
+      }
+
+      holidayOverrides =
+        rows;
+
+      offlineSections.add(
+        "holiday"
+      );
+
+      renderHolidayOverrides();
+      updateOfflineModeBanner();
+
+      console.warn(reason);
+      return true;
+    }
+
+
+    function restoreBackupHistoryFromSnapshot(
+      reason
+    ) {
+      const rows =
+        dashboardOfflineSnapshot
+          .backupHistory;
+
+      if (!Array.isArray(rows)) {
+        return false;
+      }
+
+      backupHistory =
+        rows;
+
+      offlineSections.add(
+        "backups"
+      );
+
+      renderBackupHistory();
+      updateOfflineModeBanner();
+
+      console.warn(reason);
+      return true;
+    }
+
+
+    function restoreAuditLogFromSnapshot(
+      reason
+    ) {
+      const rows =
+        dashboardOfflineSnapshot
+          .auditEntries;
+
+      if (!Array.isArray(rows)) {
+        return false;
+      }
+
+      auditEntries =
+        rows;
+
+      offlineSections.add(
+        "audit"
+      );
+
+      renderAuditLog();
+      updateOfflineModeBanner();
+
+      console.warn(reason);
+      return true;
+    }
+
+
+    function isDashboardOfflineMode() {
+      return (
+        offlineScreens.size > 0 ||
+        offlineSections.size > 0
+      );
+    }
+
+
+    function updateOfflineModeBanner() {
+      const offline =
+        isDashboardOfflineMode();
+
+      offlineModeBanner.classList.toggle(
+        "visible",
+        offline
+      );
+
+      if (!offline) {
+        offlineModeDescription.textContent =
+          "Apps Script is connected.";
+
+        offlineModeAge.textContent =
+          "Live";
+
+      } else {
+        const affected = [
+          ...Array.from(
+            offlineScreens
+          ),
+          ...Array.from(
+            offlineSections
+          ).map(
+            value =>
+              value === "holiday"
+                ? "Holiday Overrides"
+                : value === "backups"
+                  ? "Backup History"
+                  : "Audit Log"
+          )
+        ];
+
+        offlineModeDescription.textContent =
+          `Showing cached data for: ${affected.join(", ")}. Saving is disabled until live data returns.`;
+
+        offlineModeAge.textContent =
+          dashboardOfflineSnapshot.savedAt
+            ? `Snapshot ${formatOfflineSnapshotAge(dashboardOfflineSnapshot.savedAt)}`
+            : "Snapshot time unavailable";
+      }
+
+      updateManagerEditingControls();
+      updateHolidayEditingControls();
+    }
+
+
+    function formatOfflineSnapshotAge(
+      value
+    ) {
+      const date =
+        new Date(value);
+
+      if (
+        !Number.isFinite(
+          date.getTime()
+        )
+      ) {
+        return "age unknown";
+      }
+
+      const elapsed =
+        Math.max(
+          0,
+          Date.now() -
+          date.getTime()
+        );
+
+      const minutes =
+        Math.floor(
+          elapsed / 60000
+        );
+
+      if (minutes < 1) {
+        return "saved less than a minute ago";
+      }
+
+      if (minutes < 60) {
+        return `saved ${minutes} minute${minutes === 1 ? "" : "s"} ago`;
+      }
+
+      const hours =
+        Math.floor(
+          minutes / 60
+        );
+
+      if (hours < 24) {
+        return `saved ${hours} hour${hours === 1 ? "" : "s"} ago`;
+      }
+
+      const days =
+        Math.floor(
+          hours / 24
+        );
+
+      return `saved ${days} day${days === 1 ? "" : "s"} ago`;
+    }
+
 
     /*
      * =====================================================
