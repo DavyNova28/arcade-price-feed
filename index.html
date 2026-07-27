@@ -179,6 +179,22 @@
     const ACTIVE_FEED_POLL_MS = 30000;
 
     /*
+     * Stable per-screen staggering.
+     *
+     * Each screen gets a fixed offset inside the 30-second
+     * polling window so all Fire Sticks do not contact Apps
+     * Script at the same moment.
+     */
+    const SCREEN_POLL_OFFSETS_SECONDS = {
+      Arcade: 3,
+      ArcadeWeek: 8,
+      ArcadeSunday: 13,
+      Golf: 18,
+      Slush: 23,
+      infoArcade: 28
+    };
+
+    /*
      * Exact active polling window.
      *
      * 10:00–22:00:
@@ -700,6 +716,15 @@
         0
       );
 
+      next.setMilliseconds(
+        0
+      );
+
+      next.setTime(
+        next.getTime() +
+        getScreenPollOffsetMs()
+      );
+
       return next;
     }
 
@@ -719,6 +744,78 @@
     }
 
 
+    function getScreenPollOffsetMs() {
+      const configuredOffset =
+        SCREEN_POLL_OFFSETS_SECONDS[
+          SCREEN_NAME
+        ];
+
+      if (
+        Number.isFinite(
+          configuredOffset
+        )
+      ) {
+        return (
+          Math.max(
+            0,
+            Math.min(
+              29,
+              configuredOffset
+            )
+          ) * 1000
+        );
+      }
+
+      let hash =
+        0;
+
+      for (
+        let index = 0;
+        index < SCREEN_NAME.length;
+        index += 1
+      ) {
+        hash =
+          (
+            hash * 31 +
+            SCREEN_NAME.charCodeAt(index)
+          ) %
+          30;
+      }
+
+      return hash * 1000;
+    }
+
+
+    function getNextStaggeredActiveCheck(
+      now
+    ) {
+      const interval =
+        ACTIVE_FEED_POLL_MS;
+
+      const offset =
+        getScreenPollOffsetMs();
+
+      const currentMs =
+        now.getTime();
+
+      const nextSlot =
+        Math.floor(
+          (
+            currentMs -
+            offset
+          ) /
+          interval
+        ) *
+        interval +
+        offset +
+        interval;
+
+      return new Date(
+        nextSlot
+      );
+    }
+
+
     function scheduleNextFeedPoll() {
       clearScheduledFeedPoll();
 
@@ -728,12 +825,16 @@
       let delay;
 
       if (isPollingActiveNow()) {
-        delay =
-          ACTIVE_FEED_POLL_MS;
-
         nextScheduledCheck =
-          new Date(
-            now.getTime() + delay
+          getNextStaggeredActiveCheck(
+            now
+          );
+
+        delay =
+          Math.max(
+            1000,
+            nextScheduledCheck.getTime() -
+            now.getTime()
           );
 
       } else {
@@ -1201,9 +1302,15 @@
       const active =
         isPollingActiveNow();
 
+      const offsetSeconds =
+        Math.round(
+          getScreenPollOffsetMs() /
+          1000
+        );
+
       debugPolling.textContent =
         active
-          ? `ACTIVE — every 30 seconds (${POLLING_START_TIME}–${POLLING_END_TIME})`
+          ? `ACTIVE — every 30 seconds · +${offsetSeconds}s offset (${POLLING_START_TIME}–${POLLING_END_TIME})`
           : `PAUSED — quiet hours (${POLLING_END_TIME}–${POLLING_START_TIME})`;
 
       debugPolling.className =
@@ -1283,7 +1390,8 @@
 
     /*
      * Always perform one immediate startup check. After that,
-     * polling follows the 10:00–22:00 schedule.
+     * polling follows the 10:00–22:00 schedule with a
+     * stable per-screen stagger.
      */
     loadScheduleFeed({
       force:
