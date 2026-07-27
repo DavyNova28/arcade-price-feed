@@ -1519,6 +1519,61 @@
       display: inline-flex;
     }
 
+
+    .manager-save-button {
+      border-color: rgba(54, 201, 135, 0.65);
+      color: white;
+      background: #237a55;
+    }
+
+    .manager-save-button:hover:not(:disabled) {
+      background: #2a9366;
+    }
+
+    .manager-save-button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .manager-save-message {
+      display: none;
+
+      margin-bottom: 16px;
+      padding: 12px 14px;
+
+      border: 1px solid var(--border);
+      border-radius: 10px;
+
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .manager-save-message.visible {
+      display: block;
+    }
+
+    .manager-save-message.success {
+      color: #caffea;
+      border-color: rgba(54, 201, 135, 0.55);
+      background: rgba(23, 75, 56, 0.72);
+    }
+
+    .manager-save-message.error {
+      color: #ffd6d6;
+      border-color: rgba(255, 104, 104, 0.55);
+      background: rgba(103, 40, 40, 0.6);
+    }
+
+    html[data-theme="light"] .manager-save-message.success {
+      color: #15543a;
+      background: #d9f7ea;
+    }
+
+    html[data-theme="light"] .manager-save-message.error {
+      color: #7e2525;
+      background: #ffe5e5;
+    }
+
     body,
     header,
     .system-banner,
@@ -2534,11 +2589,25 @@
           >
             Undo local changes
           </button>
+
+          <button
+            id="managerSaveButton"
+            class="button manager-save-button"
+            type="button"
+            disabled
+          >
+            Save to Google Sheets
+          </button>
         </div>
 
         <div
           id="managerValidation"
           class="manager-validation"
+        ></div>
+
+        <div
+          id="managerSaveMessage"
+          class="manager-save-message"
         ></div>
 
         <div class="schedule-table-wrapper">
@@ -2571,6 +2640,46 @@
     </section>
   </main>
 
+  <iframe
+    id="scheduleSaveFrame"
+    name="scheduleSaveFrame"
+    title="Schedule save response"
+    style="display:none"
+  ></iframe>
+
+  <form
+    id="scheduleSaveForm"
+    method="post"
+    target="scheduleSaveFrame"
+    style="display:none"
+  >
+    <input
+      id="saveActionField"
+      name="action"
+      value="saveSchedule"
+    >
+
+    <input
+      id="saveScreenField"
+      name="screen"
+    >
+
+    <input
+      id="savePinField"
+      name="pin"
+    >
+
+    <input
+      id="saveScheduleField"
+      name="schedule"
+    >
+
+    <input
+      id="saveRequestIdField"
+      name="requestId"
+    >
+  </form>
+
   <script>
     /*
      * =====================================================
@@ -2579,7 +2688,7 @@
      */
 
     const SCHEDULE_FEED_URL =
-      "https://script.google.com/macros/s/AKfycbwUINP9DCEUywwCU1YMjfnPT3H8ZUq1lsGVk8ShACrTp2EZIqMYrChADlk_uEh2F-DGXw/exec";
+      "PASTE_YOUR_APPS_SCRIPT_EXEC_URL_HERE";
 
     const SCREEN_NAMES = [
       "Arcade",
@@ -2882,6 +2991,41 @@
         "managerValidation"
       );
 
+    const managerSaveButton =
+      document.getElementById(
+        "managerSaveButton"
+      );
+
+    const managerSaveMessage =
+      document.getElementById(
+        "managerSaveMessage"
+      );
+
+    const scheduleSaveForm =
+      document.getElementById(
+        "scheduleSaveForm"
+      );
+
+    const saveScreenField =
+      document.getElementById(
+        "saveScreenField"
+      );
+
+    const savePinField =
+      document.getElementById(
+        "savePinField"
+      );
+
+    const saveScheduleField =
+      document.getElementById(
+        "saveScheduleField"
+      );
+
+    const saveRequestIdField =
+      document.getElementById(
+        "saveRequestIdField"
+      );
+
     const screenStates =
       new Map();
 
@@ -2891,6 +3035,12 @@
       new Map();
 
     let managerEditingEnabled =
+      false;
+
+    let activeSaveRequestId =
+      null;
+
+    let managerSaveInProgress =
       false;
 
     /*
@@ -4671,6 +4821,7 @@
         "change",
         function() {
           managerEditingEnabled = false;
+          hideManagerSaveMessage();
           updateManagerEditingControls();
           updateScheduleManager();
         }
@@ -4701,6 +4852,11 @@
       managerDiscardButton.addEventListener(
         "click",
         discardManagerDraft
+      );
+
+      managerSaveButton.addEventListener(
+        "click",
+        saveManagerDraft
       );
 
       managerScheduleBody.addEventListener(
@@ -4740,6 +4896,24 @@
 
       managerDiscardButton.disabled =
         !hasDraft;
+
+      const draft =
+        managerDrafts.get(screenName);
+
+      const validation =
+        draft
+          ? validateManagerDraft(draft)
+          : { valid: false };
+
+      managerSaveButton.disabled =
+        !hasDraft ||
+        !validation.valid ||
+        managerSaveInProgress;
+
+      managerSaveButton.textContent =
+        managerSaveInProgress
+          ? "Saving…"
+          : "Save to Google Sheets";
 
       managerModeStatus.className =
         managerEditingEnabled
@@ -4805,6 +4979,8 @@
         return;
       }
 
+      hideManagerSaveMessage();
+
       draft.push({
         time: "12:00",
         image: "",
@@ -4827,6 +5003,7 @@
       managerDrafts.delete(screenName);
 
       managerEditingEnabled = false;
+      hideManagerSaveMessage();
 
       updateManagerEditingControls();
       updateScheduleManager();
@@ -4869,28 +5046,17 @@
         return;
       }
 
-     if (field === "fade") {
-  draft[rowIndex][field] =
-    input.value === ""
-      ? ""
-      : Number(input.value);
+      if (field === "fade") {
+        draft[rowIndex][field] =
+          input.value === ""
+            ? ""
+            : Number(input.value);
+      } else {
+        draft[rowIndex][field] =
+          input.value;
+      }
 
-} else if (field === "time") {
-  const formattedTime =
-    formatManagerTimeInput(
-      input.value
-    );
-
-  input.value =
-    formattedTime;
-
-  draft[rowIndex][field] =
-    formattedTime;
-
-} else {
-  draft[rowIndex][field] =
-    input.value;
-}
+      hideManagerSaveMessage();
 
       validateAndDisplayManagerDraft(
         draft
@@ -4937,8 +5103,222 @@
 
       draft.splice(rowIndex, 1);
 
+      hideManagerSaveMessage();
       updateManagerEditingControls();
       updateScheduleManager();
+    }
+
+    /*
+     * =====================================================
+     * SAVE SCHEDULE TO GOOGLE SHEETS
+     * =====================================================
+     */
+
+    function saveManagerDraft() {
+      const screenName =
+        managerScreenSelect.value;
+
+      const draft =
+        managerDrafts.get(screenName);
+
+      if (!draft) {
+        showManagerSaveMessage(
+          "There are no local changes to save.",
+          "error"
+        );
+
+        return;
+      }
+
+      const validation =
+        validateManagerDraft(draft);
+
+      displayManagerValidation(
+        validation
+      );
+
+      if (!validation.valid) {
+        showManagerSaveMessage(
+          "Fix the validation errors before saving.",
+          "error"
+        );
+
+        return;
+      }
+
+      const pin =
+        window.prompt(
+          `Enter the dashboard save PIN for "${screenName}":`
+        );
+
+      if (pin === null) {
+        return;
+      }
+
+      if (!String(pin).trim()) {
+        showManagerSaveMessage(
+          "A save PIN is required.",
+          "error"
+        );
+
+        return;
+      }
+
+      const confirmed =
+        window.confirm(
+          `Save ${draft.length} schedule row(s) to the "${screenName}" Google Sheet tab?\n\n` +
+          `The current schedule will be backed up automatically before it is replaced.`
+        );
+
+      if (!confirmed) {
+        return;
+      }
+
+      activeSaveRequestId =
+        createSaveRequestId();
+
+      managerSaveInProgress =
+        true;
+
+      updateManagerEditingControls();
+
+      showManagerSaveMessage(
+        `Saving "${screenName}"…`,
+        "success"
+      );
+
+      scheduleSaveForm.action =
+        SCHEDULE_FEED_URL;
+
+      saveScreenField.value =
+        screenName;
+
+      savePinField.value =
+        String(pin);
+
+      saveScheduleField.value =
+        JSON.stringify(
+          draft
+            .map(item => ({
+              time:
+                String(item.time).trim(),
+
+              image:
+                String(item.image).trim(),
+
+              fade:
+                Number(item.fade)
+            }))
+            .sort((a, b) =>
+              a.time.localeCompare(b.time)
+            )
+        );
+
+      saveRequestIdField.value =
+        activeSaveRequestId;
+
+      scheduleSaveForm.submit();
+
+      /*
+       * Clear the visible PIN immediately after submitting.
+       */
+      savePinField.value =
+        "";
+    }
+
+
+    function createSaveRequestId() {
+      return (
+        "save-" +
+        Date.now() +
+        "-" +
+        Math.random()
+          .toString(36)
+          .slice(2, 10)
+      );
+    }
+
+
+    function handleScheduleSaveMessage(event) {
+      const data =
+        event.data;
+
+      if (
+        !data ||
+        data.type !==
+          "miniGolfScheduleSaveResult" ||
+        data.requestId !==
+          activeSaveRequestId
+      ) {
+        return;
+      }
+
+      managerSaveInProgress =
+        false;
+
+      activeSaveRequestId =
+        null;
+
+      if (data.success !== true) {
+        showManagerSaveMessage(
+          data.error ||
+          "Google Sheets did not accept the schedule.",
+          "error"
+        );
+
+        updateManagerEditingControls();
+        return;
+      }
+
+      const screenName =
+        data.screen;
+
+      managerDrafts.delete(
+        screenName
+      );
+
+      managerEditingEnabled =
+        false;
+
+      showManagerSaveMessage(
+        `Saved ${data.rowsWritten} row(s) to "${screenName}". A backup was created.`,
+        "success"
+      );
+
+      updateManagerEditingControls();
+
+      /*
+       * Reload the feed so the dashboard reflects the
+       * schedule that was actually written.
+       */
+      setTimeout(
+        function() {
+          refreshDashboard();
+          updateScheduleManager();
+        },
+        600
+      );
+    }
+
+
+    function showManagerSaveMessage(
+      message,
+      type
+    ) {
+      managerSaveMessage.textContent =
+        message;
+
+      managerSaveMessage.className =
+        `manager-save-message visible ${type}`;
+    }
+
+
+    function hideManagerSaveMessage() {
+      managerSaveMessage.textContent =
+        "";
+
+      managerSaveMessage.className =
+        "manager-save-message";
     }
 
     /*
@@ -5086,15 +5466,13 @@
 
                   <td>
                     <input
-  class="manager-input manager-time-input ${rowErrors.time ? "invalid" : ""}"
-  type="text"
-  inputmode="numeric"
-  maxlength="5"
-  placeholder="HH:MM"
-  value="${escapeHtml(item.time)}"
-  data-row-index="${index}"
-  data-manager-field="time"
->
+                      class="manager-input manager-time-input ${rowErrors.time ? "invalid" : ""}"
+                      type="time"
+                      step="60"
+                      value="${escapeHtml(item.time)}"
+                      data-row-index="${index}"
+                      data-manager-field="time"
+                    >
                   </td>
 
                   <td>
@@ -5498,22 +5876,6 @@
         }
       );
     }
-    function formatManagerTimeInput(value) {
-  const digits =
-    String(value)
-      .replace(/\D/g, "")
-      .slice(0, 4);
-
-  if (digits.length <= 2) {
-    return digits;
-  }
-
-  return (
-    digits.slice(0, 2) +
-    ":" +
-    digits.slice(2)
-  );
-}
 
     function buildImageUrl(filename) {
       return String(filename)
@@ -5545,6 +5907,11 @@
      * EVENTS AND STARTUP
      * =====================================================
      */
+
+    window.addEventListener(
+      "message",
+      handleScheduleSaveMessage
+    );
 
     refreshButton.addEventListener(
       "click",
