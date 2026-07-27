@@ -1212,6 +1212,23 @@
       text-transform: uppercase;
       letter-spacing: 0.08em;
     }
+    .manager-select,
+.manager-input {
+  color: var(--text);
+  background: var(--surface);
+}
+
+.manager-select option,
+.manager-input option {
+  color: #f4f7fb;
+  background: #151a22;
+}
+
+html[data-theme="light"] .manager-select option,
+html[data-theme="light"] .manager-input option {
+  color: #172033;
+  background: #ffffff;
+}
 
     .manager-select {
       min-height: 42px;
@@ -1225,6 +1242,15 @@
 
       font: inherit;
     }
+    .holiday-screen-input option {
+  color: #f4f7fb;
+  background: #151a22;
+}
+
+html[data-theme="light"] .holiday-screen-input option {
+  color: #172033;
+  background: #ffffff;
+}
 
     .manager-overview {
       display: grid;
@@ -1794,6 +1820,7 @@
       color: #15543a;
       background: #d9f7ea;
     }
+    
 
     .holiday-screen-input {
       min-width: 150px;
