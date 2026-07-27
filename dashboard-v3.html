@@ -3542,6 +3542,53 @@
       color: #a33a3a;
     }
 
+
+    /*
+     * =====================================================
+     * REPOSITORY-SAFE SAVING
+     * =====================================================
+     */
+
+    .repository-save-warning {
+      display: none;
+
+      margin-bottom: 14px;
+      padding: 12px 14px;
+
+      border: 1px solid rgba(242, 170, 63, 0.55);
+      border-radius: 10px;
+
+      color: #fff0cf;
+      background: rgba(101, 69, 24, 0.62);
+
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    .repository-save-warning.visible {
+      display: block;
+    }
+
+    html[data-theme="light"] .repository-save-warning {
+      color: #7a5518;
+      background: #fff1d4;
+    }
+
+    .repository-fix-button {
+      margin-left: 8px;
+      padding: 4px 7px;
+
+      border: 1px solid currentColor;
+      border-radius: 7px;
+
+      color: inherit;
+      background: transparent;
+
+      font: inherit;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
     body,
     header,
     .system-banner,
@@ -4871,6 +4918,11 @@
         ></div>
 
         <div
+          id="managerRepositoryWarning"
+          class="repository-save-warning"
+        ></div>
+
+        <div
           id="managerSaveMessage"
           class="manager-save-message"
         ></div>
@@ -5068,6 +5120,11 @@
         <div
           id="holidayValidation"
           class="holiday-validation"
+        ></div>
+
+        <div
+          id="holidayRepositoryWarning"
+          class="repository-save-warning"
         ></div>
 
         <div
@@ -6543,6 +6600,11 @@
         "holidaySaveMessage"
       );
 
+    const holidayRepositoryWarning =
+      document.getElementById(
+        "holidayRepositoryWarning"
+      );
+
     const holidaySaveForm =
       document.getElementById(
         "holidaySaveForm"
@@ -7166,6 +7228,11 @@
     const managerSaveMessage =
       document.getElementById(
         "managerSaveMessage"
+      );
+
+    const managerRepositoryWarning =
+      document.getElementById(
+        "managerRepositoryWarning"
       );
 
     const scheduleSaveForm =
@@ -9310,6 +9377,28 @@
         handleManagerTableClick
       );
 
+      managerRepositoryWarning.addEventListener(
+        "click",
+        function(event) {
+          const button =
+            event.target.closest(
+              "[data-fix-repository-name]"
+            );
+
+          if (!button) {
+            return;
+          }
+
+          applyRepositoryNameFix(
+            button.dataset.fixRepositoryKind,
+            Number(
+              button.dataset.fixRepositoryRow
+            ),
+            button.dataset.fixRepositoryName
+          );
+        }
+      );
+
       simulatorTimeInput.addEventListener(
         "input",
         function() {
@@ -9710,6 +9799,29 @@
         return;
       }
 
+      const repositoryValidation =
+        validateRepositoryFilenames(
+          draft
+        );
+
+      renderRepositoryWarning(
+        managerRepositoryWarning,
+        repositoryValidation,
+        "regular"
+      );
+
+      if (
+        repositoryValidation.scanned &&
+        !repositoryValidation.valid
+      ) {
+        showManagerSaveMessage(
+          "Fix the GitHub filename errors before saving.",
+          "error"
+        );
+
+        return;
+      }
+
       const pin =
         window.prompt(
           `Enter the dashboard save PIN for "${screenName}":`
@@ -9845,6 +9957,12 @@
       managerDrafts.delete(
         screenName
       );
+
+      managerRepositoryWarning.className =
+        "repository-save-warning";
+
+      managerRepositoryWarning.innerHTML =
+        "";
 
       removeStoredScheduleDraft(
         screenName
@@ -10853,6 +10971,18 @@
           .join("");
 
       updateVisibleImagePickerStatuses();
+
+      const repositoryValidation =
+        validateRepositoryFilenames(
+          schedule
+        );
+
+      renderRepositoryWarning(
+        managerRepositoryWarning,
+        repositoryValidation,
+        "regular"
+      );
+
       runScheduleIntegrityChecks();
     }
 
@@ -11194,6 +11324,28 @@
         handleHolidayTableClick
       );
 
+      holidayRepositoryWarning.addEventListener(
+        "click",
+        function(event) {
+          const button =
+            event.target.closest(
+              "[data-fix-repository-name]"
+            );
+
+          if (!button) {
+            return;
+          }
+
+          applyRepositoryNameFix(
+            button.dataset.fixRepositoryKind,
+            Number(
+              button.dataset.fixRepositoryRow
+            ),
+            button.dataset.fixRepositoryName
+          );
+        }
+      );
+
       restoreHolidayDraftButton.addEventListener(
         "click",
         restoreStoredHolidayDraft
@@ -11325,6 +11477,12 @@
     function discardHolidayDraft() {
       holidayDraft = null;
       holidayEditingEnabled = false;
+
+      holidayRepositoryWarning.className =
+        "repository-save-warning";
+
+      holidayRepositoryWarning.innerHTML =
+        "";
 
       removeStoredHolidayDraft();
       hideHolidaySaveMessage();
@@ -11679,6 +11837,18 @@
         );
 
         updateVisibleImagePickerStatuses();
+
+        const repositoryValidation =
+          validateRepositoryFilenames(
+            sourceRows
+          );
+
+        renderRepositoryWarning(
+          holidayRepositoryWarning,
+          repositoryValidation,
+          "holiday"
+        );
+
         return;
       }
 
@@ -12344,6 +12514,29 @@
           "Fix the validation errors before saving.",
           "error"
         );
+        return;
+      }
+
+      const repositoryValidation =
+        validateRepositoryFilenames(
+          cleanedDraft
+        );
+
+      renderRepositoryWarning(
+        holidayRepositoryWarning,
+        repositoryValidation,
+        "holiday"
+      );
+
+      if (
+        repositoryValidation.scanned &&
+        !repositoryValidation.valid
+      ) {
+        showHolidaySaveMessage(
+          "Fix the GitHub filename errors before saving.",
+          "error"
+        );
+
         return;
       }
 
@@ -14356,6 +14549,199 @@
             </article>
           `)
           .join("");
+    }
+
+
+    function validateRepositoryFilenames(
+      rows
+    ) {
+      const issues = [];
+
+      if (
+        !imageHealthScanned ||
+        repositoryImages.length === 0
+      ) {
+        return {
+          scanned:
+            false,
+
+          valid:
+            true,
+
+          issues:
+            []
+        };
+      }
+
+      rows.forEach((item, index) => {
+        const typed =
+          String(
+            item.image || ""
+          ).trim();
+
+        if (!typed) {
+          return;
+        }
+
+        const exact =
+          findExactRepositoryFilename(
+            typed
+          );
+
+        if (!exact) {
+          issues.push({
+            rowIndex:
+              index,
+
+            typed:
+              typed,
+
+            exact:
+              null,
+
+            type:
+              "missing"
+          });
+
+          return;
+        }
+
+        if (exact !== typed) {
+          issues.push({
+            rowIndex:
+              index,
+
+            typed:
+              typed,
+
+            exact:
+              exact,
+
+            type:
+              "capitalization"
+          });
+        }
+      });
+
+      return {
+        scanned:
+          true,
+
+        valid:
+          issues.length === 0,
+
+        issues:
+          issues
+      };
+    }
+
+
+    function renderRepositoryWarning(
+      container,
+      validation,
+      kind
+    ) {
+      container.className =
+        "repository-save-warning";
+
+      container.innerHTML =
+        "";
+
+      if (!validation.scanned) {
+        container.classList.add(
+          "visible"
+        );
+
+        container.textContent =
+          "GitHub has not been scanned. Saving is still allowed, but filenames cannot be verified.";
+
+        return;
+      }
+
+      if (validation.valid) {
+        return;
+      }
+
+      const lines =
+        validation.issues.map(issue => {
+          const rowNumber =
+            issue.rowIndex + 1;
+
+          if (
+            issue.type ===
+            "capitalization"
+          ) {
+            return (
+              `Row ${rowNumber}: "${issue.typed}" should be "${issue.exact}".` +
+              ` <button class="repository-fix-button" type="button" ` +
+              `data-fix-repository-name="${escapeHtml(issue.exact)}" ` +
+              `data-fix-repository-row="${issue.rowIndex}" ` +
+              `data-fix-repository-kind="${kind}">Use exact name</button>`
+            );
+          }
+
+          return (
+            `Row ${rowNumber}: "${issue.typed}" was not found in GitHub.`
+          );
+        });
+
+      container.classList.add(
+        "visible"
+      );
+
+      container.innerHTML =
+        `<strong>Repository validation failed:</strong><br>` +
+        lines.join("<br>");
+    }
+
+
+    function applyRepositoryNameFix(
+      kind,
+      rowIndex,
+      exactName
+    ) {
+      if (kind === "regular") {
+        const screenName =
+          managerScreenSelect.value;
+
+        const draft =
+          managerDrafts.get(
+            screenName
+          );
+
+        if (
+          !draft ||
+          !draft[rowIndex]
+        ) {
+          return;
+        }
+
+        draft[rowIndex].image =
+          exactName;
+
+        persistScheduleDraft(
+          screenName,
+          draft
+        );
+
+        updateScheduleManager();
+        return;
+      }
+
+      if (
+        kind === "holiday" &&
+        holidayDraft &&
+        holidayDraft[rowIndex]
+      ) {
+        holidayDraft[rowIndex].image =
+          exactName;
+
+        persistHolidayDraft(
+          holidayDraft
+        );
+
+        renderHolidayOverrides();
+      }
     }
 
 
