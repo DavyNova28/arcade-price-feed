@@ -2,6 +2,14 @@
 
 All notable changes to Mini Golf Signage Manager are recorded here.
 
+## [1.0.0-build.62] — Mission Control Step 1A
+
+### Added
+
+- New Home tab as the first navigation item.
+- New Mission Control placeholder workspace.
+- Home is now the default dashboard landing page.
+
 ## [1.0.0] — Stable Candidate
 
 ### Added

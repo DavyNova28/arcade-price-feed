@@ -5920,3 +5920,67 @@
         transform: none;
       }
     }
+
+
+/*
+ * =========================================================
+ * MISSION CONTROL — STEP 1A
+ * =========================================================
+ */
+
+.home-workspace {
+  width: 100%;
+  min-width: 0;
+}
+
+.home-placeholder-card {
+  width: 100%;
+  min-width: 0;
+  padding: clamp(22px, 4vw, 42px);
+
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+
+.home-placeholder-title {
+  margin: 7px 0 0;
+
+  font-size: clamp(28px, 5vw, 48px);
+  line-height: 1.08;
+}
+
+.home-placeholder-description {
+  max-width: 680px;
+  margin: 14px 0 0;
+
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.65;
+}
+
+.home-placeholder-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+
+  margin-top: 22px;
+  padding: 9px 12px;
+
+  border: 1px solid rgba(54, 201, 135, 0.45);
+  border-radius: 999px;
+
+  color: #caffea;
+  background: rgba(23, 75, 56, 0.5);
+
+  font-size: 11px;
+  font-weight: 800;
+}
+
+html[data-theme="light"] .home-placeholder-status {
+  color: #15543a;
+  background: #d9f7ea;
+}
+

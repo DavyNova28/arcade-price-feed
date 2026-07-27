@@ -26,7 +26,7 @@
   <meta name="application-name" content="Mini Golf Signage Manager">
   <meta name="dashboard-version" content="1.0.0">
   <meta name="dashboard-channel" content="stable-candidate">
-  <meta name="dashboard-build" content="61">
+  <meta name="dashboard-build" content="62">
 </head>
 
 <body>
@@ -94,8 +94,16 @@
   <main>
     <nav class="workspace-tabs">
       <button
-        id="controlCenterTab"
+        id="homeTab"
         class="workspace-tab active"
+        type="button"
+      >
+        🏠 Home
+      </button>
+
+      <button
+        id="controlCenterTab"
+        class="workspace-tab"
         type="button"
       >
         Control Center
@@ -177,8 +185,37 @@
 </nav>
 
     <section
+      id="homeWorkspace"
+      class="workspace active home-workspace"
+      aria-labelledby="homeWorkspaceTitle"
+    >
+      <section class="home-placeholder-card">
+        <div class="eyebrow">
+          Version 1.0
+        </div>
+
+        <h2
+          id="homeWorkspaceTitle"
+          class="home-placeholder-title"
+        >
+          Mission Control
+        </h2>
+
+        <p class="home-placeholder-description">
+          Welcome to Mini Golf Signage Manager.
+          The complete Mission Control overview will be added in the next steps.
+        </p>
+
+        <div class="home-placeholder-status">
+          <span aria-hidden="true">✅</span>
+          Home navigation is ready.
+        </div>
+      </section>
+    </section>
+
+    <section
       id="controlCenterWorkspace"
-      class="workspace active"
+      class="workspace"
     >
       <section class="operations-panel">
         <div class="operations-heading">
