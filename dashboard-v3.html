@@ -3063,6 +3063,39 @@
         inset 0 0 0 1px var(--blue);
     }
 
+
+    /*
+     * =====================================================
+     * OPTIONAL END TIME
+     * =====================================================
+     */
+
+    .manager-end-time-input {
+      min-width: 105px;
+    }
+
+    .timeline-segment.has-explicit-end {
+      border-right:
+        2px solid rgba(255, 255, 255, 0.72);
+    }
+
+    .timeline-expired-gap {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+
+      background:
+        repeating-linear-gradient(
+          135deg,
+          rgba(255, 255, 255, 0.04) 0,
+          rgba(255, 255, 255, 0.04) 7px,
+          rgba(255, 255, 255, 0.01) 7px,
+          rgba(255, 255, 255, 0.01) 14px
+        );
+
+      pointer-events: none;
+    }
+
     body,
     header,
     .system-banner,
@@ -4172,6 +4205,7 @@
               <tr>
                 <th>#</th>
                 <th>Start time</th>
+                <th>End time</th>
                 <th>Image filename</th>
                 <th>Fade</th>
                 <th>Status</th>
@@ -4184,7 +4218,7 @@
             <tbody id="managerScheduleBody">
               <tr>
                 <td
-                  colspan="7"
+                  colspan="8"
                   class="manager-empty"
                 >
                   Select a screen to load its schedule.
@@ -6917,6 +6951,11 @@
             time:
               String(item.time).trim(),
 
+            endTime:
+              normalizeOptionalDashboardTime(
+                item.endTime
+              ),
+
             image:
               String(item.image).trim(),
 
@@ -7031,17 +7070,67 @@
       currentTime
     ) {
       let activeItem =
-        schedule[schedule.length - 1];
+        null;
 
       for (const item of schedule) {
-        if (item.time <= currentTime) {
-          activeItem = item;
-        } else {
+        if (item.time > currentTime) {
           break;
+        }
+
+        if (
+          !item.endTime ||
+          currentTime < item.endTime
+        ) {
+          activeItem =
+            item;
         }
       }
 
-      return activeItem;
+      if (activeItem) {
+        return activeItem;
+      }
+
+      /*
+       * Match the player fallback:
+       * return to the most recent untimed item that already
+       * started.
+       */
+      for (
+        let index =
+          schedule.length - 1;
+        index >= 0;
+        index -= 1
+      ) {
+        const item =
+          schedule[index];
+
+        if (
+          item.time <= currentTime &&
+          !item.endTime
+        ) {
+          return item;
+        }
+      }
+
+      /*
+       * Before the first item, continue the final untimed
+       * item from the previous day.
+       */
+      for (
+        let index =
+          schedule.length - 1;
+        index >= 0;
+        index -= 1
+      ) {
+        if (!schedule[index].endTime) {
+          return schedule[index];
+        }
+      }
+
+      return (
+        schedule[schedule.length - 1] ||
+        null
+      );
     }
 
     function getNextScheduleItem(
@@ -7184,7 +7273,9 @@
       screenState.textContent =
         isHoliday
           ? "Holiday override currently active"
-          : "Regular schedule operating normally";
+          : state.activeItem.endTime
+            ? `Temporary item active until ${state.activeItem.endTime}`
+            : "Regular schedule operating normally";
 
       currentImage.textContent =
         state.activeItem.image;
@@ -7283,10 +7374,21 @@
           const nextItem =
             schedule[index + 1];
 
+          const explicitEndMinute =
+            item.endTime
+              ? timeToMinutes(
+                  item.endTime
+                )
+              : null;
+
           const endMinute =
-            nextItem
-              ? timeToMinutes(nextItem.time)
-              : 1440;
+            explicitEndMinute !== null
+              ? explicitEndMinute
+              : nextItem
+                ? timeToMinutes(
+                    nextItem.time
+                  )
+                : 1440;
 
           const left =
             (startMinute / 1440) * 100;
@@ -7305,6 +7407,12 @@
 
           segment.className =
             `timeline-segment ${state.source}`;
+
+          if (item.endTime) {
+            segment.classList.add(
+              "has-explicit-end"
+            );
+          }
 
           if (
             activeItem &&
@@ -7337,9 +7445,11 @@
           segment.title =
             `${item.time} — ${item.image}` +
             (
-              nextItem
-                ? `\nUntil ${nextItem.time}`
-                : "\nUntil midnight"
+              item.endTime
+                ? `\nEnds ${item.endTime}`
+                : nextItem
+                  ? `\nUntil ${nextItem.time}`
+                  : "\nUntil midnight"
             );
 
           const thumbnail =
@@ -7395,7 +7505,9 @@
             "timeline-image-name";
 
           imageLabel.textContent =
-            item.image;
+            item.endTime
+              ? `${item.image} · ends ${item.endTime}`
+              : item.image;
 
           content.appendChild(
             timeLabel
@@ -8461,9 +8573,17 @@
 
       const draft =
         state.schedule.map(item => ({
-          time: item.time,
-          image: item.image,
-          fade: item.fade
+          time:
+            item.time,
+
+          endTime:
+            item.endTime || "",
+
+          image:
+            item.image,
+
+          fade:
+            item.fade
         }));
 
       managerDrafts.set(
@@ -8490,6 +8610,7 @@
 
       draft.push({
         time: "12:00",
+        endTime: "",
         image: "",
         fade: 1500
       });
@@ -8567,7 +8688,10 @@
             ? ""
             : Number(input.value);
 
-      } else if (field === "time") {
+      } else if (
+        field === "time" ||
+        field === "endTime"
+      ) {
         const formattedTime =
           formatManagerTimeInput(
             input.value
@@ -8740,6 +8864,11 @@
             .map(item => ({
               time:
                 String(item.time).trim(),
+
+              endTime:
+                String(
+                  item.endTime || ""
+                ).trim(),
 
               image:
                 String(item.image).trim(),
@@ -8977,7 +9106,9 @@
         String(displayedSchedule.length);
 
       managerCurrentImage.textContent =
-        activeItem.image;
+        activeItem
+          ? activeItem.image
+          : "—";
 
       managerNextChange.textContent =
         nextItem.tomorrow
@@ -9024,6 +9155,19 @@
                       value="${escapeHtml(item.time)}"
                       data-row-index="${index}"
                       data-manager-field="time"
+                    >
+                  </td>
+
+                  <td>
+                    <input
+                      class="manager-input manager-end-time-input ${rowErrors.endTime ? "invalid" : ""}"
+                      type="text"
+                      inputmode="numeric"
+                      maxlength="5"
+                      placeholder="Optional"
+                      value="${escapeHtml(item.endTime || "")}"
+                      data-row-index="${index}"
+                      data-manager-field="endTime"
                     >
                   </td>
 
@@ -9111,6 +9255,10 @@
 
                 <td class="manager-time">
                   ${escapeHtml(item.time)}
+                </td>
+
+                <td class="manager-time">
+                  ${escapeHtml(item.endTime || "—")}
                 </td>
 
                 <td class="manager-image-name">
@@ -9203,6 +9351,9 @@
         const time =
           String(item.time || "").trim();
 
+        const endTime =
+          String(item.endTime || "").trim();
+
         const image =
           String(item.image || "").trim();
 
@@ -9223,6 +9374,39 @@
             time,
             (timeCounts.get(time) || 0) + 1
           );
+        }
+
+        if (
+          endTime &&
+          !/^([01]\d|2[0-3]):[0-5]\d$/
+            .test(endTime)
+        ) {
+          errors.push(
+            `Row ${rowNumber}: enter a valid optional End Time.`
+          );
+
+          rowErrors[index] = {
+            ...(rowErrors[index] || {}),
+            endTime: true
+          };
+        }
+
+        if (
+          endTime &&
+          /^([01]\d|2[0-3]):[0-5]\d$/
+            .test(endTime) &&
+          /^([01]\d|2[0-3]):[0-5]\d$/
+            .test(time) &&
+          endTime <= time
+        ) {
+          errors.push(
+            `Row ${rowNumber}: End Time must be later than Start Time.`
+          );
+
+          rowErrors[index] = {
+            ...(rowErrors[index] || {}),
+            endTime: true
+          };
         }
 
         if (!image) {
@@ -9332,6 +9516,7 @@
       currentTime
     ) {
       const isCurrent =
+        Boolean(activeItem) &&
         item.time === activeItem.time &&
         item.image === activeItem.image;
 
@@ -11511,6 +11696,9 @@
           time:
             item.time,
 
+          endTime:
+            item.endTime || "",
+
           image:
             item.image,
 
@@ -11690,8 +11878,13 @@
       }
 
       return (
-        `${row.time} · ` +
-        `${row.image} · ` +
+        `${row.time}` +
+        (
+          row.endTime
+            ? ` → ${row.endTime}`
+            : ""
+        ) +
+        ` · ${row.image} · ` +
         `${row.fade} ms`
       );
     }
@@ -11815,6 +12008,9 @@
 
               time:
                 item.time,
+
+              endTime:
+                item.endTime || "",
 
               fade:
                 Number(item.fade)
@@ -12225,6 +12421,11 @@
           <div class="image-library-usage-detail">
             Regular ·
             ${escapeHtml(usage.time || "—")}
+            ${
+              usage.endTime
+                ? `→ ${escapeHtml(usage.endTime)}`
+                : ""
+            }
             ·
             ${escapeHtml(usage.fade)} ms
           </div>
@@ -12707,7 +12908,11 @@
 
       managerDrafts.set(
         screenName,
-        stored.rows
+        stored.rows.map(item => ({
+          ...item,
+          endTime:
+            item.endTime || ""
+        }))
       );
 
       managerEditingEnabled =
@@ -13732,6 +13937,27 @@
      * GENERAL HELPERS
      * =====================================================
      */
+
+    function normalizeOptionalDashboardTime(
+      value
+    ) {
+      if (
+        value === undefined ||
+        value === null ||
+        String(value).trim() === ""
+      ) {
+        return "";
+      }
+
+      const time =
+        String(value).trim();
+
+      return /^([01]\d|2[0-3]):[0-5]\d$/
+        .test(time)
+          ? time
+          : "";
+    }
+
 
     function formatManagerTimeInput(value) {
       const digits =
