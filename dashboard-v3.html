@@ -5018,98 +5018,6 @@
     }
 
     /*
-     * PLAYER VERSION COMPLIANCE
-     */
-
-    function renderPlayerVersionCompliance(
-      players
-    ) {
-      const normalizedPlayers =
-        Array.isArray(players)
-          ? players
-          : [];
-
-      const currentCount =
-        normalizedPlayers.filter(
-          player =>
-            player.playerVersion ===
-            EXPECTED_PLAYER_VERSION
-        ).length;
-
-      const outdatedCount =
-        normalizedPlayers.filter(
-          player =>
-            player.playerVersion &&
-            player.playerVersion !==
-              EXPECTED_PLAYER_VERSION
-        ).length;
-
-      const unknownCount =
-        normalizedPlayers.length -
-        currentCount -
-        outdatedCount;
-
-      playerVersionSummary.innerHTML =
-        `Expected version: <strong>${escapeHtml(EXPECTED_PLAYER_VERSION)}</strong>` +
-        ` · ${currentCount} current` +
-        ` · ${outdatedCount} outdated` +
-        ` · ${unknownCount} unknown`;
-
-      playerVersionList.innerHTML =
-        normalizedPlayers
-          .map(
-            player => {
-              let status =
-                "unknown";
-
-              let label =
-                "Unknown";
-
-              if (
-                player.playerVersion ===
-                EXPECTED_PLAYER_VERSION
-              ) {
-                status =
-                  "current";
-
-                label =
-                  "Current";
-
-              } else if (
-                player.playerVersion
-              ) {
-                status =
-                  "outdated";
-
-                label =
-                  "Outdated";
-              }
-
-              return `
-                <div class="player-version-row ${status}">
-                  <div class="player-version-top">
-                    <div class="player-version-name">
-                      ${escapeHtml(player.screen)}
-                    </div>
-
-                    <div class="player-version-badge ${status}">
-                      ${escapeHtml(label)}
-                    </div>
-                  </div>
-
-                  <div class="player-version-detail">
-                    Reported:
-                    ${escapeHtml(player.playerVersion || "Not reported")}
-                  </div>
-                </div>
-              `;
-            }
-          )
-          .join("");
-    }
-
-
-    /*
      * GO-LIVE READINESS
      */
 
@@ -24272,6 +24180,98 @@
           .join("");
 
       runGoLiveReadinessCheck();
+    }
+
+
+    /*
+     * PLAYER VERSION COMPLIANCE
+     */
+
+    function renderPlayerVersionCompliance(
+      players
+    ) {
+      const normalizedPlayers =
+        Array.isArray(players)
+          ? players
+          : [];
+
+      const currentCount =
+        normalizedPlayers.filter(
+          player =>
+            player.playerVersion ===
+            EXPECTED_PLAYER_VERSION
+        ).length;
+
+      const outdatedCount =
+        normalizedPlayers.filter(
+          player =>
+            player.playerVersion &&
+            player.playerVersion !==
+              EXPECTED_PLAYER_VERSION
+        ).length;
+
+      const unknownCount =
+        normalizedPlayers.length -
+        currentCount -
+        outdatedCount;
+
+      playerVersionSummary.innerHTML =
+        `Expected version: <strong>${escapeHtml(EXPECTED_PLAYER_VERSION)}</strong>` +
+        ` · ${currentCount} current` +
+        ` · ${outdatedCount} outdated` +
+        ` · ${unknownCount} unknown`;
+
+      playerVersionList.innerHTML =
+        normalizedPlayers
+          .map(
+            player => {
+              let status =
+                "unknown";
+
+              let label =
+                "Unknown";
+
+              if (
+                player.playerVersion ===
+                EXPECTED_PLAYER_VERSION
+              ) {
+                status =
+                  "current";
+
+                label =
+                  "Current";
+
+              } else if (
+                player.playerVersion
+              ) {
+                status =
+                  "outdated";
+
+                label =
+                  "Outdated";
+              }
+
+              return `
+                <div class="player-version-row ${status}">
+                  <div class="player-version-top">
+                    <div class="player-version-name">
+                      ${escapeHtml(player.screen)}
+                    </div>
+
+                    <div class="player-version-badge ${status}">
+                      ${escapeHtml(label)}
+                    </div>
+                  </div>
+
+                  <div class="player-version-detail">
+                    Reported:
+                    ${escapeHtml(player.playerVersion || "Not reported")}
+                  </div>
+                </div>
+              `;
+            }
+          )
+          .join("");
     }
 
 
