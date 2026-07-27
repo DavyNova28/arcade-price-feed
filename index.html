@@ -57,23 +57,58 @@
       bottom: 12px;
       z-index: 100;
 
-      max-width: calc(100% - 44px);
-      padding: 10px;
+      width: min(430px, calc(100% - 44px));
+      padding: 12px;
 
       color: white;
-      background: rgba(0, 0, 0, 0.85);
+      background: rgba(0, 0, 0, 0.88);
 
-      border-radius: 5px;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      border-radius: 8px;
 
       font-family: Arial, sans-serif;
-      font-size: 14px;
-      line-height: 1.4;
+      font-size: 13px;
+      line-height: 1.45;
 
       display: none;
     }
 
     body.debug #status {
       display: block;
+    }
+
+    .debug-title {
+      margin-bottom: 8px;
+
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .debug-grid {
+      display: grid;
+      grid-template-columns: 120px 1fr;
+      gap: 4px 10px;
+    }
+
+    .debug-label {
+      color: rgba(255, 255, 255, 0.64);
+    }
+
+    .debug-value {
+      min-width: 0;
+      overflow-wrap: anywhere;
+    }
+
+    .debug-active {
+      color: #8ff0bd;
+    }
+
+    .debug-paused {
+      color: #ffd38a;
+    }
+
+    .debug-error {
+      color: #ff9f9f;
     }
   </style>
 </head>
@@ -93,7 +128,35 @@
     >
 
     <div id="status">
-      Starting signage…
+      <div class="debug-title">
+        Player Status
+      </div>
+
+      <div class="debug-grid">
+        <div class="debug-label">Screen</div>
+        <div id="debugScreen" class="debug-value">—</div>
+
+        <div class="debug-label">Polling</div>
+        <div id="debugPolling" class="debug-value">Starting…</div>
+
+        <div class="debug-label">Last check</div>
+        <div id="debugLastCheck" class="debug-value">—</div>
+
+        <div class="debug-label">Next check</div>
+        <div id="debugNextCheck" class="debug-value">—</div>
+
+        <div class="debug-label">Requests today</div>
+        <div id="debugRequestCount" class="debug-value">0</div>
+
+        <div class="debug-label">Schedule rows</div>
+        <div id="debugScheduleCount" class="debug-value">0</div>
+
+        <div class="debug-label">Current image</div>
+        <div id="debugCurrentImage" class="debug-value">—</div>
+
+        <div class="debug-label">Last result</div>
+        <div id="debugLastResult" class="debug-value">Starting…</div>
+      </div>
     </div>
   </main>
 
@@ -109,17 +172,18 @@
       "https://script.google.com/macros/s/AKfycbwUINP9DCEUywwCU1YMjfnPT3H8ZUq1lsGVk8ShACrTp2EZIqMYrChADlk_uEh2F-DGXw/exec";
 
     /*
-     * Re-read Google Sheets every 30 seconds.
+     * Background polling is active only between 09:00 and
+     * 22:00. Between 22:00 and 09:00, Apps Script is not
+     * contacted at all.
      */
     const ACTIVE_FEED_POLL_MS = 30000;
-const QUIET_FEED_POLL_MS = 10 * 60 * 1000;
-    const HIDDEN_FEED_POLL_MS = 15 * 60 * 1000;
+    const POLLING_START_HOUR = 9;
+    const POLLING_END_HOUR = 22;
     const FEED_REQUEST_TIMEOUT_MS = 20000;
-    const QUIET_HOUR_START = 0;
-    const QUIET_HOUR_END = 8;
 
     /*
      * Check the current time every second.
+     * This is local and does not contact Apps Script.
      */
     const CLOCK_CHECK_MS = 1000;
 
@@ -158,11 +222,16 @@ const QUIET_FEED_POLL_MS = 10 * 60 * 1000;
     let visibleLayer = "A";
     let feedRequestNumber = 0;
     let transitionInProgress = false;
-    let currentScheduleSignature="";
-    let feedPollTimer=null;
-    let feedRequestTimeout=null;
-    let feedRequestInProgress=false;
-    let consecutiveFeedErrors=0;
+
+    let currentScheduleSignature = "";
+    let feedPollTimer = null;
+    let feedRequestTimeout = null;
+    let feedRequestInProgress = false;
+    let nextScheduledCheck = null;
+    let lastSuccessfulCheck = null;
+    let requestCountToday = 0;
+    let requestCountDate = getLocalDateKey();
+    let lastFeedResult = "Starting…";
 
     const imageA =
       document.getElementById("imageA");
@@ -172,6 +241,30 @@ const QUIET_FEED_POLL_MS = 10 * 60 * 1000;
 
     const statusElement =
       document.getElementById("status");
+
+    const debugScreen =
+      document.getElementById("debugScreen");
+
+    const debugPolling =
+      document.getElementById("debugPolling");
+
+    const debugLastCheck =
+      document.getElementById("debugLastCheck");
+
+    const debugNextCheck =
+      document.getElementById("debugNextCheck");
+
+    const debugRequestCount =
+      document.getElementById("debugRequestCount");
+
+    const debugScheduleCount =
+      document.getElementById("debugScheduleCount");
+
+    const debugCurrentImage =
+      document.getElementById("debugCurrentImage");
+
+    const debugLastResult =
+      document.getElementById("debugLastResult");
 
     /*
      * Display unexpected JavaScript errors on screen.
@@ -195,15 +288,17 @@ const QUIET_FEED_POLL_MS = 10 * 60 * 1000;
      * selected Google Sheets tab.
      */
     window.updateSignageSchedule = function(payload) {
+      finishFeedRequest();
+
       if (!payload) {
-        showError(
+        handleFeedFailure(
           "Apps Script returned no information."
         );
         return;
       }
 
       if (payload.success !== true) {
-        showError(
+        handleFeedFailure(
           payload.error ||
           "Apps Script returned an error."
         );
@@ -211,53 +306,78 @@ const QUIET_FEED_POLL_MS = 10 * 60 * 1000;
       }
 
       if (!Array.isArray(payload.schedule)) {
-        showError(
+        handleFeedFailure(
           "The schedule is not in the expected format."
         );
         return;
       }
 
-      schedule = payload.schedule
-        .filter(isValidScheduleItem)
-        .map(item => ({
-          time:
-            String(item.time).trim(),
+      const incomingSchedule =
+        payload.schedule
+          .filter(isValidScheduleItem)
+          .map(item => ({
+            time:
+              String(item.time).trim(),
 
-          image:
-            String(item.image).trim(),
+            image:
+              String(item.image).trim(),
 
-          fade:
-            normalizeFade(item.fade),
+            fade:
+              normalizeFade(item.fade),
 
-          /*
-           * Optional column D. A blank value means the item
-           * remains eligible until another schedule item
-           * replaces it.
-           */
-          endTime:
-            normalizeOptionalTime(
-              item.endTime
-            )
-        }))
-        .sort((a, b) =>
-          a.time.localeCompare(b.time)
-        );
+            endTime:
+              normalizeOptionalTime(
+                item.endTime
+              )
+          }))
+          .sort((a, b) =>
+            a.time.localeCompare(b.time)
+          );
 
-      if (schedule.length === 0) {
-        showError(
+      if (incomingSchedule.length === 0) {
+        handleFeedFailure(
           `The tab "${SCREEN_NAME}" has no valid schedule rows.`
         );
         return;
       }
 
-      setStatus(
-        `Screen: ${SCREEN_NAME} — ` +
-        `${schedule.length} schedule item(s)`
-      );
+      const incomingSignature =
+        JSON.stringify(
+          incomingSchedule.map(item => [
+            item.time,
+            item.endTime || "",
+            item.image,
+            item.fade
+          ])
+        );
 
-      preloadScheduleImages();
+      const changed =
+        incomingSignature !==
+        currentScheduleSignature;
+
+      schedule =
+        incomingSchedule;
+
+      currentScheduleSignature =
+        incomingSignature;
+
+      lastSuccessfulCheck =
+        new Date();
+
+      lastFeedResult =
+        changed
+          ? "Schedule updated"
+          : "Schedule unchanged";
+
+      if (changed) {
+        preloadScheduleImages();
+      }
+
       evaluateSchedule();
+      updateDebugPanel();
+      scheduleNextFeedPoll();
     };
+
 
     function isValidScheduleItem(item) {
       if (
@@ -337,7 +457,12 @@ const QUIET_FEED_POLL_MS = 10 * 60 * 1000;
      * LOAD GOOGLE SHEETS SCHEDULE
      * =====================================================
      */
-    function loadScheduleFeed() {
+    function loadScheduleFeed(
+      options = {}
+    ) {
+      const force =
+        options.force === true;
+
       if (
         !SCHEDULE_FEED_URL ||
         SCHEDULE_FEED_URL.includes(
@@ -350,7 +475,31 @@ const QUIET_FEED_POLL_MS = 10 * 60 * 1000;
         return;
       }
 
+      if (
+        !force &&
+        !isPollingActiveNow()
+      ) {
+        scheduleNextFeedPoll();
+        return;
+      }
+
+      if (feedRequestInProgress) {
+        return;
+      }
+
+      clearScheduledFeedPoll();
+      resetDailyRequestCounterIfNeeded();
+
+      feedRequestInProgress =
+        true;
+
       feedRequestNumber += 1;
+      requestCountToday += 1;
+
+      lastFeedResult =
+        "Checking Apps Script…";
+
+      updateDebugPanel();
 
       const previousScript =
         document.getElementById(
@@ -364,8 +513,11 @@ const QUIET_FEED_POLL_MS = 10 * 60 * 1000;
       const script =
         document.createElement("script");
 
-      script.id = "schedule-feed-script";
-      script.async = true;
+      script.id =
+        "schedule-feed-script";
+
+      script.async =
+        true;
 
       const separator =
         SCHEDULE_FEED_URL.includes("?")
@@ -379,18 +531,206 @@ const QUIET_FEED_POLL_MS = 10 * 60 * 1000;
         `&_=${Date.now()}` +
         `&request=${feedRequestNumber}`;
 
-      script.onerror = function() {
-        showError(
-          `Could not load the schedule for "${SCREEN_NAME}".`
+      script.onerror =
+        function() {
+          finishFeedRequest();
+
+          handleFeedFailure(
+            `Could not load the schedule for "${SCREEN_NAME}".`
+          );
+        };
+
+      document.head.appendChild(
+        script
+      );
+
+      feedRequestTimeout =
+        setTimeout(
+          function() {
+            finishFeedRequest();
+
+            handleFeedFailure(
+              `Schedule request timed out for "${SCREEN_NAME}".`
+            );
+          },
+          FEED_REQUEST_TIMEOUT_MS
         );
-      };
+    }
 
-      document.head.appendChild(script);
 
-      setStatus(
-        `Loading schedule for: ${SCREEN_NAME}`
+    function finishFeedRequest() {
+      feedRequestInProgress =
+        false;
+
+      if (feedRequestTimeout) {
+        clearTimeout(
+          feedRequestTimeout
+        );
+
+        feedRequestTimeout =
+          null;
+      }
+
+      const script =
+        document.getElementById(
+          "schedule-feed-script"
+        );
+
+      if (script) {
+        script.remove();
+      }
+    }
+
+
+    function handleFeedFailure(
+      message
+    ) {
+      lastFeedResult =
+        message;
+
+      updateDebugPanel();
+
+      if (
+        DEBUG_MODE ||
+        schedule.length === 0
+      ) {
+        showError(message);
+
+      } else {
+        console.error(message);
+      }
+
+      scheduleNextFeedPoll();
+    }
+
+
+    function isPollingActiveNow() {
+      const hour =
+        new Date().getHours();
+
+      return (
+        hour >= POLLING_START_HOUR &&
+        hour < POLLING_END_HOUR
       );
     }
+
+
+    function getNextPollingStart() {
+      const now =
+        new Date();
+
+      const next =
+        new Date(now);
+
+      if (
+        now.getHours() >=
+        POLLING_END_HOUR
+      ) {
+        next.setDate(
+          next.getDate() + 1
+        );
+      }
+
+      next.setHours(
+        POLLING_START_HOUR,
+        0,
+        0,
+        0
+      );
+
+      return next;
+    }
+
+
+    function clearScheduledFeedPoll() {
+      if (feedPollTimer) {
+        clearTimeout(
+          feedPollTimer
+        );
+
+        feedPollTimer =
+          null;
+      }
+
+      nextScheduledCheck =
+        null;
+    }
+
+
+    function scheduleNextFeedPoll() {
+      clearScheduledFeedPoll();
+
+      const now =
+        new Date();
+
+      let delay;
+
+      if (isPollingActiveNow()) {
+        delay =
+          ACTIVE_FEED_POLL_MS;
+
+        nextScheduledCheck =
+          new Date(
+            now.getTime() + delay
+          );
+
+      } else {
+        nextScheduledCheck =
+          getNextPollingStart();
+
+        delay =
+          Math.max(
+            1000,
+            nextScheduledCheck.getTime() -
+            now.getTime()
+          );
+      }
+
+      feedPollTimer =
+        setTimeout(
+          function() {
+            loadScheduleFeed({
+              force:
+                true
+            });
+          },
+          delay
+        );
+
+      updateDebugPanel();
+    }
+
+
+    function getLocalDateKey() {
+      const now =
+        new Date();
+
+      return [
+        now.getFullYear(),
+        String(now.getMonth() + 1)
+          .padStart(2, "0"),
+        String(now.getDate())
+          .padStart(2, "0")
+      ].join("-");
+    }
+
+
+    function resetDailyRequestCounterIfNeeded() {
+      const today =
+        getLocalDateKey();
+
+      if (
+        today !==
+        requestCountDate
+      ) {
+        requestCountDate =
+          today;
+
+        requestCountToday =
+          0;
+      }
+    }
+
 
     /*
      * =====================================================
@@ -692,6 +1032,8 @@ const QUIET_FEED_POLL_MS = 10 * 60 * 1000;
                 `${getCurrentHHMM()} — ` +
                 `${filename}`
               );
+
+              updateDebugPanel();
             }, fadeDuration + 150);
           });
         });
@@ -761,93 +1103,186 @@ const QUIET_FEED_POLL_MS = 10 * 60 * 1000;
      * STATUS AND ERROR MESSAGES
      * =====================================================
      */
-    function setStatus(message) {
-      statusElement.textContent = message;
-      console.log(message);
+    function formatClockTime(
+      value
+    ) {
+      if (!value) {
+        return "—";
+      }
+
+      return value.toLocaleTimeString(
+        [],
+        {
+          hour:
+            "2-digit",
+
+          minute:
+            "2-digit",
+
+          second:
+            "2-digit"
+        }
+      );
     }
 
+
+    function updateDebugPanel() {
+      if (!DEBUG_MODE) {
+        return;
+      }
+
+      resetDailyRequestCounterIfNeeded();
+
+      debugScreen.textContent =
+        SCREEN_NAME;
+
+      const active =
+        isPollingActiveNow();
+
+      debugPolling.textContent =
+        active
+          ? "ACTIVE — every 30 seconds"
+          : "PAUSED — quiet hours";
+
+      debugPolling.className =
+        "debug-value " +
+        (
+          active
+            ? "debug-active"
+            : "debug-paused"
+        );
+
+      debugLastCheck.textContent =
+        formatClockTime(
+          lastSuccessfulCheck
+        );
+
+      debugNextCheck.textContent =
+        formatClockTime(
+          nextScheduledCheck
+        );
+
+      debugRequestCount.textContent =
+        String(
+          requestCountToday
+        );
+
+      debugScheduleCount.textContent =
+        String(
+          schedule.length
+        );
+
+      debugCurrentImage.textContent =
+        currentImageName || "—";
+
+      debugLastResult.textContent =
+        lastFeedResult;
+
+      debugLastResult.className =
+        "debug-value" +
+        (
+          /error|failed|timed out|could not/i
+            .test(lastFeedResult)
+              ? " debug-error"
+              : ""
+        );
+    }
+
+
+    function setStatus(message) {
+      console.log(message);
+
+      if (DEBUG_MODE) {
+        lastFeedResult =
+          message;
+
+        updateDebugPanel();
+      }
+    }
+
+
     function showError(message) {
-      statusElement.textContent = message;
-      statusElement.style.display = "block";
+      lastFeedResult =
+        message;
+
+      if (DEBUG_MODE) {
+        updateDebugPanel();
+      }
 
       console.error(message);
     }
 
-    
-
-    function createScheduleSignature(scheduleItems){
-      return JSON.stringify(scheduleItems.map(i=>[i.time,i.endTime||"",i.image,i.fade]));
-    }
-    
-function getFeedPollInterval() {
-  const hour = new Date().getHours();
-
-  // Between 22:00 and 09:00, disable background polling.
-  if (hour >= QUIET_HOUR_START || hour < QUIET_HOUR_END) {
-    return null;
-  }
-
-  return ACTIVE_FEED_POLL_MS;
-}
-
-    
-function scheduleNextFeedPoll(afterError = false) {
-  clearScheduledFeedPoll();
-
-  const delay = getFeedPollInterval();
-
-  if (delay === null) {
-    // Wake up at the next 09:00.
-    const now = new Date();
-    const next = new Date(now);
-    if (now.getHours() >= QUIET_HOUR_START) {
-      next.setDate(next.getDate() + 1);
-    }
-    next.setHours(QUIET_HOUR_END, 0, 0, 0);
-
-    const ms = Math.max(1000, next.getTime() - now.getTime());
-
-    feedPollTimer = setTimeout(() => {
-      loadScheduleFeed({ force: true });
-    }, ms);
-
-    return;
-  }
-
-  feedPollTimer = setTimeout(() => {
-    loadScheduleFeed();
-  }, delay);
-}
-
-/*
+    /*
      * =====================================================
      * STARTUP
      * =====================================================
      */
-    loadScheduleFeed();
-    scheduleNextFeedPoll();
+    updateDebugPanel();
 
     /*
-     * Check for scheduled changes every second.
+     * Always perform one immediate startup check. After that,
+     * polling follows the 09:00–22:00 schedule.
+     */
+    loadScheduleFeed({
+      force:
+        true
+    });
+
+    /*
+     * Local Start/End Time evaluation continues every second.
+     * This creates no network requests.
      */
     setInterval(
-      evaluateSchedule,
+      function() {
+        evaluateSchedule();
+        updateDebugPanel();
+      },
       CLOCK_CHECK_MS
     );
 
     /*
-     * Refresh after the Fire Stick wakes up or the webpage
-     * becomes visible again.
+     * When the player becomes visible again, perform one
+     * immediate background check, then return to the normal
+     * polling schedule.
      */
     document.addEventListener(
       "visibilitychange",
       function() {
         if (!document.hidden) {
-          loadScheduleFeed();
+          loadScheduleFeed({
+            force:
+              true
+          });
+
           evaluateSchedule();
+
+        } else {
+          scheduleNextFeedPoll();
         }
       }
     );
+
+    window.addEventListener(
+      "online",
+      function() {
+        loadScheduleFeed({
+          force:
+            true
+        });
+      }
+    );
+
+    window.addEventListener(
+      "offline",
+      function() {
+        lastFeedResult =
+          "Offline — current schedule retained";
+
+        scheduleNextFeedPoll();
+        updateDebugPanel();
+      }
+    );
+
   </script>
 </body>
 </html>
