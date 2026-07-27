@@ -4719,7 +4719,7 @@
      */
 
     const SCHEDULE_FEED_URL =
-      "https://script.google.com/macros/s/AKfycbwUINP9DCEUywwCU1YMjfnPT3H8ZUq1lsGVk8ShACrTp2EZIqMYrChADlk_uEh2F-DGXw/exec";
+      "PASTE_YOUR_APPS_SCRIPT_EXEC_URL_HERE";
 
     const SCREEN_NAMES = [
       "Arcade",
@@ -8947,7 +8947,12 @@
 
       holidayTotalCount.textContent =
         String(
-          sourceRows.length
+          sourceRows.filter(
+            item =>
+              !isHolidayRowCompletelyEmpty(
+                item
+              )
+          ).length
         );
 
       holidayActiveCount.textContent =
@@ -9353,26 +9358,78 @@
     }
 
 
+    function isHolidayRowCompletelyEmpty(
+      item
+    ) {
+      return (
+        !String(item.screen || "").trim() &&
+        !String(item.startDate || "").trim() &&
+        !String(item.endDate || "").trim() &&
+        !String(item.startTime || "").trim() &&
+        !String(item.image || "").trim() &&
+        (
+          item.fade === "" ||
+          item.fade === null ||
+          item.fade === undefined
+        )
+      );
+    }
+
+
+    function removeCompletelyEmptyHolidayRows(
+      rows
+    ) {
+      return rows.filter(
+        item =>
+          !isHolidayRowCompletelyEmpty(
+            item
+          )
+      );
+    }
+
+
     function validateHolidayDraft(rows) {
       const errors = [];
       const rowErrors = {};
       let invalidRowCount = 0;
 
-      if (
-        !Array.isArray(rows) ||
-        rows.length === 0
-      ) {
+      if (!Array.isArray(rows)) {
         return {
           valid: false,
           errors: [
-            "Holiday Overrides must contain at least one row."
+            "Holiday Overrides data is invalid."
           ],
           rowErrors: {},
           invalidRowCount: 1
         };
       }
 
+      const nonEmptyRows =
+        rows.filter(
+          item =>
+            !isHolidayRowCompletelyEmpty(
+              item
+            )
+        );
+
+      if (nonEmptyRows.length === 0) {
+        return {
+          valid: true,
+          errors: [],
+          rowErrors: {},
+          invalidRowCount: 0
+        };
+      }
+
       rows.forEach((item, index) => {
+        if (
+          isHolidayRowCompletelyEmpty(
+            item
+          )
+        ) {
+          return;
+        }
+
         const rowNumber =
           index + 1;
 
@@ -9565,9 +9622,14 @@
         return;
       }
 
+      const cleanedDraft =
+        removeCompletelyEmptyHolidayRows(
+          holidayDraft
+        );
+
       const validation =
         validateHolidayDraft(
-          holidayDraft
+          cleanedDraft
         );
 
       displayHolidayValidation(
@@ -9601,7 +9663,7 @@
 
       const confirmed =
         window.confirm(
-          `Save ${holidayDraft.length} Holiday Override row(s) to Google Sheets?\n\n` +
+          `Save ${cleanedDraft.length} Holiday Override row(s) to Google Sheets?\n\n` +
           `The current Holiday Overrides tab will be backed up automatically before it is replaced.`
         );
 
@@ -9630,7 +9692,7 @@
 
       holidaySaveDataField.value =
         JSON.stringify(
-          holidayDraft.map(item => ({
+          cleanedDraft.map(item => ({
             screen:
               String(item.screen).trim(),
             startDate:
