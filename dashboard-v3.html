@@ -4582,6 +4582,62 @@
       }
     }
 
+    /*
+     * SYSTEM HEALTH V2 CONTROLS
+     */
+
+    .health-admin-actions {
+      margin-top: 18px;
+      padding: 16px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: var(--surface-light);
+    }
+
+    .health-admin-buttons {
+      display: grid;
+      grid-template-columns:
+        repeat(auto-fit, minmax(170px, 1fr));
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .health-admin-message {
+      display: none;
+      margin-top: 12px;
+      padding: 11px 12px;
+      border: 1px solid var(--border);
+      border-radius: 9px;
+      font-size: 12px;
+      line-height: 1.45;
+    }
+
+    .health-admin-message.visible {
+      display: block;
+    }
+
+    .health-admin-message.success {
+      color: #caffea;
+      border-color: rgba(54, 201, 135, 0.45);
+      background: rgba(23, 75, 56, 0.5);
+    }
+
+    .health-admin-message.error {
+      color: #ffd6d6;
+      border-color: rgba(255, 104, 104, 0.5);
+      background: rgba(103, 40, 40, 0.52);
+    }
+
+    html[data-theme="light"] .health-admin-message.success {
+      color: #15543a;
+      background: #d9f7ea;
+    }
+
+    html[data-theme="light"] .health-admin-message.error {
+      color: #7e2525;
+      background: #ffe5e5;
+    }
+
     body,
     header,
     .system-banner,
@@ -7616,10 +7672,51 @@
           ></div>
         </section>
 
+        <section class="health-admin-actions">
+          <div class="manager-header">
+            <div>
+              <div class="eyebrow">System Health v2</div>
+              <h3 style="margin:5px 0 0;">Maintenance controls</h3>
+              <p class="manager-description">
+                Protected by the same PIN used for schedule saves.
+              </p>
+            </div>
+          </div>
+
+          <div class="health-admin-buttons">
+            <button id="testHealthConnectionButton" class="button button-primary" type="button">Test connection</button>
+            <button id="clearHealthLastErrorButton" class="button" type="button">Clear last error</button>
+            <button id="resetHealthTelemetryButton" class="button" type="button">Reset statistics</button>
+            <button id="clearHealthCacheButton" class="button" type="button">Clear schedule cache</button>
+            <button id="exportHealthTelemetryButton" class="button" type="button">Export telemetry JSON</button>
+          </div>
+
+          <div id="healthAdminMessage" class="health-admin-message"></div>
+        </section>
+
         <div id="healthErrorBox" class="health-error-box"></div>
       </section>
     </section>
   </main>
+
+  <iframe
+    id="healthAdminFrame"
+    name="healthAdminFrame"
+    title="System Health response"
+    style="display:none"
+  ></iframe>
+
+  <form
+    id="healthAdminForm"
+    method="post"
+    target="healthAdminFrame"
+    style="display:none"
+  >
+    <input name="action" value="healthAdmin">
+    <input id="healthAdminPinField" name="pin">
+    <input id="healthAdminOperationField" name="operation">
+    <input id="healthAdminRequestIdField" name="requestId">
+  </form>
 
   <iframe
     id="restoreBackupFrame"
@@ -8656,6 +8753,36 @@
     const healthScreensList = document.getElementById("healthScreensList");
     const healthErrorBox = document.getElementById("healthErrorBox");
 
+    const testHealthConnectionButton =
+      document.getElementById("testHealthConnectionButton");
+
+    const clearHealthLastErrorButton =
+      document.getElementById("clearHealthLastErrorButton");
+
+    const resetHealthTelemetryButton =
+      document.getElementById("resetHealthTelemetryButton");
+
+    const clearHealthCacheButton =
+      document.getElementById("clearHealthCacheButton");
+
+    const exportHealthTelemetryButton =
+      document.getElementById("exportHealthTelemetryButton");
+
+    const healthAdminMessage =
+      document.getElementById("healthAdminMessage");
+
+    const healthAdminForm =
+      document.getElementById("healthAdminForm");
+
+    const healthAdminPinField =
+      document.getElementById("healthAdminPinField");
+
+    const healthAdminOperationField =
+      document.getElementById("healthAdminOperationField");
+
+    const healthAdminRequestIdField =
+      document.getElementById("healthAdminRequestIdField");
+
     const runAutomaticHealthChecksButton =
       document.getElementById(
         "runAutomaticHealthChecksButton"
@@ -9155,6 +9282,12 @@
 
     let automaticHealthCheckInProgress =
       false;
+
+    let activeHealthAdminRequestId =
+      null;
+
+    let latestHealthTelemetry =
+      null;
 
     let calendarCursor =
       new Date();
@@ -20960,6 +21093,39 @@
         "click",
         runAutomaticHealthChecks
       );
+
+      testHealthConnectionButton.addEventListener(
+        "click",
+        function() {
+          runHealthAdminOperation("testConnection");
+        }
+      );
+
+      clearHealthLastErrorButton.addEventListener(
+        "click",
+        function() {
+          runHealthAdminOperation("clearLastError");
+        }
+      );
+
+      resetHealthTelemetryButton.addEventListener(
+        "click",
+        function() {
+          runHealthAdminOperation("resetTelemetry");
+        }
+      );
+
+      clearHealthCacheButton.addEventListener(
+        "click",
+        function() {
+          runHealthAdminOperation("clearScheduleCache");
+        }
+      );
+
+      exportHealthTelemetryButton.addEventListener(
+        "click",
+        exportHealthTelemetry
+      );
     }
 
     function loadSystemHealth() {
@@ -21040,6 +21206,9 @@
     }
 
     function renderSystemHealth(telemetry) {
+      latestHealthTelemetry =
+        telemetry;
+
       const failures = Number(telemetry.failures || 0);
       const successRate = Number(telemetry.successRate || 0);
       const averageDuration = Number(telemetry.averageDurationMs || 0);
@@ -22156,6 +22325,229 @@
     }
 
 
+
+    /*
+     * SYSTEM HEALTH V2 ADMIN ACTIONS
+     */
+
+    function runHealthAdminOperation(
+      operation
+    ) {
+      const descriptions = {
+        testConnection:
+          "test the Apps Script connection",
+
+        clearLastError:
+          "clear the stored telemetry error",
+
+        resetTelemetry:
+          "reset all telemetry statistics",
+
+        clearScheduleCache:
+          "clear every schedule feed cache"
+      };
+
+      const pin =
+        window.prompt(
+          `Enter the dashboard save PIN to ${descriptions[operation]}:`
+        );
+
+      if (pin === null) {
+        return;
+      }
+
+      if (!String(pin).trim()) {
+        showHealthAdminMessage(
+          "A dashboard PIN is required.",
+          "error"
+        );
+
+        return;
+      }
+
+      if (
+        operation !== "testConnection" &&
+        !window.confirm(
+          `Are you sure you want to ${descriptions[operation]}?`
+        )
+      ) {
+        return;
+      }
+
+      activeHealthAdminRequestId =
+        createSaveRequestId();
+
+      setHealthAdminButtonsDisabled(
+        true
+      );
+
+      showHealthAdminMessage(
+        "Sending the maintenance request…",
+        "success"
+      );
+
+      healthAdminForm.action =
+        SCHEDULE_FEED_URL;
+
+      healthAdminPinField.value =
+        String(pin);
+
+      healthAdminOperationField.value =
+        operation;
+
+      healthAdminRequestIdField.value =
+        activeHealthAdminRequestId;
+
+      healthAdminForm.submit();
+
+      healthAdminPinField.value =
+        "";
+    }
+
+
+    function handleHealthAdminMessage(
+      event
+    ) {
+      const data =
+        event.data;
+
+      if (
+        !data ||
+        data.type !== "miniGolfHealthAdminResult" ||
+        data.requestId !== activeHealthAdminRequestId
+      ) {
+        return;
+      }
+
+      activeHealthAdminRequestId =
+        null;
+
+      setHealthAdminButtonsDisabled(
+        false
+      );
+
+      if (data.success !== true) {
+        showHealthAdminMessage(
+          data.error ||
+          "The maintenance action failed.",
+          "error"
+        );
+
+        return;
+      }
+
+      showHealthAdminMessage(
+        data.message ||
+        "Maintenance action completed.",
+        "success"
+      );
+
+      if (data.telemetry) {
+        renderSystemHealth(
+          data.telemetry
+        );
+      }
+
+      runAutomaticHealthChecks();
+    }
+
+
+    function setHealthAdminButtonsDisabled(
+      disabled
+    ) {
+      [
+        testHealthConnectionButton,
+        clearHealthLastErrorButton,
+        resetHealthTelemetryButton,
+        clearHealthCacheButton
+      ].forEach(
+        button => {
+          button.disabled =
+            disabled;
+        }
+      );
+    }
+
+
+    function showHealthAdminMessage(
+      message,
+      type
+    ) {
+      healthAdminMessage.className =
+        `health-admin-message visible ${type}`;
+
+      healthAdminMessage.textContent =
+        message;
+    }
+
+
+    function exportHealthTelemetry() {
+      if (!latestHealthTelemetry) {
+        showHealthAdminMessage(
+          "Load System Health before exporting telemetry.",
+          "error"
+        );
+
+        return;
+      }
+
+      const blob =
+        new Blob(
+          [
+            JSON.stringify(
+              {
+                exportedAt:
+                  new Date().toISOString(),
+
+                telemetry:
+                  latestHealthTelemetry
+              },
+              null,
+              2
+            )
+          ],
+          {
+            type:
+              "application/json"
+          }
+        );
+
+      const url =
+        URL.createObjectURL(
+          blob
+        );
+
+      const link =
+        document.createElement(
+          "a"
+        );
+
+      link.href =
+        url;
+
+      link.download =
+        `system-health-${new Date()
+          .toISOString()
+          .slice(0, 10)}.json`;
+
+      document.body.appendChild(
+        link
+      );
+
+      link.click();
+      link.remove();
+
+      URL.revokeObjectURL(
+        url
+      );
+
+      showHealthAdminMessage(
+        "Telemetry JSON exported.",
+        "success"
+      );
+    }
+
+
     /*
      * =====================================================
      * GENERAL HELPERS
@@ -22300,6 +22692,11 @@
     window.addEventListener(
       "message",
       handleScheduleSaveMessage
+    );
+
+    window.addEventListener(
+      "message",
+      handleHealthAdminMessage
     );
 
     refreshButton.addEventListener(
