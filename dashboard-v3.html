@@ -2621,6 +2621,48 @@
       }
     }
 
+
+    /*
+     * =====================================================
+     * LOCAL DRAFT RECOVERY
+     * =====================================================
+     */
+
+    .draft-recovery-banner {
+      display: none;
+
+      margin-bottom: 16px;
+      padding: 13px 15px;
+
+      border: 1px solid rgba(95, 168, 255, 0.48);
+      border-radius: 10px;
+
+      color: var(--text);
+      background: rgba(35, 74, 115, 0.48);
+
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .draft-recovery-banner.visible {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+
+    .draft-recovery-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    html[data-theme="light"] .draft-recovery-banner {
+      color: #173a5d;
+      background: #e7f1fb;
+    }
+
     body,
     header,
     .system-banner,
@@ -3624,6 +3666,33 @@
           </article>
         </section>
 
+        <div
+          id="scheduleDraftRecoveryBanner"
+          class="draft-recovery-banner"
+        >
+          <div id="scheduleDraftRecoveryText">
+            A saved local draft is available.
+          </div>
+
+          <div class="draft-recovery-actions">
+            <button
+              id="restoreScheduleDraftButton"
+              class="button button-primary"
+              type="button"
+            >
+              Restore draft
+            </button>
+
+            <button
+              id="discardStoredScheduleDraftButton"
+              class="button"
+              type="button"
+            >
+              Discard stored draft
+            </button>
+          </div>
+        </div>
+
         <div class="manager-editing-toolbar">
           <div class="manager-edit-note">
             Changes in this step stay only in your browser and are not sent to Google Sheets.
@@ -3794,6 +3863,33 @@
           >
             ↻ Reload overrides
           </button>
+        </div>
+
+        <div
+          id="holidayDraftRecoveryBanner"
+          class="draft-recovery-banner"
+        >
+          <div id="holidayDraftRecoveryText">
+            A saved Holiday Override draft is available.
+          </div>
+
+          <div class="draft-recovery-actions">
+            <button
+              id="restoreHolidayDraftButton"
+              class="button button-primary"
+              type="button"
+            >
+              Restore draft
+            </button>
+
+            <button
+              id="discardStoredHolidayDraftButton"
+              class="button"
+              type="button"
+            >
+              Discard stored draft
+            </button>
+          </div>
         </div>
 
         <div class="holiday-editing-toolbar">
@@ -4623,7 +4719,7 @@
      */
 
     const SCHEDULE_FEED_URL =
-      "https://script.google.com/macros/s/AKfycbwUINP9DCEUywwCU1YMjfnPT3H8ZUq1lsGVk8ShACrTp2EZIqMYrChADlk_uEh2F-DGXw/exec";
+      "PASTE_YOUR_APPS_SCRIPT_EXEC_URL_HERE";
 
     const SCREEN_NAMES = [
       "Arcade",
@@ -4647,6 +4743,14 @@
 
     const GITHUB_BRANCH =
       "main";
+
+    const LOCAL_DRAFT_STORAGE = {
+      regularPrefix:
+        "miniGolfScheduleDraft:",
+
+      holidayKey:
+        "miniGolfHolidayDraft"
+    };
 
     /*
      * =====================================================
@@ -5149,6 +5253,46 @@
     const imageHealthList =
       document.getElementById(
         "imageHealthList"
+      );
+
+    const scheduleDraftRecoveryBanner =
+      document.getElementById(
+        "scheduleDraftRecoveryBanner"
+      );
+
+    const scheduleDraftRecoveryText =
+      document.getElementById(
+        "scheduleDraftRecoveryText"
+      );
+
+    const restoreScheduleDraftButton =
+      document.getElementById(
+        "restoreScheduleDraftButton"
+      );
+
+    const discardStoredScheduleDraftButton =
+      document.getElementById(
+        "discardStoredScheduleDraftButton"
+      );
+
+    const holidayDraftRecoveryBanner =
+      document.getElementById(
+        "holidayDraftRecoveryBanner"
+      );
+
+    const holidayDraftRecoveryText =
+      document.getElementById(
+        "holidayDraftRecoveryText"
+      );
+
+    const restoreHolidayDraftButton =
+      document.getElementById(
+        "restoreHolidayDraftButton"
+      );
+
+    const discardStoredHolidayDraftButton =
+      document.getElementById(
+        "discardStoredHolidayDraftButton"
       );
 
     const restorePreviewTitle =
@@ -7269,6 +7413,7 @@
           managerEditingEnabled = false;
           hideManagerSaveMessage();
           updateManagerEditingControls();
+          updateScheduleDraftRecoveryBanner();
           updateScheduleManager();
         }
       );
@@ -7313,6 +7458,16 @@
       managerScheduleBody.addEventListener(
         "click",
         handleManagerTableClick
+      );
+
+      restoreScheduleDraftButton.addEventListener(
+        "click",
+        restoreStoredScheduleDraft
+      );
+
+      discardStoredScheduleDraftButton.addEventListener(
+        "click",
+        discardStoredScheduleDraft
       );
 
       managerOpenScreen.href =
@@ -7437,6 +7592,11 @@
         a.time.localeCompare(b.time)
       );
 
+      persistScheduleDraft(
+        screenName,
+        draft
+      );
+
       updateManagerEditingControls();
       updateScheduleManager();
     }
@@ -7447,6 +7607,9 @@
         managerScreenSelect.value;
 
       managerDrafts.delete(screenName);
+      removeStoredScheduleDraft(
+        screenName
+      );
 
       managerEditingEnabled = false;
       hideManagerSaveMessage();
@@ -7517,6 +7680,11 @@
 
       hideManagerSaveMessage();
 
+      persistScheduleDraft(
+        screenName,
+        draft
+      );
+
       validateAndDisplayManagerDraft(
         draft
       );
@@ -7561,6 +7729,11 @@
       }
 
       draft.splice(rowIndex, 1);
+
+      persistScheduleDraft(
+        screenName,
+        draft
+      );
 
       hideManagerSaveMessage();
       updateManagerEditingControls();
@@ -7733,6 +7906,10 @@
         data.screen;
 
       managerDrafts.delete(
+        screenName
+      );
+
+      removeStoredScheduleDraft(
         screenName
       );
 
@@ -8367,6 +8544,16 @@
         handleHolidayTableClick
       );
 
+      restoreHolidayDraftButton.addEventListener(
+        "click",
+        restoreStoredHolidayDraft
+      );
+
+      discardStoredHolidayDraftButton.addEventListener(
+        "click",
+        discardStoredHolidayDraft
+      );
+
       window.addEventListener(
         "message",
         handleHolidaySaveMessage
@@ -8476,6 +8663,10 @@
           1500
       });
 
+      persistHolidayDraft(
+        holidayDraft
+      );
+
       updateHolidayEditingControls();
       renderHolidayOverrides();
     }
@@ -8485,6 +8676,7 @@
       holidayDraft = null;
       holidayEditingEnabled = false;
 
+      removeStoredHolidayDraft();
       hideHolidaySaveMessage();
       hideHolidayValidation();
       updateHolidayEditingControls();
@@ -8546,6 +8738,10 @@
 
       hideHolidaySaveMessage();
 
+      persistHolidayDraft(
+        holidayDraft
+      );
+
       const validation =
         validateHolidayDraft(
           holidayDraft
@@ -8592,6 +8788,10 @@
       holidayDraft.splice(
         rowIndex,
         1
+      );
+
+      persistHolidayDraft(
+        holidayDraft
       );
 
       hideHolidaySaveMessage();
@@ -9489,6 +9689,8 @@
 
       holidayDraft = null;
       holidayEditingEnabled = false;
+
+      removeStoredHolidayDraft();
 
       showHolidaySaveMessage(
         `Saved ${data.rowsWritten} Holiday Override row(s). A backup was created.`,
@@ -11355,6 +11557,312 @@
 
     /*
      * =====================================================
+     * LOCAL DRAFT RECOVERY
+     * =====================================================
+     */
+
+    function getScheduleDraftStorageKey(
+      screenName
+    ) {
+      return (
+        LOCAL_DRAFT_STORAGE
+          .regularPrefix +
+        screenName
+      );
+    }
+
+
+    function persistScheduleDraft(
+      screenName,
+      draft
+    ) {
+      try {
+        localStorage.setItem(
+          getScheduleDraftStorageKey(
+            screenName
+          ),
+          JSON.stringify({
+            savedAt:
+              new Date()
+                .toISOString(),
+
+            screen:
+              screenName,
+
+            rows:
+              draft
+          })
+        );
+
+        updateScheduleDraftRecoveryBanner();
+
+      } catch (error) {
+        console.warn(
+          "Schedule draft could not be saved locally.",
+          error
+        );
+      }
+    }
+
+
+    function readStoredScheduleDraft(
+      screenName
+    ) {
+      try {
+        const raw =
+          localStorage.getItem(
+            getScheduleDraftStorageKey(
+              screenName
+            )
+          );
+
+        if (!raw) {
+          return null;
+        }
+
+        const parsed =
+          JSON.parse(raw);
+
+        if (
+          !parsed ||
+          !Array.isArray(
+            parsed.rows
+          )
+        ) {
+          return null;
+        }
+
+        return parsed;
+
+      } catch (error) {
+        return null;
+      }
+    }
+
+
+    function removeStoredScheduleDraft(
+      screenName
+    ) {
+      try {
+        localStorage.removeItem(
+          getScheduleDraftStorageKey(
+            screenName
+          )
+        );
+      } catch (error) {}
+
+      updateScheduleDraftRecoveryBanner();
+    }
+
+
+    function updateScheduleDraftRecoveryBanner() {
+      const screenName =
+        managerScreenSelect.value;
+
+      const stored =
+        readStoredScheduleDraft(
+          screenName
+        );
+
+      const shouldShow =
+        Boolean(stored) &&
+        !managerDrafts.has(
+          screenName
+        );
+
+      scheduleDraftRecoveryBanner.classList.toggle(
+        "visible",
+        shouldShow
+      );
+
+      if (!shouldShow) {
+        return;
+      }
+
+      const savedTime =
+        stored.savedAt
+          ? new Date(
+              stored.savedAt
+            ).toLocaleString()
+          : "an unknown time";
+
+      scheduleDraftRecoveryText.textContent =
+        `A local draft for "${screenName}" was saved at ${savedTime}.`;
+    }
+
+
+    function restoreStoredScheduleDraft() {
+      const screenName =
+        managerScreenSelect.value;
+
+      const stored =
+        readStoredScheduleDraft(
+          screenName
+        );
+
+      if (!stored) {
+        updateScheduleDraftRecoveryBanner();
+        return;
+      }
+
+      managerDrafts.set(
+        screenName,
+        stored.rows
+      );
+
+      managerEditingEnabled =
+        true;
+
+      updateManagerEditingControls();
+      updateScheduleDraftRecoveryBanner();
+      updateScheduleManager();
+    }
+
+
+    function discardStoredScheduleDraft() {
+      const screenName =
+        managerScreenSelect.value;
+
+      removeStoredScheduleDraft(
+        screenName
+      );
+    }
+
+
+    function persistHolidayDraft(
+      draft
+    ) {
+      try {
+        localStorage.setItem(
+          LOCAL_DRAFT_STORAGE
+            .holidayKey,
+          JSON.stringify({
+            savedAt:
+              new Date()
+                .toISOString(),
+
+            rows:
+              draft
+          })
+        );
+
+        updateHolidayDraftRecoveryBanner();
+
+      } catch (error) {
+        console.warn(
+          "Holiday draft could not be saved locally.",
+          error
+        );
+      }
+    }
+
+
+    function readStoredHolidayDraft() {
+      try {
+        const raw =
+          localStorage.getItem(
+            LOCAL_DRAFT_STORAGE
+              .holidayKey
+          );
+
+        if (!raw) {
+          return null;
+        }
+
+        const parsed =
+          JSON.parse(raw);
+
+        if (
+          !parsed ||
+          !Array.isArray(
+            parsed.rows
+          )
+        ) {
+          return null;
+        }
+
+        return parsed;
+
+      } catch (error) {
+        return null;
+      }
+    }
+
+
+    function removeStoredHolidayDraft() {
+      try {
+        localStorage.removeItem(
+          LOCAL_DRAFT_STORAGE
+            .holidayKey
+        );
+      } catch (error) {}
+
+      updateHolidayDraftRecoveryBanner();
+    }
+
+
+    function updateHolidayDraftRecoveryBanner() {
+      const stored =
+        readStoredHolidayDraft();
+
+      const shouldShow =
+        Boolean(stored) &&
+        !holidayDraft;
+
+      holidayDraftRecoveryBanner.classList.toggle(
+        "visible",
+        shouldShow
+      );
+
+      if (!shouldShow) {
+        return;
+      }
+
+      const savedTime =
+        stored.savedAt
+          ? new Date(
+              stored.savedAt
+            ).toLocaleString()
+          : "an unknown time";
+
+      holidayDraftRecoveryText.textContent =
+        `A local Holiday Override draft was saved at ${savedTime}.`;
+    }
+
+
+    function restoreStoredHolidayDraft() {
+      const stored =
+        readStoredHolidayDraft();
+
+      if (!stored) {
+        updateHolidayDraftRecoveryBanner();
+        return;
+      }
+
+      holidayDraft =
+        stored.rows;
+
+      holidayEditingEnabled =
+        true;
+
+      updateHolidayEditingControls();
+      updateHolidayDraftRecoveryBanner();
+      renderHolidayOverrides();
+    }
+
+
+    function discardStoredHolidayDraft() {
+      removeStoredHolidayDraft();
+    }
+
+
+    function initializeDraftRecovery() {
+      updateScheduleDraftRecoveryBanner();
+      updateHolidayDraftRecoveryBanner();
+    }
+
+    /*
+     * =====================================================
      * GENERAL HELPERS
      * =====================================================
      */
@@ -11543,6 +12051,7 @@
     setupHolidayManager();
     setupBackupHistory();
     setupImageLibrary();
+    initializeDraftRecovery();
 
     refreshDashboard();
     updateOperationsPanel();
