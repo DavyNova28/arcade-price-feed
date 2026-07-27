@@ -3385,6 +3385,17 @@
 
     .image-picker-dialog.visible {
       display: flex;
+      pointer-events: auto;
+    }
+
+    .image-picker-dialog:not(.visible) {
+      pointer-events: none;
+    }
+
+    #closeImagePickerButton {
+      position: relative;
+      z-index: 2;
+      cursor: pointer;
     }
 
     .image-picker-panel {
@@ -13919,10 +13930,33 @@
      */
 
     function setupGitHubImagePicker() {
+      /*
+       * Use direct listeners for the fixed modal controls.
+       * stopPropagation prevents clicks inside the panel from
+       * being mistaken for backdrop clicks.
+       */
       closeImagePickerButton.addEventListener(
         "click",
-        closeGitHubImagePicker
+        function(event) {
+          event.preventDefault();
+          event.stopPropagation();
+          closeGitHubImagePicker();
+        }
       );
+
+      const pickerPanel =
+        imagePickerDialog.querySelector(
+          ".image-picker-panel"
+        );
+
+      if (pickerPanel) {
+        pickerPanel.addEventListener(
+          "click",
+          function(event) {
+            event.stopPropagation();
+          }
+        );
+      }
 
       imagePickerDialog.addEventListener(
         "click",
@@ -13936,11 +13970,51 @@
         }
       );
 
-      imagePickerSearch.addEventListener(
-        "input",
-        renderGitHubImagePicker
+      document.addEventListener(
+        "keydown",
+        function(event) {
+          if (
+            event.key === "Escape" &&
+            imagePickerDialog.classList.contains(
+              "visible"
+            )
+          ) {
+            closeGitHubImagePicker();
+          }
+        }
       );
 
+      /*
+       * Render on every input event. requestAnimationFrame
+       * keeps rapid typing smooth and avoids stale results.
+       */
+      let pickerSearchFrame =
+        null;
+
+      imagePickerSearch.addEventListener(
+        "input",
+        function() {
+          if (pickerSearchFrame) {
+            cancelAnimationFrame(
+              pickerSearchFrame
+            );
+          }
+
+          pickerSearchFrame =
+            requestAnimationFrame(
+              function() {
+                pickerSearchFrame =
+                  null;
+
+                renderGitHubImagePicker();
+              }
+            );
+        }
+      );
+
+      /*
+       * Event delegation survives every grid rebuild.
+       */
       imagePickerGrid.addEventListener(
         "click",
         function(event) {
@@ -13955,6 +14029,9 @@
           ) {
             return;
           }
+
+          event.preventDefault();
+          event.stopPropagation();
 
           const exactFilename =
             card.dataset.pickerFilename;
@@ -13987,8 +14064,12 @@
       activeImagePickerInput =
         input;
 
+      /*
+       * Start with an empty search so every repository image
+       * is visible. The user can then type a fresh query.
+       */
       imagePickerSearch.value =
-        input.value || "";
+        "";
 
       imagePickerDialog.classList.add(
         "visible"
@@ -13998,6 +14079,9 @@
         "aria-hidden",
         "false"
       );
+
+      document.body.style.overflow =
+        "hidden";
 
       if (
         repositoryImages.length === 0
@@ -14037,7 +14121,6 @@
       setTimeout(
         function() {
           imagePickerSearch.focus();
-          imagePickerSearch.select();
         },
         50
       );
@@ -14045,9 +14128,6 @@
 
 
     function closeGitHubImagePicker() {
-      activeImagePickerInput =
-        null;
-
       imagePickerDialog.classList.remove(
         "visible"
       );
@@ -14056,6 +14136,28 @@
         "aria-hidden",
         "true"
       );
+
+      document.body.style.overflow =
+        "";
+
+      imagePickerSearch.value =
+        "";
+
+      /*
+       * Release the field only after the modal is visually
+       * closed. This prevents late click events from writing
+       * to an old input.
+       */
+      activeImagePickerInput =
+        null;
+
+      if (
+        document.activeElement &&
+        typeof document.activeElement.blur ===
+          "function"
+      ) {
+        document.activeElement.blur();
+      }
     }
 
 
