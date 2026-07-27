@@ -5,7 +5,7 @@
      */
 
     const SCHEDULE_FEED_URL =
-      "https://script.google.com/macros/s/AKfycbwUINP9DCEUywwCU1YMjfnPT3H8ZUq1lsGVk8ShACrTp2EZIqMYrChADlk_uEh2F-DGXw/exec";
+      "PASTE_YOUR_APPS_SCRIPT_EXEC_URL_HERE";
 
     const SCREEN_NAMES = [
       "Arcade",
@@ -276,6 +276,16 @@
     const themeButtonText =
       document.getElementById(
         "themeButtonText"
+      );
+
+    const homeTab =
+      document.getElementById(
+        "homeTab"
+      );
+
+    const homeWorkspace =
+      document.getElementById(
+        "homeWorkspace"
       );
 
     const controlCenterTab =
@@ -3406,6 +3416,9 @@
      */
 
     function openWorkspace(workspaceName) {
+      const showHome =
+        workspaceName === "home";
+
       const showControl =
         workspaceName === "control";
 
@@ -3435,6 +3448,11 @@
 
       const showSystemHealth =
         workspaceName === "systemHealth";
+
+      homeTab.classList.toggle(
+        "active",
+        showHome
+      );
 
       controlCenterTab.classList.toggle(
         "active",
@@ -3484,6 +3502,11 @@
       systemHealthTab.classList.toggle(
         "active",
         showSystemHealth
+      );
+
+      homeWorkspace.classList.toggle(
+        "active",
+        showHome
       );
 
       controlCenterWorkspace.classList.toggle(
@@ -17064,6 +17087,13 @@
       cycleThemePreference
     );
 
+    homeTab.addEventListener(
+      "click",
+      function() {
+        openWorkspace("home");
+      }
+    );
+
     controlCenterTab.addEventListener(
       "click",
       function() {
@@ -17175,6 +17205,7 @@
     initializeDraftRecovery();
     initializeScheduleTemplates();
 
+    openWorkspace("home");
     refreshDashboard();
     updateOperationsPanel();
 
