@@ -3209,6 +3209,113 @@
       }
     }
 
+
+    /*
+     * =====================================================
+     * SCHEDULE INTEGRITY CHECKS
+     * =====================================================
+     */
+
+    .schedule-integrity {
+      margin-bottom: 18px;
+      padding: 16px;
+
+      border: 1px solid var(--border);
+      border-radius: 12px;
+
+      background: var(--surface-light);
+    }
+
+    .integrity-summary {
+      display: grid;
+      grid-template-columns:
+        repeat(4, minmax(150px, 1fr));
+      gap: 12px;
+
+      margin-top: 14px;
+    }
+
+    .integrity-list {
+      display: grid;
+      gap: 9px;
+
+      margin-top: 14px;
+    }
+
+    .integrity-item {
+      padding: 11px 12px;
+
+      border: 1px solid var(--border);
+      border-radius: 9px;
+
+      background: var(--surface);
+
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    .integrity-item strong {
+      display: block;
+      margin-bottom: 3px;
+    }
+
+    .integrity-item-overlap {
+      color: #fff0cf;
+      border-color: rgba(242, 170, 63, 0.48);
+      background: rgba(101, 69, 24, 0.48);
+    }
+
+    .integrity-item-gap {
+      color: #d9eaff;
+      border-color: rgba(95, 168, 255, 0.48);
+      background: rgba(35, 74, 115, 0.48);
+    }
+
+    .integrity-item-warning {
+      color: #ffd6d6;
+      border-color: rgba(255, 104, 104, 0.48);
+      background: rgba(103, 40, 40, 0.48);
+    }
+
+    .integrity-item-ok {
+      color: #caffea;
+      border-color: rgba(54, 201, 135, 0.42);
+      background: rgba(23, 75, 56, 0.48);
+    }
+
+    html[data-theme="light"] .integrity-item-overlap {
+      color: #7a5518;
+      background: #fff1d4;
+    }
+
+    html[data-theme="light"] .integrity-item-gap {
+      color: #173a5d;
+      background: #e7f1fb;
+    }
+
+    html[data-theme="light"] .integrity-item-warning {
+      color: #7e2525;
+      background: #ffe5e5;
+    }
+
+    html[data-theme="light"] .integrity-item-ok {
+      color: #15543a;
+      background: #d9f7ea;
+    }
+
+    @media (max-width: 720px) {
+      .integrity-summary {
+        grid-template-columns:
+          repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 480px) {
+      .integrity-summary {
+        grid-template-columns: 1fr;
+      }
+    }
+
     body,
     header,
     .system-banner,
@@ -4142,6 +4249,95 @@
             Read-only
           </div>
         </div>
+
+        <section class="schedule-integrity">
+          <div class="manager-header">
+            <div>
+              <div class="eyebrow">
+                V3.1 integrity
+              </div>
+
+              <h3 style="margin:5px 0 0;">
+                Schedule integrity checks
+              </h3>
+
+              <p class="manager-description">
+                Detects overlapping temporary rows, fallback gaps, and schedules with no persistent safety image.
+              </p>
+            </div>
+
+            <button
+              id="runIntegrityCheckButton"
+              class="button"
+              type="button"
+            >
+              Run checks
+            </button>
+          </div>
+
+          <section class="integrity-summary">
+            <article class="manager-stat">
+              <div class="manager-stat-label">
+                Temporary rows
+              </div>
+
+              <div
+                id="integrityTemporaryCount"
+                class="manager-stat-value"
+              >
+                0
+              </div>
+            </article>
+
+            <article class="manager-stat">
+              <div class="manager-stat-label">
+                Overlaps
+              </div>
+
+              <div
+                id="integrityOverlapCount"
+                class="manager-stat-value"
+              >
+                0
+              </div>
+            </article>
+
+            <article class="manager-stat">
+              <div class="manager-stat-label">
+                Fallback gaps
+              </div>
+
+              <div
+                id="integrityGapCount"
+                class="manager-stat-value"
+              >
+                0
+              </div>
+            </article>
+
+            <article class="manager-stat">
+              <div class="manager-stat-label">
+                Persistent safety row
+              </div>
+
+              <div
+                id="integrityPersistentStatus"
+                class="manager-stat-value"
+              >
+                —
+              </div>
+            </article>
+          </section>
+
+          <div
+            id="integrityList"
+            class="integrity-list"
+          >
+            <div class="integrity-item">
+              Select a screen and run the checks.
+            </div>
+          </div>
+        </section>
 
         <section class="schedule-simulator">
           <div class="manager-header">
@@ -6570,6 +6766,36 @@
         "simulatorDecision"
       );
 
+    const runIntegrityCheckButton =
+      document.getElementById(
+        "runIntegrityCheckButton"
+      );
+
+    const integrityTemporaryCount =
+      document.getElementById(
+        "integrityTemporaryCount"
+      );
+
+    const integrityOverlapCount =
+      document.getElementById(
+        "integrityOverlapCount"
+      );
+
+    const integrityGapCount =
+      document.getElementById(
+        "integrityGapCount"
+      );
+
+    const integrityPersistentStatus =
+      document.getElementById(
+        "integrityPersistentStatus"
+      );
+
+    const integrityList =
+      document.getElementById(
+        "integrityList"
+      );
+
     const managerModeStatus =
       document.getElementById(
         "managerModeStatus"
@@ -8702,6 +8928,7 @@
           updateManagerEditingControls();
           updateScheduleDraftRecoveryBanner();
           resetScheduleSimulation();
+          resetScheduleIntegrityChecks();
           updateScheduleManager();
         }
       );
@@ -8773,6 +9000,11 @@
 
           runScheduleSimulation();
         }
+      );
+
+      runIntegrityCheckButton.addEventListener(
+        "click",
+        runScheduleIntegrityChecks
       );
 
       restoreScheduleDraftButton.addEventListener(
@@ -9296,6 +9528,357 @@
       managerSaveMessage.className =
         "manager-save-message";
     }
+
+    /*
+     * =====================================================
+     * SCHEDULE INTEGRITY CHECKS
+     * =====================================================
+     */
+
+    function runScheduleIntegrityChecks() {
+      const screenName =
+        managerScreenSelect.value;
+
+      const state =
+        screenStates.get(
+          screenName
+        );
+
+      if (
+        !state ||
+        state.error ||
+        !Array.isArray(
+          state.schedule
+        )
+      ) {
+        resetScheduleIntegrityChecks();
+
+        integrityList.innerHTML = `
+          <div class="integrity-item integrity-item-warning">
+            The selected schedule has not loaded.
+          </div>
+        `;
+
+        return;
+      }
+
+      const schedule =
+        (
+          managerDrafts.get(
+            screenName
+          ) ||
+          state.schedule
+        )
+          .map(item => ({
+            ...item,
+
+            time:
+              String(item.time || ""),
+
+            endTime:
+              String(
+                item.endTime || ""
+              )
+          }))
+          .sort((a, b) =>
+            a.time.localeCompare(
+              b.time
+            )
+          );
+
+      const persistentRows =
+        schedule.filter(
+          item =>
+            !item.endTime
+        );
+
+      const temporaryRows =
+        schedule.filter(
+          item =>
+            Boolean(item.endTime)
+        );
+
+      const overlaps =
+        findScheduleOverlaps(
+          schedule
+        );
+
+      const gaps =
+        findFallbackGaps(
+          schedule
+        );
+
+      integrityTemporaryCount.textContent =
+        String(
+          temporaryRows.length
+        );
+
+      integrityOverlapCount.textContent =
+        String(
+          overlaps.length
+        );
+
+      integrityGapCount.textContent =
+        String(
+          gaps.length
+        );
+
+      integrityPersistentStatus.textContent =
+        persistentRows.length > 0
+          ? "Yes"
+          : "No";
+
+      const messages = [];
+
+      if (persistentRows.length === 0) {
+        messages.push(`
+          <div class="integrity-item integrity-item-warning">
+            <strong>No persistent safety row</strong>
+            Every row has an End Time. When none is active, the player must use its last-resort no-black-screen fallback. Add at least one row with a blank End Time for predictable fallback behavior.
+          </div>
+        `);
+      }
+
+      overlaps.forEach(overlap => {
+        messages.push(`
+          <div class="integrity-item integrity-item-overlap">
+            <strong>
+              Overlap:
+              ${escapeHtml(overlap.first.time)}
+              →
+              ${escapeHtml(overlap.first.endTime)}
+              and
+              ${escapeHtml(overlap.second.time)}
+              →
+              ${escapeHtml(overlap.second.endTime || "persistent")}
+            </strong>
+
+            From ${escapeHtml(overlap.second.time)}, the newer row
+            <strong style="display:inline;">
+              ${escapeHtml(overlap.second.image)}
+            </strong>
+            wins until it expires or another newer row starts.
+          </div>
+        `);
+      });
+
+      gaps.forEach(gap => {
+        messages.push(`
+          <div class="integrity-item integrity-item-gap">
+            <strong>
+              Fallback period:
+              ${escapeHtml(gap.start)}
+              →
+              ${escapeHtml(gap.end)}
+            </strong>
+
+            No temporary item is active during this period.
+            The player displays
+            <strong style="display:inline;">
+              ${escapeHtml(gap.fallbackImage)}
+            </strong>
+            as the most recent persistent fallback.
+          </div>
+        `);
+      });
+
+      if (
+        messages.length === 0
+      ) {
+        messages.push(`
+          <div class="integrity-item integrity-item-ok">
+            <strong>Schedule looks healthy</strong>
+            No temporary overlaps or fallback gaps were detected, and a persistent safety row is available.
+          </div>
+        `);
+      }
+
+      integrityList.innerHTML =
+        messages.join("");
+    }
+
+
+    function findScheduleOverlaps(
+      schedule
+    ) {
+      const overlaps = [];
+
+      for (
+        let firstIndex = 0;
+        firstIndex <
+          schedule.length;
+        firstIndex += 1
+      ) {
+        const first =
+          schedule[firstIndex];
+
+        const firstEnd =
+          first.endTime ||
+          "24:00";
+
+        for (
+          let secondIndex =
+            firstIndex + 1;
+          secondIndex <
+            schedule.length;
+          secondIndex += 1
+        ) {
+          const second =
+            schedule[secondIndex];
+
+          if (
+            second.time >= firstEnd
+          ) {
+            break;
+          }
+
+          /*
+           * Persistent rows naturally overlap all later rows.
+           * Report only overlaps involving at least one
+           * temporary row, because those are the cases that
+           * usually need operator attention.
+           */
+          if (
+            first.endTime ||
+            second.endTime
+          ) {
+            overlaps.push({
+              first:
+                first,
+
+              second:
+                second
+            });
+          }
+        }
+      }
+
+      return overlaps;
+    }
+
+
+    function findFallbackGaps(
+      schedule
+    ) {
+      const temporaryRows =
+        schedule
+          .filter(
+            item =>
+              item.endTime
+          )
+          .sort((a, b) =>
+            a.time.localeCompare(
+              b.time
+            )
+          );
+
+      const gaps = [];
+
+      temporaryRows.forEach(
+        (item, index) => {
+          const nextTemporary =
+            temporaryRows[
+              index + 1
+            ];
+
+          const gapStart =
+            item.endTime;
+
+          const gapEnd =
+            nextTemporary
+              ? nextTemporary.time
+              : "24:00";
+
+          if (
+            !gapStart ||
+            gapStart >= gapEnd
+          ) {
+            return;
+          }
+
+          const fallback =
+            findPersistentFallbackAtTime(
+              schedule,
+              gapStart
+            );
+
+          if (!fallback) {
+            return;
+          }
+
+          gaps.push({
+            start:
+              gapStart,
+
+            end:
+              gapEnd,
+
+            fallbackImage:
+              fallback.image
+          });
+        }
+      );
+
+      return gaps;
+    }
+
+
+    function findPersistentFallbackAtTime(
+      schedule,
+      testTime
+    ) {
+      for (
+        let index =
+          schedule.length - 1;
+        index >= 0;
+        index -= 1
+      ) {
+        const item =
+          schedule[index];
+
+        if (
+          item.time <= testTime &&
+          !item.endTime
+        ) {
+          return item;
+        }
+      }
+
+      for (
+        let index =
+          schedule.length - 1;
+        index >= 0;
+        index -= 1
+      ) {
+        if (!schedule[index].endTime) {
+          return schedule[index];
+        }
+      }
+
+      return null;
+    }
+
+
+    function resetScheduleIntegrityChecks() {
+      integrityTemporaryCount.textContent =
+        "0";
+
+      integrityOverlapCount.textContent =
+        "0";
+
+      integrityGapCount.textContent =
+        "0";
+
+      integrityPersistentStatus.textContent =
+        "—";
+
+      integrityList.innerHTML = `
+        <div class="integrity-item">
+          Select a screen and run the checks.
+        </div>
+      `;
+    }
+
 
     /*
      * =====================================================
@@ -9865,6 +10448,8 @@
             `;
           })
           .join("");
+
+      runScheduleIntegrityChecks();
     }
 
 
