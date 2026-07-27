@@ -4148,6 +4148,92 @@
       }
     }
 
+
+    /*
+     * =====================================================
+     * DAILY SCHEDULE CALENDAR — EDITING
+     * =====================================================
+     */
+
+    .daily-calendar-block {
+      user-select: none;
+    }
+
+    .daily-calendar-block:hover {
+      filter: brightness(1.08);
+    }
+
+    .daily-calendar-resize-handle {
+      position: absolute;
+      left: 6px;
+      right: 6px;
+      bottom: 2px;
+
+      height: 8px;
+
+      border-radius: 999px;
+
+      background: rgba(255, 255, 255, 0.42);
+
+      cursor: ns-resize;
+    }
+
+    .daily-calendar-hover-preview {
+      position: fixed;
+      z-index: 12000;
+
+      display: none;
+
+      width: 260px;
+      padding: 8px;
+
+      border: 1px solid var(--border);
+      border-radius: 10px;
+
+      background: var(--surface);
+      box-shadow: var(--shadow);
+
+      pointer-events: none;
+    }
+
+    .daily-calendar-hover-preview.visible {
+      display: block;
+    }
+
+    .daily-calendar-hover-preview img {
+      display: block;
+
+      width: 100%;
+      aspect-ratio: 16 / 9;
+
+      object-fit: contain;
+
+      background: #000;
+      border-radius: 7px;
+    }
+
+    .daily-calendar-hover-preview-name {
+      margin-top: 7px;
+
+      font-size: 11px;
+      font-weight: 800;
+      overflow-wrap: anywhere;
+    }
+
+    .daily-calendar-edit-note {
+      margin-top: 12px;
+      padding: 10px 12px;
+
+      border: 1px solid var(--border);
+      border-radius: 9px;
+
+      color: var(--muted);
+      background: var(--surface-light);
+
+      font-size: 11px;
+      line-height: 1.45;
+    }
+
     body,
     header,
     .system-banner,
@@ -4709,7 +4795,6 @@
       >
         Schedule Manager
       </button>
-      
       <button
         id="dailyScheduleCalendarTab"
         class="workspace-tab"
@@ -4717,23 +4802,9 @@
       >
         Daily Schedule
       </button>
-      
-       <button
-        id="imageLibraryTab"
-        class="workspace-tab"
-        type="button"
-      >
-        Image Library
-      </button>
-      
-       <button
-        id="backupHistoryTab"
-        class="workspace-tab"
-        type="button"
-      >
-        Backup History
-      </button>
-      
+    
+
+
       <button
         id="holidayManagerTab"
         class="workspace-tab"
@@ -4741,12 +4812,21 @@
       >
         Holiday Overrides
       </button>
-       <button
-        id="holidayCalendarTab"
+
+      <button
+        id="backupHistoryTab"
         class="workspace-tab"
         type="button"
       >
-        Holiday Calendar
+        Backup History
+      </button>
+
+      <button
+        id="imageLibraryTab"
+        class="workspace-tab"
+        type="button"
+      >
+        Image Library
       </button>
 
       <button
@@ -4758,15 +4838,21 @@
       </button>
 
       <button
+        id="holidayCalendarTab"
+        class="workspace-tab"
+        type="button"
+      >
+        Holiday Calendar
+      </button>
+
+      <button
         id="compatibilityAuditTab"
         class="workspace-tab"
         type="button"
       >
         V3.1 Audit
       </button>
-
-      
-    </nav>
+</nav>
 
     <section
       id="controlCenterWorkspace"
@@ -6940,6 +7026,11 @@
           </div>
         </div>
 
+        <div class="daily-calendar-edit-note">
+          Click a block to edit its row. Double-click an empty time slot to create a new draft row.
+          Drag the bottom handle of a temporary block to adjust its End Time locally.
+        </div>
+
         <div class="daily-calendar-legend">
           <span class="persistent">
             Persistent
@@ -7222,6 +7313,21 @@
       ></div>
     </div>
   </section>
+
+  <div
+    id="dailyCalendarHoverPreview"
+    class="daily-calendar-hover-preview"
+  >
+    <img
+      id="dailyCalendarHoverPreviewImage"
+      alt=""
+    >
+
+    <div
+      id="dailyCalendarHoverPreviewName"
+      class="daily-calendar-hover-preview-name"
+    ></div>
+  </div>
 
   <script>
     /*
@@ -8030,6 +8136,21 @@
         "closeDailyCalendarDetailsButton"
       );
 
+    const dailyCalendarHoverPreview =
+      document.getElementById(
+        "dailyCalendarHoverPreview"
+      );
+
+    const dailyCalendarHoverPreviewImage =
+      document.getElementById(
+        "dailyCalendarHoverPreviewImage"
+      );
+
+    const dailyCalendarHoverPreviewName =
+      document.getElementById(
+        "dailyCalendarHoverPreviewName"
+      );
+
     const createHolidayForDateButton =
       document.getElementById(
         "createHolidayForDateButton"
@@ -8489,6 +8610,9 @@
       new Date();
 
     let selectedCalendarDate =
+      null;
+
+    let dailyCalendarResizeState =
       null;
 
     /*
@@ -18772,6 +18896,15 @@
       dailyCalendarGrid.addEventListener(
         "click",
         function(event) {
+          const resizeHandle =
+            event.target.closest(
+              "[data-daily-resize-handle]"
+            );
+
+          if (resizeHandle) {
+            return;
+          }
+
           const block =
             event.target.closest(
               "[data-daily-calendar-block]"
@@ -18781,26 +18914,129 @@
             return;
           }
 
-          openDailyCalendarDetails({
-            screen:
-              block.dataset.screen,
-
-            image:
-              block.dataset.image,
-
-            start:
-              block.dataset.start,
-
-            end:
-              block.dataset.end,
-
-            type:
-              block.dataset.type,
-
-            reason:
-              block.dataset.reason
-          });
+          jumpFromDailyCalendarToScheduleRow(
+            block.dataset.screen,
+            Number(
+              block.dataset.rowIndex
+            )
+          );
         }
+      );
+
+      dailyCalendarGrid.addEventListener(
+        "dblclick",
+        function(event) {
+          if (
+            event.target.closest(
+              "[data-daily-calendar-block]"
+            )
+          ) {
+            return;
+          }
+
+          const cell =
+            event.target.closest(
+              ".daily-calendar-cell"
+            );
+
+          if (!cell) {
+            return;
+          }
+
+          createScheduleRowFromCalendarCell(
+            cell
+          );
+        }
+      );
+
+      dailyCalendarGrid.addEventListener(
+        "mouseover",
+        function(event) {
+          const block =
+            event.target.closest(
+              "[data-daily-calendar-block]"
+            );
+
+          if (!block) {
+            return;
+          }
+
+          showDailyCalendarHoverPreview(
+            block,
+            event
+          );
+        }
+      );
+
+      dailyCalendarGrid.addEventListener(
+        "mousemove",
+        function(event) {
+          if (
+            dailyCalendarHoverPreview.classList.contains(
+              "visible"
+            )
+          ) {
+            positionDailyCalendarHoverPreview(
+              event
+            );
+          }
+        }
+      );
+
+      dailyCalendarGrid.addEventListener(
+        "mouseout",
+        function(event) {
+          const block =
+            event.target.closest(
+              "[data-daily-calendar-block]"
+            );
+
+          if (!block) {
+            return;
+          }
+
+          if (
+            block.contains(
+              event.relatedTarget
+            )
+          ) {
+            return;
+          }
+
+          hideDailyCalendarHoverPreview();
+        }
+      );
+
+      dailyCalendarGrid.addEventListener(
+        "mousedown",
+        function(event) {
+          const handle =
+            event.target.closest(
+              "[data-daily-resize-handle]"
+            );
+
+          if (!handle) {
+            return;
+          }
+
+          event.preventDefault();
+          event.stopPropagation();
+
+          beginDailyCalendarResize(
+            handle,
+            event
+          );
+        }
+      );
+
+      document.addEventListener(
+        "mousemove",
+        handleDailyCalendarResize
+      );
+
+      document.addEventListener(
+        "mouseup",
+        finishDailyCalendarResize
       );
 
       closeDailyCalendarDetailsButton.addEventListener(
@@ -18862,9 +19098,13 @@
         `;
 
         SCREEN_NAMES.forEach(
-          () => {
+          screenName => {
             html += `
-              <div class="daily-calendar-cell"></div>
+              <div
+                class="daily-calendar-cell"
+                data-daily-cell-screen="${escapeHtml(screenName)}"
+                data-daily-cell-hour="${hour}"
+              ></div>
             `;
           }
         );
@@ -18890,9 +19130,15 @@
             return;
           }
 
+          const calendarSchedule =
+            managerDrafts.get(
+              screenName
+            ) ||
+            state.schedule;
+
           const segments =
             buildDailyCalendarSegments(
-              state.schedule
+              calendarSchedule
             );
 
           segments.forEach(
@@ -18993,6 +19239,21 @@
               block.dataset.reason =
                 segment.reason;
 
+              block.dataset.rowIndex =
+                String(segment.rowIndex);
+
+              block.dataset.startMinute =
+                String(segmentStart);
+
+              block.dataset.endMinute =
+                String(segmentEnd);
+
+              block.dataset.startHour =
+                String(startHour);
+
+              block.dataset.rowHeight =
+                String(rowHeight);
+
               block.innerHTML = `
                 <div class="daily-calendar-block-title">
                   ${escapeHtml(segment.image)}
@@ -19003,6 +19264,17 @@
                   →
                   ${escapeHtml(segment.end)}
                 </div>
+
+                ${
+                  segment.type === "temporary"
+                    ? `
+                      <div
+                        class="daily-calendar-resize-handle"
+                        data-daily-resize-handle="1"
+                      ></div>
+                    `
+                    : ""
+                }
               `;
 
               dailyCalendarGrid.appendChild(
@@ -19050,6 +19322,15 @@
           const next =
             sorted[index + 1];
 
+          const originalRowIndex =
+            schedule.findIndex(
+              sourceItem =>
+                sourceItem.time === item.time &&
+                sourceItem.image === item.image &&
+                String(sourceItem.endTime || "") ===
+                  String(item.endTime || "")
+            );
+
           const end =
             item.endTime ||
             (
@@ -19086,7 +19367,10 @@
             reason:
               item.endTime
                 ? `Temporary row active from ${item.time} until ${item.endTime}.`
-                : `Persistent row active from ${item.time} until another row replaces it.`
+                : `Persistent row active from ${item.time} until another row replaces it.`,
+
+            rowIndex:
+              originalRowIndex
           });
 
           if (
@@ -19119,7 +19403,14 @@
                   false,
 
                 reason:
-                  `No temporary row is active. The player falls back to ${fallback.image}.`
+                  `No temporary row is active. The player falls back to ${fallback.image}.`,
+
+                rowIndex:
+                  schedule.findIndex(
+                    sourceItem =>
+                      sourceItem.time === fallback.time &&
+                      sourceItem.image === fallback.image
+                  )
               });
             }
           }
@@ -19217,6 +19508,525 @@
 
       dailyCalendarWrap.scrollTop =
         offset;
+    }
+
+
+    function jumpFromDailyCalendarToScheduleRow(
+      screenName,
+      rowIndex
+    ) {
+      if (
+        !screenName ||
+        rowIndex < 0
+      ) {
+        return;
+      }
+
+      managerScreenSelect.value =
+        screenName;
+
+      const state =
+        screenStates.get(
+          screenName
+        );
+
+      if (
+        !managerDrafts.has(
+          screenName
+        ) &&
+        state &&
+        Array.isArray(
+          state.schedule
+        )
+      ) {
+        managerDrafts.set(
+          screenName,
+          state.schedule.map(item => ({
+            time:
+              item.time,
+
+            endTime:
+              item.endTime || "",
+
+            image:
+              item.image,
+
+            fade:
+              item.fade
+          }))
+        );
+      }
+
+      managerEditingEnabled =
+        true;
+
+      updateManagerEditingControls();
+
+      openWorkspace(
+        "manager"
+      );
+
+      updateScheduleManager();
+
+      setTimeout(
+        function() {
+          const row =
+            managerScheduleBody.querySelector(
+              `[data-row-index="${rowIndex}"]`
+            )?.closest("tr");
+
+          if (!row) {
+            return;
+          }
+
+          row.scrollIntoView({
+            behavior:
+              "smooth",
+
+            block:
+              "center"
+          });
+
+          row.classList.add(
+            "active-selection"
+          );
+
+          const input =
+            row.querySelector(
+              "[data-manager-field]"
+            );
+
+          if (input) {
+            input.focus();
+          }
+        },
+        120
+      );
+    }
+
+
+    function createScheduleRowFromCalendarCell(
+      cell
+    ) {
+      const screenName =
+        cell.dataset.dailyCellScreen;
+
+      const hour =
+        Number(
+          cell.dataset.dailyCellHour
+        );
+
+      if (
+        !screenName ||
+        !Number.isFinite(hour)
+      ) {
+        return;
+      }
+
+      managerScreenSelect.value =
+        screenName;
+
+      const state =
+        screenStates.get(
+          screenName
+        );
+
+      if (
+        !state ||
+        state.error ||
+        !Array.isArray(
+          state.schedule
+        )
+      ) {
+        return;
+      }
+
+      const draft =
+        managerDrafts.get(
+          screenName
+        ) ||
+        state.schedule.map(item => ({
+          time:
+            item.time,
+
+          endTime:
+            item.endTime || "",
+
+          image:
+            item.image,
+
+          fade:
+            item.fade
+        }));
+
+      const time =
+        `${String(hour).padStart(2, "0")}:00`;
+
+      draft.push({
+        time:
+          time,
+
+        endTime:
+          "",
+
+        image:
+          "",
+
+        fade:
+          1500
+      });
+
+      draft.sort(
+        (a, b) =>
+          a.time.localeCompare(
+            b.time
+          )
+      );
+
+      managerDrafts.set(
+        screenName,
+        draft
+      );
+
+      persistScheduleDraft(
+        screenName,
+        draft
+      );
+
+      managerEditingEnabled =
+        true;
+
+      openWorkspace(
+        "manager"
+      );
+
+      updateManagerEditingControls();
+      updateScheduleManager();
+
+      const newIndex =
+        draft.findIndex(
+          item =>
+            item.time === time &&
+            item.image === ""
+        );
+
+      setTimeout(
+        function() {
+          const input =
+            managerScheduleBody.querySelector(
+              `[data-manager-field="image"][data-row-index="${newIndex}"]`
+            );
+
+          if (input) {
+            input.scrollIntoView({
+              behavior:
+                "smooth",
+
+              block:
+                "center"
+            });
+
+            input.focus();
+          }
+        },
+        120
+      );
+    }
+
+
+    function showDailyCalendarHoverPreview(
+      block,
+      event
+    ) {
+      dailyCalendarHoverPreviewImage.src =
+        buildImageUrl(
+          block.dataset.image
+        );
+
+      dailyCalendarHoverPreviewName.textContent =
+        `${block.dataset.screen} · ${block.dataset.image}`;
+
+      dailyCalendarHoverPreview.classList.add(
+        "visible"
+      );
+
+      positionDailyCalendarHoverPreview(
+        event
+      );
+    }
+
+
+    function positionDailyCalendarHoverPreview(
+      event
+    ) {
+      const gap =
+        16;
+
+      const previewWidth =
+        276;
+
+      const previewHeight =
+        210;
+
+      let left =
+        event.clientX + gap;
+
+      let top =
+        event.clientY + gap;
+
+      if (
+        left + previewWidth >
+        window.innerWidth
+      ) {
+        left =
+          event.clientX -
+          previewWidth -
+          gap;
+      }
+
+      if (
+        top + previewHeight >
+        window.innerHeight
+      ) {
+        top =
+          event.clientY -
+          previewHeight -
+          gap;
+      }
+
+      dailyCalendarHoverPreview.style.left =
+        `${Math.max(8, left)}px`;
+
+      dailyCalendarHoverPreview.style.top =
+        `${Math.max(8, top)}px`;
+    }
+
+
+    function hideDailyCalendarHoverPreview() {
+      dailyCalendarHoverPreview.classList.remove(
+        "visible"
+      );
+
+      dailyCalendarHoverPreviewImage.removeAttribute(
+        "src"
+      );
+    }
+
+
+    function beginDailyCalendarResize(
+      handle,
+      event
+    ) {
+      const block =
+        handle.closest(
+          "[data-daily-calendar-block]"
+        );
+
+      if (
+        !block ||
+        block.dataset.type !==
+          "temporary"
+      ) {
+        return;
+      }
+
+      dailyCalendarResizeState = {
+        block:
+          block,
+
+        screen:
+          block.dataset.screen,
+
+        rowIndex:
+          Number(
+            block.dataset.rowIndex
+          ),
+
+        startMinute:
+          Number(
+            block.dataset.startMinute
+          ),
+
+        initialEndMinute:
+          Number(
+            block.dataset.endMinute
+          ),
+
+        initialY:
+          event.clientY,
+
+        rowHeight:
+          Number(
+            block.dataset.rowHeight
+          )
+      };
+
+      hideDailyCalendarHoverPreview();
+    }
+
+
+    function handleDailyCalendarResize(
+      event
+    ) {
+      if (!dailyCalendarResizeState) {
+        return;
+      }
+
+      const state =
+        dailyCalendarResizeState;
+
+      const deltaMinutes =
+        Math.round(
+          (
+            event.clientY -
+            state.initialY
+          ) /
+          state.rowHeight *
+          60 /
+          5
+        ) * 5;
+
+      const endMinute =
+        Math.max(
+          state.startMinute + 5,
+          Math.min(
+            1435,
+            state.initialEndMinute +
+            deltaMinutes
+          )
+        );
+
+      const height =
+        Math.max(
+          24,
+          (
+            (
+              endMinute -
+              state.startMinute
+            ) /
+            60
+          ) *
+          state.rowHeight -
+          4
+        );
+
+      state.block.style.height =
+        `${height}px`;
+
+      state.block.dataset.pendingEndMinute =
+        String(endMinute);
+
+      const meta =
+        state.block.querySelector(
+          ".daily-calendar-block-meta"
+        );
+
+      if (meta) {
+        meta.textContent =
+          `${minutesToHHMM(state.startMinute)} → ${minutesToHHMM(endMinute)}`;
+      }
+    }
+
+
+    function finishDailyCalendarResize() {
+      if (!dailyCalendarResizeState) {
+        return;
+      }
+
+      const state =
+        dailyCalendarResizeState;
+
+      const pendingEndMinute =
+        Number(
+          state.block.dataset.pendingEndMinute ||
+          state.initialEndMinute
+        );
+
+      const screenState =
+        screenStates.get(
+          state.screen
+        );
+
+      if (
+        screenState &&
+        Array.isArray(
+          screenState.schedule
+        )
+      ) {
+        const draft =
+          managerDrafts.get(
+            state.screen
+          ) ||
+          screenState.schedule.map(item => ({
+            time:
+              item.time,
+
+            endTime:
+              item.endTime || "",
+
+            image:
+              item.image,
+
+            fade:
+              item.fade
+          }));
+
+        if (
+          draft[state.rowIndex]
+        ) {
+          draft[state.rowIndex].endTime =
+            minutesToHHMM(
+              pendingEndMinute
+            );
+
+          managerDrafts.set(
+            state.screen,
+            draft
+          );
+
+          persistScheduleDraft(
+            state.screen,
+            draft
+          );
+        }
+      }
+
+      dailyCalendarResizeState =
+        null;
+
+      renderDailyScheduleCalendar();
+    }
+
+
+    function minutesToHHMM(
+      totalMinutes
+    ) {
+      const safeMinutes =
+        Math.max(
+          0,
+          Math.min(
+            1439,
+            Math.round(
+              totalMinutes
+            )
+          )
+        );
+
+      const hours =
+        Math.floor(
+          safeMinutes / 60
+        );
+
+      const minutes =
+        safeMinutes % 60;
+
+      return (
+        String(hours)
+          .padStart(2, "0") +
+        ":" +
+        String(minutes)
+          .padStart(2, "0")
+      );
     }
 
 
