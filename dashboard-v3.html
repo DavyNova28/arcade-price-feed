@@ -3977,7 +3977,8 @@
       right: 6px;
       z-index: 3;
 
-      min-height: 24px;
+      box-sizing: border-box;
+      min-height: 8px;
       padding: 7px 8px;
 
       overflow: hidden;
@@ -4025,6 +4026,27 @@
     .daily-calendar-block-meta {
       margin-top: 3px;
       opacity: 0.84;
+    }
+
+    .daily-calendar-block.compact {
+      padding-top: 3px;
+      padding-bottom: 3px;
+    }
+
+    .daily-calendar-block.compact
+    .daily-calendar-block-meta {
+      display: none;
+    }
+
+    .daily-calendar-block.very-compact {
+      padding: 1px 5px;
+    }
+
+    .daily-calendar-block.very-compact
+    .daily-calendar-block-title,
+    .daily-calendar-block.very-compact
+    .daily-calendar-block-meta {
+      display: none;
     }
 
     .daily-calendar-now-line {
@@ -19181,7 +19203,7 @@
 
               const height =
                 Math.max(
-                  24,
+                  8,
                   (
                     (
                       segmentEnd -
@@ -19208,6 +19230,18 @@
                     ? " overlap"
                     : ""
                 );
+
+              if (height < 34) {
+                block.classList.add(
+                  "compact"
+                );
+              }
+
+              if (height < 18) {
+                block.classList.add(
+                  "very-compact"
+                );
+              }
 
               block.style.gridColumn =
                 String(leftColumn);
@@ -19898,7 +19932,7 @@
 
       const height =
         Math.max(
-          24,
+          8,
           (
             (
               endMinute -
@@ -19912,6 +19946,16 @@
 
       state.block.style.height =
         `${height}px`;
+
+      state.block.classList.toggle(
+        "compact",
+        height < 34
+      );
+
+      state.block.classList.toggle(
+        "very-compact",
+        height < 18
+      );
 
       state.block.dataset.pendingEndMinute =
         String(endMinute);
