@@ -4417,6 +4417,117 @@
       border-color: #cf8b16;
     }
 
+
+    /*
+     * =====================================================
+     * AUTOMATIC HEALTH CHECKS
+     * =====================================================
+     */
+
+    .auto-health-checks {
+      margin-top: 18px;
+      padding: 16px;
+
+      border: 1px solid var(--border);
+      border-radius: 12px;
+
+      background: var(--surface-light);
+    }
+
+    .auto-health-list {
+      display: grid;
+      gap: 10px;
+
+      margin-top: 14px;
+    }
+
+    .auto-health-item {
+      display: grid;
+      grid-template-columns: 26px 1fr auto;
+      align-items: center;
+      gap: 10px;
+
+      padding: 11px 12px;
+
+      border: 1px solid var(--border);
+      border-radius: 10px;
+
+      background: var(--surface);
+    }
+
+    .auto-health-icon {
+      font-size: 16px;
+      text-align: center;
+    }
+
+    .auto-health-main {
+      min-width: 0;
+    }
+
+    .auto-health-title {
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .auto-health-detail {
+      margin-top: 2px;
+
+      color: var(--muted);
+      font-size: 10px;
+      line-height: 1.4;
+    }
+
+    .auto-health-status {
+      padding: 4px 7px;
+
+      border-radius: 999px;
+
+      font-size: 9px;
+      font-weight: 850;
+      text-transform: uppercase;
+    }
+
+    .auto-health-ok {
+      color: #caffea;
+      background: var(--regular-dark);
+    }
+
+    .auto-health-warning {
+      color: #fff0cf;
+      background: var(--holiday-dark);
+    }
+
+    .auto-health-error {
+      color: #ffd6d6;
+      background: var(--error-dark);
+    }
+
+    html[data-theme="light"] .auto-health-ok {
+      color: #15543a;
+      background: #d9f7ea;
+    }
+
+    html[data-theme="light"] .auto-health-warning {
+      color: #7a5518;
+      background: #fff1d4;
+    }
+
+    html[data-theme="light"] .auto-health-error {
+      color: #7e2525;
+      background: #ffe5e5;
+    }
+
+    @media (max-width: 560px) {
+      .auto-health-item {
+        grid-template-columns: 24px 1fr;
+      }
+
+      .auto-health-status {
+        grid-column: 2;
+        justify-self: start;
+      }
+    }
+
     body,
     header,
     .system-banner,
@@ -7412,6 +7523,45 @@
           <article class="health-panel"><h3 class="health-panel-title">Requests by screen</h3><div id="healthScreensList" class="health-list"></div></article>
         </section>
 
+        <section class="auto-health-checks">
+          <div class="manager-header">
+            <div>
+              <div class="eyebrow">
+                Automatic diagnostics
+              </div>
+
+              <h3 style="margin:5px 0 0;">
+                Service checks
+              </h3>
+
+              <p class="manager-description">
+                Runs automatically when System Health opens and every five minutes while this workspace remains active.
+              </p>
+            </div>
+
+            <button
+              id="runAutomaticHealthChecksButton"
+              class="button"
+              type="button"
+            >
+              Run checks now
+            </button>
+          </div>
+
+          <div
+            id="automaticHealthChecksStatus"
+            class="manager-description"
+            style="margin-top:10px;"
+          >
+            Checks have not run yet.
+          </div>
+
+          <div
+            id="automaticHealthChecksList"
+            class="auto-health-list"
+          ></div>
+        </section>
+
         <div id="healthErrorBox" class="health-error-box"></div>
       </section>
     </section>
@@ -7604,7 +7754,7 @@
      */
 
     const SCHEDULE_FEED_URL =
-      "https://script.google.com/macros/s/AKfycbwUINP9DCEUywwCU1YMjfnPT3H8ZUq1lsGVk8ShACrTp2EZIqMYrChADlk_uEh2F-DGXw/exec";
+      "PASTE_YOUR_APPS_SCRIPT_EXEC_URL_HERE";
 
     const SCREEN_NAMES = [
       "Arcade",
@@ -8452,6 +8602,21 @@
     const healthScreensList = document.getElementById("healthScreensList");
     const healthErrorBox = document.getElementById("healthErrorBox");
 
+    const runAutomaticHealthChecksButton =
+      document.getElementById(
+        "runAutomaticHealthChecksButton"
+      );
+
+    const automaticHealthChecksStatus =
+      document.getElementById(
+        "automaticHealthChecksStatus"
+      );
+
+    const automaticHealthChecksList =
+      document.getElementById(
+        "automaticHealthChecksList"
+      );
+
     const dailyCalendarHoverPreview =
       document.getElementById(
         "dailyCalendarHoverPreview"
@@ -8930,6 +9095,12 @@
 
     let dashboardOfflineSnapshot =
       readDashboardOfflineSnapshot();
+
+    let automaticHealthCheckTimer =
+      null;
+
+    let automaticHealthCheckInProgress =
+      false;
 
     let calendarCursor =
       new Date();
@@ -11006,6 +11177,10 @@
 
       if (showSystemHealth) {
         loadSystemHealth();
+        runAutomaticHealthChecks();
+        startAutomaticHealthChecks();
+      } else {
+        stopAutomaticHealthChecks();
       }
     }
 
@@ -20722,7 +20897,15 @@
      */
 
     function setupSystemHealth() {
-      refreshSystemHealthButton.addEventListener("click", loadSystemHealth);
+      refreshSystemHealthButton.addEventListener(
+        "click",
+        loadSystemHealth
+      );
+
+      runAutomaticHealthChecksButton.addEventListener(
+        "click",
+        runAutomaticHealthChecks
+      );
     }
 
     function loadSystemHealth() {
@@ -21266,6 +21449,614 @@
         );
 
       return `saved ${days} day${days === 1 ? "" : "s"} ago`;
+    }
+
+
+    /*
+     * =====================================================
+     * AUTOMATIC HEALTH CHECKS
+     * =====================================================
+     */
+
+    function startAutomaticHealthChecks() {
+      stopAutomaticHealthChecks();
+
+      automaticHealthCheckTimer =
+        setInterval(
+          function() {
+            if (
+              systemHealthWorkspace.classList.contains(
+                "active"
+              )
+            ) {
+              runAutomaticHealthChecks();
+            }
+          },
+          5 * 60 * 1000
+        );
+    }
+
+
+    function stopAutomaticHealthChecks() {
+      if (automaticHealthCheckTimer) {
+        clearInterval(
+          automaticHealthCheckTimer
+        );
+
+        automaticHealthCheckTimer =
+          null;
+      }
+    }
+
+
+    async function runAutomaticHealthChecks() {
+      if (automaticHealthCheckInProgress) {
+        return;
+      }
+
+      automaticHealthCheckInProgress =
+        true;
+
+      runAutomaticHealthChecksButton.disabled =
+        true;
+
+      runAutomaticHealthChecksButton.textContent =
+        "Checking…";
+
+      automaticHealthChecksStatus.textContent =
+        "Running service checks…";
+
+      const checks = [];
+
+      try {
+        checks.push(
+          await checkAppsScriptHealth()
+        );
+
+        checks.push(
+          await checkGitHubImageIndexHealth()
+        );
+
+        checks.push(
+          checkScheduleFeedHealth()
+        );
+
+        checks.push(
+          checkOfflineSnapshotHealth()
+        );
+
+        checks.push(
+          checkDashboardCacheHealth()
+        );
+
+        renderAutomaticHealthChecks(
+          checks
+        );
+
+      } finally {
+        automaticHealthCheckInProgress =
+          false;
+
+        runAutomaticHealthChecksButton.disabled =
+          false;
+
+        runAutomaticHealthChecksButton.textContent =
+          "Run checks now";
+      }
+    }
+
+
+    async function checkAppsScriptHealth() {
+      const startedAt =
+        performance.now();
+
+      try {
+        const payload =
+          await fetchJsonpPayload(
+            "healthManager"
+          );
+
+        const elapsed =
+          Math.round(
+            performance.now() -
+            startedAt
+          );
+
+        if (
+          !payload ||
+          payload.success !== true
+        ) {
+          throw new Error(
+            payload &&
+            payload.error
+              ? payload.error
+              : "Apps Script returned an invalid response."
+          );
+        }
+
+        return {
+          icon:
+            "🟢",
+
+          title:
+            "Apps Script endpoint",
+
+          detail:
+            `Responded in ${elapsed} ms.`,
+
+          level:
+            elapsed > 3000
+              ? "warning"
+              : "ok",
+
+          status:
+            elapsed > 3000
+              ? "Slow"
+              : "Online"
+        };
+
+      } catch (error) {
+        return {
+          icon:
+            "🔴",
+
+          title:
+            "Apps Script endpoint",
+
+          detail:
+            error.message ||
+            "Apps Script could not be reached.",
+
+          level:
+            "error",
+
+          status:
+            "Offline"
+        };
+      }
+    }
+
+
+    async function checkGitHubImageIndexHealth() {
+      const startedAt =
+        performance.now();
+
+      try {
+        const response =
+          await fetch(
+            `${GITHUB_IMAGE_INDEX_FILE}?_=${Date.now()}`,
+            {
+              cache:
+                "no-store"
+            }
+          );
+
+        if (!response.ok) {
+          throw new Error(
+            `GitHub returned HTTP ${response.status}.`
+          );
+        }
+
+        const payload =
+          await response.json();
+
+        if (
+          !payload ||
+          !Array.isArray(
+            payload.images
+          )
+        ) {
+          throw new Error(
+            "image-index.json has an invalid format."
+          );
+        }
+
+        const elapsed =
+          Math.round(
+            performance.now() -
+            startedAt
+          );
+
+        return {
+          icon:
+            "🟢",
+
+          title:
+            "GitHub image index",
+
+          detail:
+            `${payload.images.length} image(s) indexed · ${elapsed} ms.`,
+
+          level:
+            "ok",
+
+          status:
+            "Available"
+        };
+
+      } catch (error) {
+        return {
+          icon:
+            "🟠",
+
+          title:
+            "GitHub image index",
+
+          detail:
+            `${error.message || error} The dashboard can still fall back to the GitHub API.`,
+
+          level:
+            "warning",
+
+          status:
+            "Fallback"
+        };
+      }
+    }
+
+
+    function checkScheduleFeedHealth() {
+      const loaded =
+        Array.from(
+          screenStates.values()
+        ).filter(
+          state =>
+            state &&
+            !state.error
+        ).length;
+
+      const offline =
+        offlineScreens.size;
+
+      if (
+        loaded === SCREEN_NAMES.length &&
+        offline === 0
+      ) {
+        return {
+          icon:
+            "🟢",
+
+          title:
+            "Schedule feeds",
+
+          detail:
+            `All ${SCREEN_NAMES.length} configured screens have live schedule data.`,
+
+          level:
+            "ok",
+
+          status:
+            "Healthy"
+        };
+      }
+
+      if (loaded > 0) {
+        return {
+          icon:
+            "🟠",
+
+          title:
+            "Schedule feeds",
+
+          detail:
+            `${loaded} of ${SCREEN_NAMES.length} screen(s) loaded · ${offline} using cached data.`,
+
+          level:
+            "warning",
+
+          status:
+            "Partial"
+        };
+      }
+
+      return {
+        icon:
+          "🔴",
+
+        title:
+          "Schedule feeds",
+
+        detail:
+          "No live screen schedules are currently available.",
+
+        level:
+          "error",
+
+        status:
+          "Unavailable"
+      };
+    }
+
+
+    function checkOfflineSnapshotHealth() {
+      const savedAt =
+        dashboardOfflineSnapshot &&
+        dashboardOfflineSnapshot.savedAt
+          ? new Date(
+              dashboardOfflineSnapshot.savedAt
+            )
+          : null;
+
+      if (
+        !savedAt ||
+        !Number.isFinite(
+          savedAt.getTime()
+        )
+      ) {
+        return {
+          icon:
+            "🟠",
+
+          title:
+            "Offline snapshot",
+
+          detail:
+            "No reusable offline snapshot has been stored yet.",
+
+          level:
+            "warning",
+
+          status:
+            "Missing"
+        };
+      }
+
+      const ageMs =
+        Date.now() -
+        savedAt.getTime();
+
+      if (
+        ageMs >
+        DASHBOARD_OFFLINE_MAX_AGE_MS
+      ) {
+        return {
+          icon:
+            "🔴",
+
+          title:
+            "Offline snapshot",
+
+          detail:
+            `Snapshot is too old: ${formatOfflineSnapshotAge(savedAt)}.`,
+
+          level:
+            "error",
+
+          status:
+            "Expired"
+        };
+      }
+
+      return {
+        icon:
+          "🟢",
+
+        title:
+          "Offline snapshot",
+
+        detail:
+          `Available · ${formatOfflineSnapshotAge(savedAt)}.`,
+
+        level:
+          "ok",
+
+        status:
+          "Ready"
+      };
+    }
+
+
+    function checkDashboardCacheHealth() {
+      try {
+        const raw =
+          localStorage.getItem(
+            DASHBOARD_OFFLINE_STORAGE_KEY
+          );
+
+        const bytes =
+          raw
+            ? new Blob([raw]).size
+            : 0;
+
+        return {
+          icon:
+            "🟢",
+
+          title:
+            "Browser storage",
+
+          detail:
+            `${Math.round(bytes / 1024)} KB currently used by the offline snapshot.`,
+
+          level:
+            "ok",
+
+          status:
+            "Available"
+        };
+
+      } catch (error) {
+        return {
+          icon:
+            "🔴",
+
+          title:
+            "Browser storage",
+
+          detail:
+            "Local browser storage is unavailable.",
+
+          level:
+            "error",
+
+          status:
+            "Blocked"
+        };
+      }
+    }
+
+
+    function fetchJsonpPayload(
+      action
+    ) {
+      return new Promise(
+        (resolve, reject) => {
+          const callbackName =
+            `healthCheckCallback_${Date.now()}_${Math.random()
+              .toString(36)
+              .slice(2)}`;
+
+          const script =
+            document.createElement(
+              "script"
+            );
+
+          let completed =
+            false;
+
+          const cleanup =
+            function() {
+              if (script.remove) {
+                script.remove();
+              }
+
+              try {
+                delete window[
+                  callbackName
+                ];
+              } catch (error) {
+                window[
+                  callbackName
+                ] = undefined;
+              }
+            };
+
+          const timeout =
+            setTimeout(
+              function() {
+                if (completed) {
+                  return;
+                }
+
+                completed =
+                  true;
+
+                cleanup();
+
+                reject(
+                  new Error(
+                    "Request timed out."
+                  )
+                );
+              },
+              15000
+            );
+
+          window[
+            callbackName
+          ] = function(payload) {
+            if (completed) {
+              return;
+            }
+
+            completed =
+              true;
+
+            clearTimeout(
+              timeout
+            );
+
+            cleanup();
+            resolve(payload);
+          };
+
+          script.onerror =
+            function() {
+              if (completed) {
+                return;
+              }
+
+              completed =
+                true;
+
+              clearTimeout(
+                timeout
+              );
+
+              cleanup();
+
+              reject(
+                new Error(
+                  "Could not connect."
+                )
+              );
+            };
+
+          const separator =
+            SCHEDULE_FEED_URL.includes("?")
+              ? "&"
+              : "?";
+
+          script.src =
+            `${SCHEDULE_FEED_URL}` +
+            `${separator}action=${encodeURIComponent(action)}` +
+            `&callback=${encodeURIComponent(callbackName)}` +
+            `&_=${Date.now()}`;
+
+          document.head.appendChild(
+            script
+          );
+        }
+      );
+    }
+
+
+    function renderAutomaticHealthChecks(
+      checks
+    ) {
+      const errors =
+        checks.filter(
+          check =>
+            check.level === "error"
+        ).length;
+
+      const warnings =
+        checks.filter(
+          check =>
+            check.level === "warning"
+        ).length;
+
+      automaticHealthChecksStatus.textContent =
+        errors > 0
+          ? `${errors} critical issue(s) and ${warnings} warning(s) found.`
+          : warnings > 0
+            ? `${warnings} warning(s) found.`
+            : `All checks passed at ${new Date().toLocaleTimeString()}.`;
+
+      automaticHealthChecksList.innerHTML =
+        checks.map(
+          check => `
+            <div class="auto-health-item">
+              <div class="auto-health-icon">
+                ${escapeHtml(check.icon)}
+              </div>
+
+              <div class="auto-health-main">
+                <div class="auto-health-title">
+                  ${escapeHtml(check.title)}
+                </div>
+
+                <div class="auto-health-detail">
+                  ${escapeHtml(check.detail)}
+                </div>
+              </div>
+
+              <div class="auto-health-status auto-health-${escapeHtml(check.level)}">
+                ${escapeHtml(check.status)}
+              </div>
+            </div>
+          `
+        ).join("");
     }
 
 
