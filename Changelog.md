@@ -9,6 +9,18 @@ All notable changes to the Mini Golf Signage project will be documented here.
 - Day-of-week schedules
 - Automatic recovery health check
 
+## [3.0.0] - 2026-07-27
+Official realase of the Dashboard V3 with a bunch of new feature added to mix.
+
+- Schedule Manager fully operational
+- Daily Schedule
+- Holiday Overrides
+- Backup History
+- Image Library
+- Audit Log
+- Holiday Calendar
+- System Heath
+  
 ## [2.0.0] - 2026-07-26
 
 ### Added
