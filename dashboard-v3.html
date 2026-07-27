@@ -21995,12 +21995,28 @@
 
       refreshGoLiveReadinessButton.addEventListener(
         "click",
-        runGoLiveReadinessCheck
+        function() {
+          refreshGoLiveReadinessButton.disabled =
+            true;
+
+          refreshGoLiveReadinessButton.textContent =
+            "Checking…";
+
+          try {
+            runGoLiveReadinessCheck();
+          } finally {
+            refreshGoLiveReadinessButton.disabled =
+              false;
+
+            refreshGoLiveReadinessButton.textContent =
+              "Run preflight";
+          }
+        }
       );
 
       refreshPlayerVersionsButton.addEventListener(
         "click",
-        loadPlayerHeartbeats
+        loadPlayerVersions
       );
 
       expectedPlayerVersionLabel.textContent =
@@ -23718,9 +23734,16 @@
           }
         );
 
-      renderPlayerVersionCompliance(
-        normalized
-      );
+      try {
+        renderPlayerVersionCompliance(
+          normalized
+        );
+      } catch (error) {
+        console.warn(
+          "Player Version Compliance could not render.",
+          error
+        );
+      }
 
       const onlineCount =
         normalized.filter(
@@ -24187,13 +24210,123 @@
      * PLAYER VERSION COMPLIANCE
      */
 
+    async function loadPlayerVersions() {
+      refreshPlayerVersionsButton.disabled =
+        true;
+
+      refreshPlayerVersionsButton.textContent =
+        "Loading…";
+
+      try {
+        const payload =
+          await fetchJsonpPayload(
+            "heartbeatManager"
+          );
+
+        if (
+          !payload ||
+          payload.success !== true ||
+          !Array.isArray(payload.players)
+        ) {
+          throw new Error(
+            payload && payload.error
+              ? payload.error
+              : "Player version data was unavailable."
+          );
+        }
+
+        latestPlayerHeartbeats =
+          payload.players;
+
+        renderPlayerVersionCompliance(
+          normalizePlayerVersionRecords(
+            payload.players
+          )
+        );
+
+        runGoLiveReadinessCheck();
+
+      } catch (error) {
+        playerVersionSummary.textContent =
+          error.message ||
+          "Could not load player versions.";
+
+      } finally {
+        refreshPlayerVersionsButton.disabled =
+          false;
+
+        refreshPlayerVersionsButton.textContent =
+          "Refresh versions";
+      }
+    }
+
+
+    function normalizePlayerVersionRecords(
+      players
+    ) {
+      const playerMap =
+        new Map(
+          (Array.isArray(players)
+            ? players
+            : []
+          ).map(
+            player => [
+              player.screen,
+              player
+            ]
+          )
+        );
+
+      return SCREEN_NAMES.map(
+        screenName => {
+          const player =
+            playerMap.get(
+              screenName
+            );
+
+          return {
+            screen:
+              screenName,
+
+            playerVersion:
+              player &&
+              player.playerVersion
+                ? String(
+                    player.playerVersion
+                  ).trim()
+                : "",
+
+            lastSeenAt:
+              player &&
+              player.lastSeenAt
+                ? player.lastSeenAt
+                : "",
+
+            status:
+              player &&
+              player.status
+                ? player.status
+                : "offline"
+          };
+        }
+      );
+    }
+
+
     function renderPlayerVersionCompliance(
       players
     ) {
+      if (
+        !playerVersionSummary ||
+        !playerVersionList
+      ) {
+        return;
+      }
+
       const normalizedPlayers =
-        Array.isArray(players)
-          ? players
-          : [];
+        normalizePlayerVersionRecords(
+          players
+        );
 
       const currentCount =
         normalizedPlayers.filter(
@@ -24265,7 +24398,10 @@
 
                   <div class="player-version-detail">
                     Reported:
-                    ${escapeHtml(player.playerVersion || "Not reported")}
+                    ${escapeHtml(player.playerVersion || "No version received yet")}
+                    ${player.lastSeenAt
+                      ? ` · Last seen ${escapeHtml(new Date(player.lastSeenAt).toLocaleString())}`
+                      : " · Player has not checked in"}
                   </div>
                 </div>
               `;
@@ -24280,9 +24416,33 @@
      */
 
     function runGoLiveReadinessCheck() {
-      renderGoLiveReadiness(
-        buildGoLiveReadinessChecks()
-      );
+      try {
+        const checks =
+          buildGoLiveReadinessChecks();
+
+        renderGoLiveReadiness(
+          checks
+        );
+
+      } catch (error) {
+        console.error(
+          "Go-Live Preflight failed.",
+          error
+        );
+
+        goLiveReadinessState.className =
+          "go-live-readiness-state go-live-warning";
+
+        goLiveReadinessState.textContent =
+          "Review";
+
+        goLiveReadinessHeadline.textContent =
+          "Preflight could not complete";
+
+        goLiveReadinessDescription.textContent =
+          error.message ||
+          "One readiness check could not be evaluated.";
+      }
     }
 
 
@@ -24450,9 +24610,14 @@
             : `${imageIssueCount} screen(s) reference a missing active image.`
       });
 
+      const normalizedHeartbeatRecords =
+        normalizePlayerVersionRecords(
+          latestPlayerHeartbeats
+        );
+
       const heartbeatMap =
         new Map(
-          latestPlayerHeartbeats.map(
+          normalizedHeartbeatRecords.map(
             player => [
               player.screen,
               player
@@ -24514,7 +24679,7 @@
           playersWithWrongVersion.length > 0
             ? `Outdated player version on: ${playersWithWrongVersion.join(", ")}.`
             : playersWithUnknownVersion.length > 0
-              ? `Version not yet reported by: ${playersWithUnknownVersion.join(", ")}.`
+              ? `No player version has been received yet from: ${playersWithUnknownVersion.join(", ")}. Open the new heartbeat-enabled index.html on each screen once.`
               : `Every player reports ${EXPECTED_PLAYER_VERSION}.`
       });
 
