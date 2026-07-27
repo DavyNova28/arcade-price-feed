@@ -2470,320 +2470,6 @@
 
     /*
      * =====================================================
-     * GITHUB IMAGE PICKER
-     * =====================================================
-     */
-
-    function setupGitHubImagePicker() {
-      closeImagePickerButton.addEventListener(
-        "click",
-        closeGitHubImagePicker
-      );
-
-      imagePickerDialog.addEventListener(
-        "click",
-        function(event) {
-          if (
-            event.target ===
-            imagePickerDialog
-          ) {
-            closeGitHubImagePicker();
-          }
-        }
-      );
-
-      imagePickerSearch.addEventListener(
-        "input",
-        renderGitHubImagePicker
-      );
-
-      imagePickerGrid.addEventListener(
-        "click",
-        function(event) {
-          const card =
-            event.target.closest(
-              "[data-picker-filename]"
-            );
-
-          if (
-            !card ||
-            !activeImagePickerInput
-          ) {
-            return;
-          }
-
-          const exactFilename =
-            card.dataset.pickerFilename;
-
-          activeImagePickerInput.value =
-            exactFilename;
-
-          activeImagePickerInput.dispatchEvent(
-            new Event(
-              "input",
-              {
-                bubbles: true
-              }
-            )
-          );
-
-          closeGitHubImagePicker();
-        }
-      );
-    }
-
-
-    async function openGitHubImagePicker(
-      input
-    ) {
-      if (!input) {
-        return;
-      }
-
-      activeImagePickerInput =
-        input;
-
-      imagePickerSearch.value =
-        input.value || "";
-
-      imagePickerDialog.classList.add(
-        "visible"
-      );
-
-      imagePickerDialog.setAttribute(
-        "aria-hidden",
-        "false"
-      );
-
-      if (
-        repositoryImages.length === 0
-      ) {
-        imagePickerGrid.innerHTML = `
-          <div class="image-picker-empty">
-            Loading exact filenames from GitHub…
-          </div>
-        `;
-
-        try {
-          repositoryImages =
-            await fetchRepositoryImageFiles();
-
-          imageHealthScanned =
-            true;
-
-          renderGitHubImagePicker();
-          updateVisibleImagePickerStatuses();
-
-        } catch (error) {
-          imagePickerGrid.innerHTML = `
-            <div class="image-picker-empty">
-              ${escapeHtml(
-                error.message ||
-                "Could not load GitHub images."
-              )}
-            </div>
-          `;
-
-          return;
-        }
-      }
-
-      renderGitHubImagePicker();
-
-      setTimeout(
-        function() {
-          imagePickerSearch.focus();
-          imagePickerSearch.select();
-        },
-        50
-      );
-    }
-
-
-    function closeGitHubImagePicker() {
-      activeImagePickerInput =
-        null;
-
-      imagePickerDialog.classList.remove(
-        "visible"
-      );
-
-      imagePickerDialog.setAttribute(
-        "aria-hidden",
-        "true"
-      );
-    }
-
-
-    function renderGitHubImagePicker() {
-      const query =
-        String(
-          imagePickerSearch.value || ""
-        )
-          .trim()
-          .toLowerCase();
-
-      const images =
-        repositoryImages
-          .filter(
-            filename =>
-              isImageFilename(
-                filename
-              )
-          )
-          .filter(
-            filename =>
-              !query ||
-              filename
-                .toLowerCase()
-                .includes(query)
-          )
-          .sort((a, b) =>
-            a.localeCompare(
-              b,
-              undefined,
-              {
-                sensitivity:
-                  "variant"
-              }
-            )
-          );
-
-      if (images.length === 0) {
-        imagePickerGrid.innerHTML = `
-          <div class="image-picker-empty">
-            No repository images match this search.
-          </div>
-        `;
-
-        return;
-      }
-
-      imagePickerGrid.innerHTML =
-        images
-          .map(filename => `
-            <article
-              class="image-picker-card"
-              data-picker-filename="${escapeHtml(filename)}"
-              title="${escapeHtml(filename)}"
-            >
-              <div class="image-picker-thumb">
-                <img
-                  src="${buildImageUrl(filename)}"
-                  alt=""
-                >
-              </div>
-
-              <div class="image-picker-card-name">
-                ${escapeHtml(filename)}
-              </div>
-            </article>
-          `)
-          .join("");
-    }
-
-
-    function findExactRepositoryFilename(
-      typedFilename
-    ) {
-      const normalized =
-        normalizeRepositoryPath(
-          typedFilename
-        );
-
-      return repositoryImages.find(
-        filename =>
-          normalizeRepositoryPath(
-            filename
-          ) === normalized
-      ) || null;
-    }
-
-
-    function updateVisibleImagePickerStatuses() {
-      document
-        .querySelectorAll(
-          "[data-image-picker-input]"
-        )
-        .forEach(input => {
-          const kind =
-            input.dataset.imagePickerInput;
-
-          const rowIndex =
-            input.dataset.rowIndex;
-
-          const status =
-            document.querySelector(
-              `[data-image-picker-status="${kind}"][data-row-index="${rowIndex}"]`
-            );
-
-          if (!status) {
-            return;
-          }
-
-          const value =
-            String(
-              input.value || ""
-            ).trim();
-
-          status.className =
-            "image-picker-status";
-
-          if (!value) {
-            status.textContent =
-              "";
-
-            return;
-          }
-
-          if (
-            repositoryImages.length === 0
-          ) {
-            status.textContent =
-              "Repository not scanned yet.";
-
-            return;
-          }
-
-          const exact =
-            findExactRepositoryFilename(
-              value
-            );
-
-          if (!exact) {
-            status.classList.add(
-              "invalid"
-            );
-
-            status.textContent =
-              "Not found in GitHub repository.";
-
-            return;
-          }
-
-          if (exact !== value) {
-            status.classList.add(
-              "invalid"
-            );
-
-            status.textContent =
-              `Capitalization mismatch. Exact name: ${exact}`;
-
-            return;
-          }
-
-          status.classList.add(
-            "valid"
-          );
-
-          status.textContent =
-            "Exact GitHub filename.";
-        });
-    }
-
-
-    /*
-     * =====================================================
      * IMAGE HEALTH — MISSING AND UNUSED DETECTION
      * =====================================================
      */
@@ -14225,6 +13911,320 @@
         </div>
       `;
     }
+
+    /*
+     * =====================================================
+     * GITHUB IMAGE PICKER
+     * =====================================================
+     */
+
+    function setupGitHubImagePicker() {
+      closeImagePickerButton.addEventListener(
+        "click",
+        closeGitHubImagePicker
+      );
+
+      imagePickerDialog.addEventListener(
+        "click",
+        function(event) {
+          if (
+            event.target ===
+            imagePickerDialog
+          ) {
+            closeGitHubImagePicker();
+          }
+        }
+      );
+
+      imagePickerSearch.addEventListener(
+        "input",
+        renderGitHubImagePicker
+      );
+
+      imagePickerGrid.addEventListener(
+        "click",
+        function(event) {
+          const card =
+            event.target.closest(
+              "[data-picker-filename]"
+            );
+
+          if (
+            !card ||
+            !activeImagePickerInput
+          ) {
+            return;
+          }
+
+          const exactFilename =
+            card.dataset.pickerFilename;
+
+          activeImagePickerInput.value =
+            exactFilename;
+
+          activeImagePickerInput.dispatchEvent(
+            new Event(
+              "input",
+              {
+                bubbles: true
+              }
+            )
+          );
+
+          closeGitHubImagePicker();
+        }
+      );
+    }
+
+
+    async function openGitHubImagePicker(
+      input
+    ) {
+      if (!input) {
+        return;
+      }
+
+      activeImagePickerInput =
+        input;
+
+      imagePickerSearch.value =
+        input.value || "";
+
+      imagePickerDialog.classList.add(
+        "visible"
+      );
+
+      imagePickerDialog.setAttribute(
+        "aria-hidden",
+        "false"
+      );
+
+      if (
+        repositoryImages.length === 0
+      ) {
+        imagePickerGrid.innerHTML = `
+          <div class="image-picker-empty">
+            Loading exact filenames from GitHub…
+          </div>
+        `;
+
+        try {
+          repositoryImages =
+            await fetchRepositoryImageFiles();
+
+          imageHealthScanned =
+            true;
+
+          renderGitHubImagePicker();
+          updateVisibleImagePickerStatuses();
+
+        } catch (error) {
+          imagePickerGrid.innerHTML = `
+            <div class="image-picker-empty">
+              ${escapeHtml(
+                error.message ||
+                "Could not load GitHub images."
+              )}
+            </div>
+          `;
+
+          return;
+        }
+      }
+
+      renderGitHubImagePicker();
+
+      setTimeout(
+        function() {
+          imagePickerSearch.focus();
+          imagePickerSearch.select();
+        },
+        50
+      );
+    }
+
+
+    function closeGitHubImagePicker() {
+      activeImagePickerInput =
+        null;
+
+      imagePickerDialog.classList.remove(
+        "visible"
+      );
+
+      imagePickerDialog.setAttribute(
+        "aria-hidden",
+        "true"
+      );
+    }
+
+
+    function renderGitHubImagePicker() {
+      const query =
+        String(
+          imagePickerSearch.value || ""
+        )
+          .trim()
+          .toLowerCase();
+
+      const images =
+        repositoryImages
+          .filter(
+            filename =>
+              isImageFilename(
+                filename
+              )
+          )
+          .filter(
+            filename =>
+              !query ||
+              filename
+                .toLowerCase()
+                .includes(query)
+          )
+          .sort((a, b) =>
+            a.localeCompare(
+              b,
+              undefined,
+              {
+                sensitivity:
+                  "variant"
+              }
+            )
+          );
+
+      if (images.length === 0) {
+        imagePickerGrid.innerHTML = `
+          <div class="image-picker-empty">
+            No repository images match this search.
+          </div>
+        `;
+
+        return;
+      }
+
+      imagePickerGrid.innerHTML =
+        images
+          .map(filename => `
+            <article
+              class="image-picker-card"
+              data-picker-filename="${escapeHtml(filename)}"
+              title="${escapeHtml(filename)}"
+            >
+              <div class="image-picker-thumb">
+                <img
+                  src="${buildImageUrl(filename)}"
+                  alt=""
+                >
+              </div>
+
+              <div class="image-picker-card-name">
+                ${escapeHtml(filename)}
+              </div>
+            </article>
+          `)
+          .join("");
+    }
+
+
+    function findExactRepositoryFilename(
+      typedFilename
+    ) {
+      const normalized =
+        normalizeRepositoryPath(
+          typedFilename
+        );
+
+      return repositoryImages.find(
+        filename =>
+          normalizeRepositoryPath(
+            filename
+          ) === normalized
+      ) || null;
+    }
+
+
+    function updateVisibleImagePickerStatuses() {
+      document
+        .querySelectorAll(
+          "[data-image-picker-input]"
+        )
+        .forEach(input => {
+          const kind =
+            input.dataset.imagePickerInput;
+
+          const rowIndex =
+            input.dataset.rowIndex;
+
+          const status =
+            document.querySelector(
+              `[data-image-picker-status="${kind}"][data-row-index="${rowIndex}"]`
+            );
+
+          if (!status) {
+            return;
+          }
+
+          const value =
+            String(
+              input.value || ""
+            ).trim();
+
+          status.className =
+            "image-picker-status";
+
+          if (!value) {
+            status.textContent =
+              "";
+
+            return;
+          }
+
+          if (
+            repositoryImages.length === 0
+          ) {
+            status.textContent =
+              "Repository not scanned yet.";
+
+            return;
+          }
+
+          const exact =
+            findExactRepositoryFilename(
+              value
+            );
+
+          if (!exact) {
+            status.classList.add(
+              "invalid"
+            );
+
+            status.textContent =
+              "Not found in GitHub repository.";
+
+            return;
+          }
+
+          if (exact !== value) {
+            status.classList.add(
+              "invalid"
+            );
+
+            status.textContent =
+              `Capitalization mismatch. Exact name: ${exact}`;
+
+            return;
+          }
+
+          status.classList.add(
+            "valid"
+          );
+
+          status.textContent =
+            "Exact GitHub filename.";
+        });
+    }
+
 
     /*
      * =====================================================
