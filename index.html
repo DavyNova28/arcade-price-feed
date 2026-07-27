@@ -172,13 +172,24 @@
       "https://script.google.com/macros/s/AKfycbwUINP9DCEUywwCU1YMjfnPT3H8ZUq1lsGVk8ShACrTp2EZIqMYrChADlk_uEh2F-DGXw/exec";
 
     /*
-     * Background polling is active only between 09:00 and
-     * 22:00. Between 22:00 and 09:00, Apps Script is not
+     * Background polling is active only between 10:00 and
+     * 22:00. Between 22:00 and 10:00, Apps Script is not
      * contacted at all.
      */
     const ACTIVE_FEED_POLL_MS = 30000;
-    const POLLING_START_HOUR = 10;
-    const POLLING_END_HOUR = 22;
+
+    /*
+     * Exact active polling window.
+     *
+     * 10:00–22:00:
+     *   Check Apps Script every 30 seconds.
+     *
+     * 22:00–10:00:
+     *   No Apps Script polling.
+     */
+    const POLLING_START_TIME = "10:00";
+    const POLLING_END_TIME = "22:00";
+
     const FEED_REQUEST_TIMEOUT_MS = 20000;
 
     /*
@@ -604,13 +615,49 @@
     }
 
 
-    function isPollingActiveNow() {
-      const hour =
-        new Date().getHours();
+    function timeTextToMinutes(
+      timeText
+    ) {
+      const parts =
+        String(timeText)
+          .split(":")
+          .map(Number);
 
       return (
-        hour >= POLLING_START_HOUR &&
-        hour < POLLING_END_HOUR
+        parts[0] * 60 +
+        parts[1]
+      );
+    }
+
+
+    function getCurrentMinuteOfDay() {
+      const now =
+        new Date();
+
+      return (
+        now.getHours() * 60 +
+        now.getMinutes()
+      );
+    }
+
+
+    function isPollingActiveNow() {
+      const currentMinute =
+        getCurrentMinuteOfDay();
+
+      const startMinute =
+        timeTextToMinutes(
+          POLLING_START_TIME
+        );
+
+      const endMinute =
+        timeTextToMinutes(
+          POLLING_END_TIME
+        );
+
+      return (
+        currentMinute >= startMinute &&
+        currentMinute < endMinute
       );
     }
 
@@ -622,18 +669,33 @@
       const next =
         new Date(now);
 
+      const startMinute =
+        timeTextToMinutes(
+          POLLING_START_TIME
+        );
+
+      const currentMinute =
+        getCurrentMinuteOfDay();
+
       if (
-        now.getHours() >=
-        POLLING_END_HOUR
+        currentMinute >= startMinute
       ) {
         next.setDate(
           next.getDate() + 1
         );
       }
 
+      const startHour =
+        Math.floor(
+          startMinute / 60
+        );
+
+      const startMinutes =
+        startMinute % 60;
+
       next.setHours(
-        POLLING_START_HOUR,
-        0,
+        startHour,
+        startMinutes,
         0,
         0
       );
@@ -1141,8 +1203,8 @@
 
       debugPolling.textContent =
         active
-          ? "ACTIVE — every 30 seconds"
-          : "PAUSED — quiet hours";
+          ? `ACTIVE — every 30 seconds (${POLLING_START_TIME}–${POLLING_END_TIME})`
+          : `PAUSED — quiet hours (${POLLING_END_TIME}–${POLLING_START_TIME})`;
 
       debugPolling.className =
         "debug-value " +
@@ -1221,7 +1283,7 @@
 
     /*
      * Always perform one immediate startup check. After that,
-     * polling follows the 09:00–22:00 schedule.
+     * polling follows the 10:00–22:00 schedule.
      */
     loadScheduleFeed({
       force:
