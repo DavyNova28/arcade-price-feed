@@ -4291,16 +4291,19 @@
      */
 
     .offline-mode-banner {
-      display: none;
+      display: flex;
       align-items: center;
       justify-content: space-between;
       gap: 14px;
       flex-wrap: wrap;
 
-      margin-bottom: 18px;
-      padding: 13px 15px;
+      max-height: 0;
+      margin-bottom: 0;
+      padding: 0 15px;
 
-      border: 1px solid rgba(242, 170, 63, 0.55);
+      overflow: hidden;
+
+      border: 0 solid rgba(242, 170, 63, 0.55);
       border-radius: 11px;
 
       color: #fff0cf;
@@ -4308,10 +4311,21 @@
 
       font-size: 12px;
       line-height: 1.5;
+
+      opacity: 0;
+      transform: translateY(-5px);
+      pointer-events: none;
     }
 
     .offline-mode-banner.visible {
-      display: flex;
+      max-height: 120px;
+      margin-bottom: 18px;
+      padding: 13px 15px;
+      border-width: 1px;
+
+      opacity: 1;
+      transform: translateY(0);
+      pointer-events: auto;
     }
 
     .offline-mode-banner strong {
@@ -4329,8 +4343,78 @@
       background: #fff1d4;
     }
 
+    /*
+     * Centralized screen status system.
+     */
+    .screen-card,
+    .status-badge,
+    .offline-mode-banner {
+      transition:
+        border-color 180ms ease,
+        background-color 180ms ease,
+        color 180ms ease,
+        box-shadow 180ms ease,
+        opacity 180ms ease;
+    }
+
     .screen-card.offline-card {
-      border-color: rgba(242, 170, 63, 0.5);
+      border-color: rgba(242, 170, 63, 0.68);
+      box-shadow:
+        0 0 0 1px rgba(242, 170, 63, 0.12),
+        0 8px 24px rgba(0, 0, 0, 0.18);
+    }
+
+    .status-offline {
+      display: inline-flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 1px;
+
+      min-width: 92px;
+      padding: 6px 9px;
+
+      border: 1px solid rgba(255, 211, 138, 0.42);
+      border-radius: 9px;
+
+      color: #ffd98a;
+      background: #5d3b00;
+
+      line-height: 1.15;
+      text-align: left;
+    }
+
+    .status-offline-main {
+      font-size: 11px;
+      font-weight: 850;
+      letter-spacing: 0.02em;
+      text-transform: uppercase;
+    }
+
+    .status-offline-sub {
+      font-size: 9px;
+      font-weight: 700;
+      opacity: 0.88;
+      text-transform: none;
+    }
+
+    html[data-theme="light"] .screen-card.offline-card {
+      border-color: #d89a22;
+      background:
+        linear-gradient(
+          180deg,
+          rgba(255, 239, 199, 0.45),
+          rgba(255, 255, 255, 0)
+        ),
+        var(--surface);
+      box-shadow:
+        0 0 0 1px rgba(216, 154, 34, 0.12),
+        0 7px 20px rgba(109, 75, 14, 0.09);
+    }
+
+    html[data-theme="light"] .status-offline {
+      color: #6d4300;
+      background: #ffe8b3;
+      border-color: #cf8b16;
     }
 
     body,
@@ -9684,21 +9768,32 @@
 
       badge.className =
         state.offlineSnapshot
-          ? "status-badge status-error"
+          ? "status-badge status-offline"
           : isHoliday
             ? "status-badge status-holiday"
             : "status-badge status-regular";
 
-      badge.textContent =
-        state.offlineSnapshot
-          ? "Offline"
-          : isHoliday
+      if (state.offlineSnapshot) {
+        badge.innerHTML = `
+          <span class="status-offline-main">
+            Offline
+          </span>
+
+          <span class="status-offline-sub">
+            Using cached data
+          </span>
+        `;
+
+      } else {
+        badge.textContent =
+          isHoliday
             ? "Holiday"
             : "Regular";
+      }
 
       screenState.textContent =
         state.offlineSnapshot
-          ? `Cached snapshot · ${formatOfflineSnapshotAge(state.snapshotSavedAt)}`
+          ? `💾 Cached snapshot · ${formatOfflineSnapshotAge(state.snapshotSavedAt)}`
           : isHoliday
             ? "Holiday override currently active"
             : state.activeItem.endTime
