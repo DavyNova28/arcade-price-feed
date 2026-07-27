@@ -4736,6 +4736,32 @@
       background: #ffe5e5;
     }
 
+    /*
+     * PLAYER HEARTBEAT V2
+     */
+
+    .player-heartbeat-card.sleeping {
+      border-color: rgba(130, 145, 164, 0.55);
+    }
+
+    .player-heartbeat-status.sleeping {
+      color: #d7e0ea;
+      background: #364352;
+    }
+
+    html[data-theme="light"]
+    .player-heartbeat-status.sleeping {
+      color: #334155;
+      background: #e2e8f0;
+    }
+
+    .player-heartbeat-meta {
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 10px;
+      line-height: 1.4;
+    }
+
     body,
     header,
     .system-banner,
@@ -7798,6 +7824,13 @@
           </div>
 
           <div
+            id="playerHeartbeatMeta"
+            class="player-heartbeat-meta"
+          >
+            Quiet hours: 22:00–10:00
+          </div>
+
+          <div
             id="playerHeartbeatGrid"
             class="player-heartbeat-grid"
           ></div>
@@ -8899,6 +8932,11 @@
         "playerHeartbeatGrid"
       );
 
+    const playerHeartbeatMeta =
+      document.getElementById(
+        "playerHeartbeatMeta"
+      );
+
     const testHealthConnectionButton =
       document.getElementById("testHealthConnectionButton");
 
@@ -9433,6 +9471,9 @@
       null;
 
     let latestHealthTelemetry =
+      null;
+
+    let playerHeartbeatRefreshTimer =
       null;
 
     let calendarCursor =
@@ -11513,8 +11554,10 @@
         loadPlayerHeartbeats();
         runAutomaticHealthChecks();
         startAutomaticHealthChecks();
+        startPlayerHeartbeatAutoRefresh();
       } else {
         stopAutomaticHealthChecks();
+        stopPlayerHeartbeatAutoRefresh();
       }
     }
 
@@ -22814,6 +22857,92 @@
     }
 
 
+    function startPlayerHeartbeatAutoRefresh() {
+      stopPlayerHeartbeatAutoRefresh();
+
+      playerHeartbeatRefreshTimer =
+        setInterval(
+          function() {
+            if (
+              systemHealthWorkspace.classList.contains(
+                "active"
+              )
+            ) {
+              loadPlayerHeartbeats();
+            }
+          },
+          30 * 1000
+        );
+    }
+
+
+    function stopPlayerHeartbeatAutoRefresh() {
+      if (playerHeartbeatRefreshTimer) {
+        clearInterval(
+          playerHeartbeatRefreshTimer
+        );
+
+        playerHeartbeatRefreshTimer =
+          null;
+      }
+    }
+
+
+    function isPlayerQuietHours() {
+      const hour =
+        new Date().getHours();
+
+      return (
+        hour >= 22 ||
+        hour < 10
+      );
+    }
+
+
+    function formatHeartbeatAge(
+      ageSeconds
+    ) {
+      if (
+        ageSeconds === null ||
+        ageSeconds === undefined ||
+        !Number.isFinite(
+          Number(ageSeconds)
+        )
+      ) {
+        return "Never seen";
+      }
+
+      const seconds =
+        Math.max(
+          0,
+          Number(ageSeconds)
+        );
+
+      if (seconds < 60) {
+        const rounded =
+          Math.round(seconds);
+
+        return `${rounded} second${rounded === 1 ? "" : "s"} ago`;
+      }
+
+      const minutes =
+        Math.floor(
+          seconds / 60
+        );
+
+      if (minutes < 60) {
+        return `${minutes} minute${minutes === 1 ? "" : "s"} ago`;
+      }
+
+      const hours =
+        Math.floor(
+          minutes / 60
+        );
+
+      return `${hours} hour${hours === 1 ? "" : "s"} ago`;
+    }
+
+
     function renderPlayerHeartbeats(players) {
       const playerMap =
         new Map(
@@ -22825,25 +22954,48 @@
           )
         );
 
+      const quietHours =
+        isPlayerQuietHours();
+
       const normalized =
         SCREEN_NAMES.map(
-          screenName =>
-            playerMap.get(screenName) || {
-              screen:
-                screenName,
+          screenName => {
+            const source =
+              playerMap.get(
+                screenName
+              ) || {
+                screen:
+                  screenName,
 
-              status:
-                "offline",
+                status:
+                  "offline",
 
-              lastSeenAt:
-                "",
+                lastSeenAt:
+                  "",
 
-              currentImage:
-                "",
+                ageSeconds:
+                  null,
 
-              playerVersion:
-                ""
+                currentImage:
+                  "",
+
+                playerVersion:
+                  ""
+              };
+
+            if (
+              quietHours &&
+              source.status !== "online"
+            ) {
+              return {
+                ...source,
+                status:
+                  "sleeping"
+              };
             }
+
+            return source;
+          }
         );
 
       const onlineCount =
@@ -22858,56 +23010,94 @@
             item.status === "stale"
         ).length;
 
+      const sleepingCount =
+        normalized.filter(
+          item =>
+            item.status === "sleeping"
+        ).length;
+
+      const offlineCount =
+        normalized.length -
+        onlineCount -
+        staleCount -
+        sleepingCount;
+
       playerHeartbeatSummary.textContent =
-        `${onlineCount} online · ${staleCount} stale · ` +
-        `${normalized.length - onlineCount - staleCount} offline`;
+        `${onlineCount} online · ` +
+        `${staleCount} stale · ` +
+        `${sleepingCount} sleeping · ` +
+        `${offlineCount} offline`;
+
+      playerHeartbeatMeta.textContent =
+        quietHours
+          ? "Quiet hours are active. Inactive players are shown as Sleeping instead of Offline."
+          : "Active hours are in effect. Players should check in at least once every 90 seconds.";
 
       playerHeartbeatGrid.innerHTML =
-        normalized.map(item => {
-          const status =
-            ["online", "stale"].includes(
-              item.status
-            )
-              ? item.status
-              : "offline";
+        normalized.map(
+          item => {
+            const allowedStatuses = [
+              "online",
+              "stale",
+              "sleeping"
+            ];
 
-          const lastSeen =
-            item.lastSeenAt
-              ? new Date(
-                  item.lastSeenAt
-                ).toLocaleString()
-              : "Never seen";
+            const status =
+              allowedStatuses.includes(
+                item.status
+              )
+                ? item.status
+                : "offline";
 
-          return `
-            <article class="player-heartbeat-card ${status}">
-              <div class="player-heartbeat-header">
-                <div class="player-heartbeat-name">
-                  ${escapeHtml(item.screen)}
+            const lastSeen =
+              item.lastSeenAt
+                ? new Date(
+                    item.lastSeenAt
+                  ).toLocaleString()
+                : "Never seen";
+
+            const ageText =
+              formatHeartbeatAge(
+                item.ageSeconds
+              );
+
+            return `
+              <article class="player-heartbeat-card ${status}">
+                <div class="player-heartbeat-header">
+                  <div class="player-heartbeat-name">
+                    ${escapeHtml(item.screen)}
+                  </div>
+
+                  <div class="player-heartbeat-status ${status}">
+                    ${escapeHtml(status)}
+                  </div>
                 </div>
 
-                <div class="player-heartbeat-status ${status}">
-                  ${escapeHtml(status)}
-                </div>
-              </div>
+                <div class="player-heartbeat-details">
+                  <div>
+                    Last seen:
+                    ${escapeHtml(lastSeen)}
+                  </div>
 
-              <div class="player-heartbeat-details">
-                <div>
-                  Last seen: ${escapeHtml(lastSeen)}
-                </div>
+                  <div>
+                    Age:
+                    ${escapeHtml(ageText)}
+                  </div>
 
-                <div>
-                  Current image:
-                  ${escapeHtml(item.currentImage || "Unknown")}
-                </div>
+                  <div>
+                    Current image:
+                    ${escapeHtml(item.currentImage || "Unknown")}
+                  </div>
 
-                <div>
-                  Player version:
-                  ${escapeHtml(item.playerVersion || "Unknown")}
+                  <div>
+                    Player version:
+                    ${escapeHtml(item.playerVersion || "Unknown")}
+                  </div>
                 </div>
-              </div>
-            </article>
-          `;
-        }).join("");
+              </article>
+            `;
+          }
+        ).join("");
     }
 
 
