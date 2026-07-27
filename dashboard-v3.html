@@ -1693,6 +1693,143 @@
       }
     }
 
+
+    /*
+     * =====================================================
+     * HOLIDAY OVERRIDE EDITING
+     * =====================================================
+     */
+
+    .holiday-editing-toolbar {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+
+      margin-bottom: 16px;
+    }
+
+    .holiday-edit-note {
+      margin-right: auto;
+
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .holiday-dirty-indicator {
+      display: none;
+
+      margin-left: 8px;
+      padding: 4px 7px;
+
+      border-radius: 999px;
+
+      color: #fff0cf;
+      background: var(--holiday-dark);
+
+      font-size: 10px;
+      font-weight: 800;
+      text-transform: uppercase;
+      vertical-align: middle;
+    }
+
+    .holiday-dirty-indicator.visible {
+      display: inline-flex;
+    }
+
+    .holiday-save-button {
+      border-color: rgba(54, 201, 135, 0.65);
+      color: white;
+      background: #237a55;
+    }
+
+    .holiday-save-button:hover:not(:disabled) {
+      background: #2a9366;
+    }
+
+    .holiday-save-button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .holiday-validation,
+    .holiday-save-message {
+      display: none;
+
+      margin-bottom: 16px;
+      padding: 12px 14px;
+
+      border: 1px solid var(--border);
+      border-radius: 10px;
+
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .holiday-validation.visible,
+    .holiday-save-message.visible {
+      display: block;
+    }
+
+    .holiday-validation,
+    .holiday-save-message.error {
+      color: #ffd6d6;
+      border-color: rgba(255, 104, 104, 0.55);
+      background: rgba(103, 40, 40, 0.6);
+    }
+
+    .holiday-save-message.success {
+      color: #caffea;
+      border-color: rgba(54, 201, 135, 0.55);
+      background: rgba(23, 75, 56, 0.72);
+    }
+
+    html[data-theme="light"] .holiday-validation,
+    html[data-theme="light"] .holiday-save-message.error {
+      color: #7e2525;
+      background: #ffe5e5;
+    }
+
+    html[data-theme="light"] .holiday-save-message.success {
+      color: #15543a;
+      background: #d9f7ea;
+    }
+
+    .holiday-screen-input {
+      min-width: 150px;
+    }
+
+    .holiday-date-input {
+      min-width: 145px;
+    }
+
+    .holiday-time-input {
+      min-width: 100px;
+    }
+
+    .holiday-image-input {
+      min-width: 240px;
+    }
+
+    .holiday-fade-input {
+      min-width: 100px;
+    }
+
+    @media (max-width: 720px) {
+      .holiday-editing-toolbar {
+        align-items: stretch;
+        flex-direction: column;
+      }
+
+      .holiday-editing-toolbar .button {
+        width: 100%;
+      }
+
+      .holiday-edit-note {
+        margin-right: 0;
+      }
+    }
+
     body,
     header,
     .system-banner,
@@ -2748,6 +2885,7 @@
                 <th>Status</th>
                 <th>Preview</th>
                 <th>Actions</th>
+                <th>Actions</th>
               </tr>
             </thead>
 
@@ -2787,7 +2925,10 @@
             </p>
           </div>
 
-          <div class="manager-status">
+          <div
+            id="holidayModeStatus"
+            class="manager-status"
+          >
             Read-only
           </div>
         </div>
@@ -2847,6 +2988,63 @@
             ↻ Reload overrides
           </button>
         </div>
+
+        <div class="holiday-editing-toolbar">
+          <div class="holiday-edit-note">
+            Changes stay local until you press Save.
+            <span
+              id="holidayDirtyIndicator"
+              class="holiday-dirty-indicator"
+            >
+              Unsaved changes
+            </span>
+          </div>
+
+          <button
+            id="holidayEditButton"
+            class="button button-primary"
+            type="button"
+          >
+            ✎ Enable editing
+          </button>
+
+          <button
+            id="holidayAddRowButton"
+            class="button"
+            type="button"
+            disabled
+          >
+            ＋ Add override
+          </button>
+
+          <button
+            id="holidayDiscardButton"
+            class="button"
+            type="button"
+            disabled
+          >
+            Undo local changes
+          </button>
+
+          <button
+            id="holidaySaveButton"
+            class="button holiday-save-button"
+            type="button"
+            disabled
+          >
+            Save Holiday Overrides
+          </button>
+        </div>
+
+        <div
+          id="holidayValidation"
+          class="holiday-validation"
+        ></div>
+
+        <div
+          id="holidaySaveMessage"
+          class="holiday-save-message"
+        ></div>
 
         <section class="holiday-summary-grid">
           <article class="manager-stat">
@@ -2920,7 +3118,7 @@
             <tbody id="holidayTableBody">
               <tr>
                 <td
-                  colspan="8"
+                  colspan="9"
                   class="manager-empty"
                 >
                   Open this workspace to load Holiday Overrides.
@@ -2973,6 +3171,40 @@
     >
   </form>
 
+  <iframe
+    id="holidaySaveFrame"
+    name="holidaySaveFrame"
+    title="Holiday override save response"
+    style="display:none"
+  ></iframe>
+
+  <form
+    id="holidaySaveForm"
+    method="post"
+    target="holidaySaveFrame"
+    style="display:none"
+  >
+    <input
+      name="action"
+      value="saveHolidayOverrides"
+    >
+
+    <input
+      id="holidaySavePinField"
+      name="pin"
+    >
+
+    <input
+      id="holidaySaveDataField"
+      name="overrides"
+    >
+
+    <input
+      id="holidaySaveRequestIdField"
+      name="requestId"
+    >
+  </form>
+
   <script>
     /*
      * =====================================================
@@ -2981,7 +3213,7 @@
      */
 
     const SCHEDULE_FEED_URL =
-      "https://script.google.com/macros/s/AKfycbwUINP9DCEUywwCU1YMjfnPT3H8ZUq1lsGVk8ShACrTp2EZIqMYrChADlk_uEh2F-DGXw/exec";
+      "PASTE_YOUR_APPS_SCRIPT_EXEC_URL_HERE";
 
     const SCREEN_NAMES = [
       "Arcade",
@@ -3264,6 +3496,66 @@
         "holidayTableBody"
       );
 
+    const holidayModeStatus =
+      document.getElementById(
+        "holidayModeStatus"
+      );
+
+    const holidayEditButton =
+      document.getElementById(
+        "holidayEditButton"
+      );
+
+    const holidayAddRowButton =
+      document.getElementById(
+        "holidayAddRowButton"
+      );
+
+    const holidayDiscardButton =
+      document.getElementById(
+        "holidayDiscardButton"
+      );
+
+    const holidaySaveButton =
+      document.getElementById(
+        "holidaySaveButton"
+      );
+
+    const holidayDirtyIndicator =
+      document.getElementById(
+        "holidayDirtyIndicator"
+      );
+
+    const holidayValidation =
+      document.getElementById(
+        "holidayValidation"
+      );
+
+    const holidaySaveMessage =
+      document.getElementById(
+        "holidaySaveMessage"
+      );
+
+    const holidaySaveForm =
+      document.getElementById(
+        "holidaySaveForm"
+      );
+
+    const holidaySavePinField =
+      document.getElementById(
+        "holidaySavePinField"
+      );
+
+    const holidaySaveDataField =
+      document.getElementById(
+        "holidaySaveDataField"
+      );
+
+    const holidaySaveRequestIdField =
+      document.getElementById(
+        "holidaySaveRequestIdField"
+      );
+
     const managerScreenSelect =
       document.getElementById(
         "managerScreenSelect"
@@ -3391,6 +3683,18 @@
 
     let holidayRequestGeneration =
       0;
+
+    let holidayEditingEnabled =
+      false;
+
+    let holidayDraft =
+      null;
+
+    let holidaySaveInProgress =
+      false;
+
+    let activeHolidaySaveRequestId =
+      null;
 
     /*
      * =====================================================
@@ -6245,8 +6549,300 @@
 
       reloadHolidayButton.addEventListener(
         "click",
-        loadHolidayOverrides
+        function() {
+          if (
+            holidayDraft &&
+            !window.confirm(
+              "Discard local Holiday Override changes and reload from Google Sheets?"
+            )
+          ) {
+            return;
+          }
+
+          holidayDraft = null;
+          holidayEditingEnabled = false;
+          hideHolidaySaveMessage();
+          updateHolidayEditingControls();
+          loadHolidayOverrides();
+        }
       );
+
+      holidayEditButton.addEventListener(
+        "click",
+        function() {
+          holidayEditingEnabled =
+            !holidayEditingEnabled;
+
+          if (
+            holidayEditingEnabled &&
+            !holidayDraft
+          ) {
+            holidayDraft =
+              cloneHolidayRows(
+                holidayOverrides
+              );
+          }
+
+          updateHolidayEditingControls();
+          renderHolidayOverrides();
+        }
+      );
+
+      holidayAddRowButton.addEventListener(
+        "click",
+        addHolidayDraftRow
+      );
+
+      holidayDiscardButton.addEventListener(
+        "click",
+        discardHolidayDraft
+      );
+
+      holidaySaveButton.addEventListener(
+        "click",
+        saveHolidayDraft
+      );
+
+      holidayTableBody.addEventListener(
+        "input",
+        handleHolidayTableInput
+      );
+
+      holidayTableBody.addEventListener(
+        "click",
+        handleHolidayTableClick
+      );
+
+      window.addEventListener(
+        "message",
+        handleHolidaySaveMessage
+      );
+
+      updateHolidayEditingControls();
+    }
+
+
+    function cloneHolidayRows(rows) {
+      return rows.map(item => ({
+        screen:
+          item.screen,
+        startDate:
+          item.startDate || "",
+        endDate:
+          item.endDate || "",
+        startTime:
+          item.startTime || "",
+        image:
+          item.image || "",
+        fade:
+          Number(item.fade) || 1500
+      }));
+    }
+
+
+    function updateHolidayEditingControls() {
+      const hasDraft =
+        Array.isArray(holidayDraft);
+
+      const validation =
+        hasDraft
+          ? validateHolidayDraft(
+              holidayDraft
+            )
+          : { valid: false };
+
+      holidayEditButton.textContent =
+        holidayEditingEnabled
+          ? "✓ Finish editing"
+          : "✎ Enable editing";
+
+      holidayAddRowButton.disabled =
+        !holidayEditingEnabled;
+
+      holidayDiscardButton.disabled =
+        !hasDraft;
+
+      holidaySaveButton.disabled =
+        !hasDraft ||
+        !validation.valid ||
+        holidaySaveInProgress;
+
+      holidaySaveButton.textContent =
+        holidaySaveInProgress
+          ? "Saving…"
+          : "Save Holiday Overrides";
+
+      holidayModeStatus.className =
+        holidayEditingEnabled
+          ? "manager-status editing"
+          : hasDraft
+            ? "manager-status changed"
+            : "manager-status";
+
+      holidayModeStatus.textContent =
+        holidayEditingEnabled
+          ? "Local editing"
+          : hasDraft
+            ? "Local changes"
+            : "Read-only";
+
+      holidayDirtyIndicator.classList.toggle(
+        "visible",
+        hasDraft
+      );
+    }
+
+
+    function addHolidayDraftRow() {
+      if (!holidayDraft) {
+        holidayDraft =
+          cloneHolidayRows(
+            holidayOverrides
+          );
+      }
+
+      hideHolidaySaveMessage();
+
+      holidayDraft.push({
+        screen:
+          SCREEN_NAMES[0] || "All",
+        startDate:
+          formatDateForInput(
+            new Date()
+          ),
+        endDate:
+          formatDateForInput(
+            new Date()
+          ),
+        startTime:
+          "12:00",
+        image:
+          "",
+        fade:
+          1500
+      });
+
+      updateHolidayEditingControls();
+      renderHolidayOverrides();
+    }
+
+
+    function discardHolidayDraft() {
+      holidayDraft = null;
+      holidayEditingEnabled = false;
+
+      hideHolidaySaveMessage();
+      hideHolidayValidation();
+      updateHolidayEditingControls();
+      renderHolidayOverrides();
+    }
+
+
+    function handleHolidayTableInput(event) {
+      const input =
+        event.target.closest(
+          "[data-holiday-field]"
+        );
+
+      if (
+        !input ||
+        !holidayEditingEnabled ||
+        !holidayDraft
+      ) {
+        return;
+      }
+
+      const rowIndex =
+        Number(
+          input.dataset.rowIndex
+        );
+
+      const field =
+        input.dataset.holidayField;
+
+      if (
+        !Number.isInteger(rowIndex) ||
+        !holidayDraft[rowIndex]
+      ) {
+        return;
+      }
+
+      if (field === "fade") {
+        holidayDraft[rowIndex][field] =
+          input.value === ""
+            ? ""
+            : Number(input.value);
+
+      } else if (field === "startTime") {
+        const formatted =
+          formatManagerTimeInput(
+            input.value
+          );
+
+        input.value =
+          formatted;
+
+        holidayDraft[rowIndex][field] =
+          formatted;
+
+      } else {
+        holidayDraft[rowIndex][field] =
+          input.value;
+      }
+
+      hideHolidaySaveMessage();
+
+      const validation =
+        validateHolidayDraft(
+          holidayDraft
+        );
+
+      displayHolidayValidation(
+        validation
+      );
+
+      applyHolidayInputErrors(
+        validation
+      );
+
+      updateHolidayEditingControls();
+    }
+
+
+    function handleHolidayTableClick(event) {
+      const deleteButton =
+        event.target.closest(
+          "[data-delete-holiday-row]"
+        );
+
+      if (
+        !deleteButton ||
+        !holidayEditingEnabled ||
+        !holidayDraft
+      ) {
+        return;
+      }
+
+      const rowIndex =
+        Number(
+          deleteButton.dataset.deleteHolidayRow
+        );
+
+      if (
+        !Number.isInteger(rowIndex) ||
+        !holidayDraft[rowIndex]
+      ) {
+        return;
+      }
+
+      holidayDraft.splice(
+        rowIndex,
+        1
+      );
+
+      hideHolidaySaveMessage();
+      updateHolidayEditingControls();
+      renderHolidayOverrides();
     }
 
 
@@ -6274,7 +6870,7 @@
       holidayTableBody.innerHTML = `
         <tr>
           <td
-            colspan="8"
+            colspan="9"
             class="manager-empty"
           >
             Loading Holiday Overrides…
@@ -6303,13 +6899,15 @@
             holidayOverrides =
               payload.overrides;
 
-            renderHolidayOverrides();
+            if (!holidayDraft) {
+              renderHolidayOverrides();
+            }
 
           } catch (error) {
             holidayTableBody.innerHTML = `
               <tr>
                 <td
-                  colspan="8"
+                  colspan="9"
                   class="manager-empty"
                 >
                   ${escapeHtml(
@@ -6356,7 +6954,7 @@
           holidayTableBody.innerHTML = `
             <tr>
               <td
-                colspan="8"
+                colspan="9"
                 class="manager-empty"
               >
                 Could not load Holiday Overrides from Apps Script.
@@ -6372,6 +6970,68 @@
 
 
     function renderHolidayOverrides() {
+      const sourceRows =
+        holidayDraft ||
+        holidayOverrides;
+
+      const validation =
+        validateHolidayDraft(
+          sourceRows
+        );
+
+      displayHolidayValidation(
+        validation
+      );
+
+      holidayTotalCount.textContent =
+        String(
+          sourceRows.length
+        );
+
+      holidayActiveCount.textContent =
+        String(
+          sourceRows.filter(
+            item =>
+              getHolidayRowStatus(item) ===
+              "active"
+          ).length
+        );
+
+      holidayUpcomingCount.textContent =
+        String(
+          sourceRows.filter(
+            item =>
+              getHolidayRowStatus(item) ===
+              "upcoming"
+          ).length
+        );
+
+      holidayInvalidCount.textContent =
+        String(
+          validation.invalidRowCount
+        );
+
+      updateHolidayEditingControls();
+
+      if (holidayEditingEnabled) {
+        holidayTableBody.innerHTML =
+          sourceRows
+            .map((item, index) =>
+              createEditableHolidayRow(
+                item,
+                index,
+                validation
+              )
+            )
+            .join("");
+
+        applyHolidayInputErrors(
+          validation
+        );
+
+        return;
+      }
+
       const screenFilter =
         holidayScreenFilter.value;
 
@@ -6379,55 +7039,36 @@
         holidayStatusFilter.value;
 
       const filtered =
-        holidayOverrides.filter(item => {
-          const screenMatches =
-            screenFilter === "all" ||
-            item.screen === screenFilter;
+        sourceRows
+          .map((item, index) => ({
+            ...item,
+            originalIndex:
+              index,
+            status:
+              getHolidayRowStatus(item)
+          }))
+          .filter(item => {
+            const screenMatches =
+              screenFilter === "all" ||
+              item.screen ===
+                screenFilter;
 
-          const statusMatches =
-            statusFilter === "all" ||
-            item.status === statusFilter;
+            const statusMatches =
+              statusFilter === "all" ||
+              item.status ===
+                statusFilter;
 
-          return (
-            screenMatches &&
-            statusMatches
-          );
-        });
-
-      holidayTotalCount.textContent =
-        String(
-          holidayOverrides.length
-        );
-
-      holidayActiveCount.textContent =
-        String(
-          holidayOverrides.filter(
-            item =>
-              item.status === "active"
-          ).length
-        );
-
-      holidayUpcomingCount.textContent =
-        String(
-          holidayOverrides.filter(
-            item =>
-              item.status === "upcoming"
-          ).length
-        );
-
-      holidayInvalidCount.textContent =
-        String(
-          holidayOverrides.filter(
-            item =>
-              item.status === "invalid"
-          ).length
-        );
+            return (
+              screenMatches &&
+              statusMatches
+            );
+          });
 
       if (filtered.length === 0) {
         holidayTableBody.innerHTML = `
           <tr>
             <td
-              colspan="8"
+              colspan="9"
               class="manager-empty"
             >
               No Holiday Override rows match these filters.
@@ -6440,74 +7081,698 @@
 
       holidayTableBody.innerHTML =
         filtered
-          .map(item => `
-            <tr>
-              <td>
-                ${item.rowNumber}
-              </td>
-
-              <td>
-                ${escapeHtml(item.screen)}
-              </td>
-
-              <td class="holiday-date-range">
-                ${escapeHtml(item.startDate || "—")}
-                →
-                ${escapeHtml(item.endDate || "—")}
-              </td>
-
-              <td class="manager-time">
-                ${escapeHtml(item.startTime || "—")}
-              </td>
-
-              <td class="holiday-image-name">
-                ${escapeHtml(item.image || "—")}
-              </td>
-
-              <td class="manager-fade">
-                ${escapeHtml(item.fade)} ms
-              </td>
-
-              <td>
-                <span
-                  class="holiday-status-badge holiday-status-${escapeHtml(item.status)}"
-                  title="${escapeHtml(item.validationMessage || "")}"
-                >
-                  ${escapeHtml(
-                    capitalizeDashboardText(
-                      item.status
-                    )
-                  )}
-                </span>
-              </td>
-
-              <td>
-                ${
-                  item.image
-                    ? `
-                      <img
-                        class="manager-preview"
-                        src="${buildImageUrl(item.image)}"
-                        alt=""
-                        onerror="
-                          this.style.display='none';
-                          this.nextElementSibling.style.display='block';
-                        "
-                      >
-
-                      <div
-                        class="manager-preview-error"
-                        style="display:none"
-                      >
-                        Image unavailable
-                      </div>
-                    `
-                    : "—"
-                }
-              </td>
-            </tr>
-          `)
+          .map((item, index) =>
+            createReadOnlyHolidayRow(
+              item,
+              index
+            )
+          )
           .join("");
+    }
+
+
+    function createEditableHolidayRow(
+      item,
+      index,
+      validation
+    ) {
+      const rowErrors =
+        validation.rowErrors[index] ||
+        {};
+
+      const status =
+        getHolidayRowStatus(item);
+
+      return `
+        <tr>
+          <td>
+            ${index + 1}
+          </td>
+
+          <td>
+            <select
+              class="manager-input holiday-screen-input ${rowErrors.screen ? "invalid" : ""}"
+              data-row-index="${index}"
+              data-holiday-field="screen"
+            >
+              ${createHolidayScreenOptions(
+                item.screen
+              )}
+            </select>
+          </td>
+
+          <td>
+            <div style="display:grid; gap:7px;">
+              <input
+                class="manager-input holiday-date-input ${rowErrors.startDate ? "invalid" : ""}"
+                type="date"
+                value="${escapeHtml(item.startDate)}"
+                data-row-index="${index}"
+                data-holiday-field="startDate"
+              >
+
+              <input
+                class="manager-input holiday-date-input ${rowErrors.endDate ? "invalid" : ""}"
+                type="date"
+                value="${escapeHtml(item.endDate)}"
+                data-row-index="${index}"
+                data-holiday-field="endDate"
+              >
+            </div>
+          </td>
+
+          <td>
+            <input
+              class="manager-input holiday-time-input ${rowErrors.startTime ? "invalid" : ""}"
+              type="text"
+              inputmode="numeric"
+              maxlength="5"
+              placeholder="HH:MM"
+              value="${escapeHtml(item.startTime)}"
+              data-row-index="${index}"
+              data-holiday-field="startTime"
+            >
+          </td>
+
+          <td>
+            <input
+              class="manager-input holiday-image-input ${rowErrors.image ? "invalid" : ""}"
+              type="text"
+              value="${escapeHtml(item.image)}"
+              placeholder="image-name.jpg"
+              data-row-index="${index}"
+              data-holiday-field="image"
+            >
+          </td>
+
+          <td>
+            <input
+              class="manager-input holiday-fade-input ${rowErrors.fade ? "invalid" : ""}"
+              type="number"
+              min="0"
+              max="10000"
+              step="100"
+              value="${escapeHtml(item.fade)}"
+              data-row-index="${index}"
+              data-holiday-field="fade"
+            >
+          </td>
+
+          <td>
+            <span
+              class="holiday-status-badge holiday-status-${escapeHtml(status)}"
+            >
+              ${escapeHtml(
+                capitalizeDashboardText(
+                  status
+                )
+              )}
+            </span>
+          </td>
+
+          <td>
+            ${
+              item.image
+                ? `
+                  <img
+                    class="manager-preview"
+                    src="${buildImageUrl(item.image)}"
+                    alt=""
+                    onerror="
+                      this.style.display='none';
+                      this.nextElementSibling.style.display='block';
+                    "
+                  >
+
+                  <div
+                    class="manager-preview-error"
+                    style="display:none"
+                  >
+                    Image unavailable
+                  </div>
+                `
+                : `
+                  <div class="manager-preview-error">
+                    Enter an image filename
+                  </div>
+                `
+            }
+          </td>
+
+          <td>
+            <button
+              class="manager-icon-button danger"
+              type="button"
+              data-delete-holiday-row="${index}"
+            >
+              Delete
+            </button>
+          </td>
+        </tr>
+      `;
+    }
+
+
+    function createReadOnlyHolidayRow(
+      item,
+      index
+    ) {
+      const status =
+        item.status ||
+        getHolidayRowStatus(item);
+
+      return `
+        <tr>
+          <td>
+            ${item.rowNumber || index + 2}
+          </td>
+
+          <td>
+            ${escapeHtml(item.screen)}
+          </td>
+
+          <td class="holiday-date-range">
+            ${escapeHtml(item.startDate || "—")}
+            →
+            ${escapeHtml(item.endDate || "—")}
+          </td>
+
+          <td class="manager-time">
+            ${escapeHtml(item.startTime || "—")}
+          </td>
+
+          <td class="holiday-image-name">
+            ${escapeHtml(item.image || "—")}
+          </td>
+
+          <td class="manager-fade">
+            ${escapeHtml(item.fade)} ms
+          </td>
+
+          <td>
+            <span
+              class="holiday-status-badge holiday-status-${escapeHtml(status)}"
+            >
+              ${escapeHtml(
+                capitalizeDashboardText(
+                  status
+                )
+              )}
+            </span>
+          </td>
+
+          <td>
+            ${
+              item.image
+                ? `
+                  <img
+                    class="manager-preview"
+                    src="${buildImageUrl(item.image)}"
+                    alt=""
+                    onerror="
+                      this.style.display='none';
+                      this.nextElementSibling.style.display='block';
+                    "
+                  >
+
+                  <div
+                    class="manager-preview-error"
+                    style="display:none"
+                  >
+                    Image unavailable
+                  </div>
+                `
+                : "—"
+            }
+          </td>
+
+          <td>
+            —
+          </td>
+        </tr>
+      `;
+    }
+
+
+    function createHolidayScreenOptions(
+      selectedValue
+    ) {
+      const values = [
+        "All",
+        ...SCREEN_NAMES
+      ];
+
+      if (
+        selectedValue &&
+        !values.includes(
+          selectedValue
+        )
+      ) {
+        values.push(
+          selectedValue
+        );
+      }
+
+      return values
+        .map(value => `
+          <option
+            value="${escapeHtml(value)}"
+            ${
+              value === selectedValue
+                ? "selected"
+                : ""
+            }
+          >
+            ${escapeHtml(value)}
+          </option>
+        `)
+        .join("");
+    }
+
+
+    function getHolidayRowStatus(item) {
+      const validation =
+        validateHolidayDraft([
+          item
+        ]);
+
+      if (!validation.valid) {
+        return "invalid";
+      }
+
+      const today =
+        formatDateForInput(
+          new Date()
+        );
+
+      const currentTime =
+        getCurrentHHMM(
+          new Date()
+        );
+
+      if (
+        today < item.startDate ||
+        (
+          today === item.startDate &&
+          currentTime <
+            item.startTime
+        )
+      ) {
+        return "upcoming";
+      }
+
+      if (
+        today > item.endDate
+      ) {
+        return "expired";
+      }
+
+      return "active";
+    }
+
+
+    function validateHolidayDraft(rows) {
+      const errors = [];
+      const rowErrors = {};
+      let invalidRowCount = 0;
+
+      if (
+        !Array.isArray(rows) ||
+        rows.length === 0
+      ) {
+        return {
+          valid: false,
+          errors: [
+            "Holiday Overrides must contain at least one row."
+          ],
+          rowErrors: {},
+          invalidRowCount: 1
+        };
+      }
+
+      rows.forEach((item, index) => {
+        const rowNumber =
+          index + 1;
+
+        let rowInvalid =
+          false;
+
+        const addError =
+          function(field, message) {
+            errors.push(
+              `Row ${rowNumber}: ${message}`
+            );
+
+            rowErrors[index] = {
+              ...(rowErrors[index] || {}),
+              [field]: true
+            };
+
+            rowInvalid = true;
+          };
+
+        const screen =
+          String(item.screen || "")
+            .trim();
+
+        const startDate =
+          String(item.startDate || "")
+            .trim();
+
+        const endDate =
+          String(item.endDate || "")
+            .trim();
+
+        const startTime =
+          String(item.startTime || "")
+            .trim();
+
+        const image =
+          String(item.image || "")
+            .trim();
+
+        const fade =
+          Number(item.fade);
+
+        if (!screen) {
+          addError(
+            "screen",
+            "screen is required."
+          );
+        }
+
+        if (
+          !/^\d{4}-\d{2}-\d{2}$/
+            .test(startDate)
+        ) {
+          addError(
+            "startDate",
+            "enter a valid start date."
+          );
+        }
+
+        if (
+          !/^\d{4}-\d{2}-\d{2}$/
+            .test(endDate)
+        ) {
+          addError(
+            "endDate",
+            "enter a valid end date."
+          );
+        }
+
+        if (
+          startDate &&
+          endDate &&
+          startDate > endDate
+        ) {
+          addError(
+            "endDate",
+            "end date cannot be before start date."
+          );
+        }
+
+        if (
+          !/^([01]\d|2[0-3]):[0-5]\d$/
+            .test(startTime)
+        ) {
+          addError(
+            "startTime",
+            "enter a valid time in HH:MM format."
+          );
+        }
+
+        if (!image) {
+          addError(
+            "image",
+            "image filename is required."
+          );
+        }
+
+        if (
+          !Number.isFinite(fade) ||
+          fade < 0 ||
+          fade > 10000
+        ) {
+          addError(
+            "fade",
+            "fade must be between 0 and 10000 ms."
+          );
+        }
+
+        if (rowInvalid) {
+          invalidRowCount += 1;
+        }
+      });
+
+      return {
+        valid:
+          errors.length === 0,
+        errors,
+        rowErrors,
+        invalidRowCount
+      };
+    }
+
+
+    function displayHolidayValidation(
+      validation
+    ) {
+      if (validation.valid) {
+        hideHolidayValidation();
+        return;
+      }
+
+      holidayValidation.innerHTML =
+        `<strong>Please fix the following:</strong><br>` +
+        validation.errors
+          .map(error =>
+            `• ${escapeHtml(error)}`
+          )
+          .join("<br>");
+
+      holidayValidation.classList.add(
+        "visible"
+      );
+    }
+
+
+    function hideHolidayValidation() {
+      holidayValidation.textContent =
+        "";
+
+      holidayValidation.className =
+        "holiday-validation";
+    }
+
+
+    function applyHolidayInputErrors(
+      validation
+    ) {
+      holidayTableBody
+        .querySelectorAll(
+          "[data-holiday-field]"
+        )
+        .forEach(input => {
+          const rowIndex =
+            Number(
+              input.dataset.rowIndex
+            );
+
+          const field =
+            input.dataset.holidayField;
+
+          const rowErrors =
+            validation.rowErrors[rowIndex] ||
+            {};
+
+          input.classList.toggle(
+            "invalid",
+            Boolean(rowErrors[field])
+          );
+        });
+    }
+
+
+    function saveHolidayDraft() {
+      if (!holidayDraft) {
+        showHolidaySaveMessage(
+          "There are no local Holiday Override changes to save.",
+          "error"
+        );
+        return;
+      }
+
+      const validation =
+        validateHolidayDraft(
+          holidayDraft
+        );
+
+      displayHolidayValidation(
+        validation
+      );
+
+      if (!validation.valid) {
+        showHolidaySaveMessage(
+          "Fix the validation errors before saving.",
+          "error"
+        );
+        return;
+      }
+
+      const pin =
+        window.prompt(
+          "Enter the dashboard save PIN for Holiday Overrides:"
+        );
+
+      if (pin === null) {
+        return;
+      }
+
+      if (!String(pin).trim()) {
+        showHolidaySaveMessage(
+          "A save PIN is required.",
+          "error"
+        );
+        return;
+      }
+
+      const confirmed =
+        window.confirm(
+          `Save ${holidayDraft.length} Holiday Override row(s) to Google Sheets?\n\n` +
+          `The current Holiday Overrides tab will be backed up automatically before it is replaced.`
+        );
+
+      if (!confirmed) {
+        return;
+      }
+
+      activeHolidaySaveRequestId =
+        createSaveRequestId();
+
+      holidaySaveInProgress =
+        true;
+
+      updateHolidayEditingControls();
+
+      showHolidaySaveMessage(
+        "Saving Holiday Overrides…",
+        "success"
+      );
+
+      holidaySaveForm.action =
+        SCHEDULE_FEED_URL;
+
+      holidaySavePinField.value =
+        String(pin);
+
+      holidaySaveDataField.value =
+        JSON.stringify(
+          holidayDraft.map(item => ({
+            screen:
+              String(item.screen).trim(),
+            startDate:
+              String(item.startDate).trim(),
+            endDate:
+              String(item.endDate).trim(),
+            startTime:
+              String(item.startTime).trim(),
+            image:
+              String(item.image).trim(),
+            fade:
+              Number(item.fade)
+          }))
+        );
+
+      holidaySaveRequestIdField.value =
+        activeHolidaySaveRequestId;
+
+      holidaySaveForm.submit();
+
+      holidaySavePinField.value =
+        "";
+    }
+
+
+    function handleHolidaySaveMessage(event) {
+      const data =
+        event.data;
+
+      if (
+        !data ||
+        data.type !==
+          "miniGolfHolidaySaveResult" ||
+        data.requestId !==
+          activeHolidaySaveRequestId
+      ) {
+        return;
+      }
+
+      holidaySaveInProgress =
+        false;
+
+      activeHolidaySaveRequestId =
+        null;
+
+      if (data.success !== true) {
+        showHolidaySaveMessage(
+          data.error ||
+          "Google Sheets did not accept the Holiday Overrides.",
+          "error"
+        );
+
+        updateHolidayEditingControls();
+        return;
+      }
+
+      holidayDraft = null;
+      holidayEditingEnabled = false;
+
+      showHolidaySaveMessage(
+        `Saved ${data.rowsWritten} Holiday Override row(s). A backup was created.`,
+        "success"
+      );
+
+      updateHolidayEditingControls();
+
+      setTimeout(
+        loadHolidayOverrides,
+        600
+      );
+    }
+
+
+    function showHolidaySaveMessage(
+      message,
+      type
+    ) {
+      holidaySaveMessage.textContent =
+        message;
+
+      holidaySaveMessage.className =
+        `holiday-save-message visible ${type}`;
+    }
+
+
+    function hideHolidaySaveMessage() {
+      holidaySaveMessage.textContent =
+        "";
+
+      holidaySaveMessage.className =
+        "holiday-save-message";
+    }
+
+
+    function formatDateForInput(date) {
+      return [
+        date.getFullYear(),
+        String(
+          date.getMonth() + 1
+        ).padStart(2, "0"),
+        String(
+          date.getDate()
+        ).padStart(2, "0")
+      ].join("-");
     }
 
 
