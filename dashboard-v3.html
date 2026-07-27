@@ -2175,6 +2175,71 @@
       }
     }
 
+
+    .restore-action-bar {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 10px;
+      flex-wrap: wrap;
+
+      margin-top: 16px;
+    }
+
+    .restore-save-button {
+      border-color: rgba(255, 104, 104, 0.65);
+      color: white;
+      background: #9b3636;
+    }
+
+    .restore-save-button:hover:not(:disabled) {
+      background: #b34242;
+    }
+
+    .restore-save-button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .restore-save-message {
+      display: none;
+
+      margin-top: 16px;
+      padding: 12px 14px;
+
+      border: 1px solid var(--border);
+      border-radius: 10px;
+
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .restore-save-message.visible {
+      display: block;
+    }
+
+    .restore-save-message.success {
+      color: #caffea;
+      border-color: rgba(54, 201, 135, 0.55);
+      background: rgba(23, 75, 56, 0.72);
+    }
+
+    .restore-save-message.error {
+      color: #ffd6d6;
+      border-color: rgba(255, 104, 104, 0.55);
+      background: rgba(103, 40, 40, 0.6);
+    }
+
+    html[data-theme="light"] .restore-save-message.success {
+      color: #15543a;
+      background: #d9f7ea;
+    }
+
+    html[data-theme="light"] .restore-save-message.error {
+      color: #7e2525;
+      background: #ffe5e5;
+    }
+
     body,
     header,
     .system-banner,
@@ -3789,11 +3854,71 @@
                 class="restore-change-list"
               ></div>
             </section>
+
+            <div class="restore-action-bar">
+              <button
+                id="restoreBackupButton"
+                class="button restore-save-button"
+                type="button"
+                disabled
+              >
+                Restore this backup
+              </button>
+            </div>
+
+            <div
+              id="restoreSaveMessage"
+              class="restore-save-message"
+            ></div>
           </section>
         </section>
       </section>
     </section>
   </main>
+
+  <iframe
+    id="restoreBackupFrame"
+    name="restoreBackupFrame"
+    title="Backup restore response"
+    style="display:none"
+  ></iframe>
+
+  <form
+    id="restoreBackupForm"
+    method="post"
+    target="restoreBackupFrame"
+    style="display:none"
+  >
+    <input
+      name="action"
+      value="restoreBackup"
+    >
+
+    <input
+      id="restorePinField"
+      name="pin"
+    >
+
+    <input
+      id="restoreTypeField"
+      name="backupType"
+    >
+
+    <input
+      id="restoreScreenField"
+      name="screen"
+    >
+
+    <input
+      id="restoreDataField"
+      name="backupData"
+    >
+
+    <input
+      id="restoreRequestIdField"
+      name="requestId"
+    >
+  </form>
 
   <iframe
     id="scheduleSaveFrame"
@@ -3877,7 +4002,7 @@
      */
 
     const SCHEDULE_FEED_URL =
-      "https://script.google.com/macros/s/AKfycbwUINP9DCEUywwCU1YMjfnPT3H8ZUq1lsGVk8ShACrTp2EZIqMYrChADlk_uEh2F-DGXw/exec";
+      "PASTE_YOUR_APPS_SCRIPT_EXEC_URL_HERE";
 
     const SCREEN_NAMES = [
       "Arcade",
@@ -4345,6 +4470,46 @@
         "restoreChangeList"
       );
 
+    const restoreBackupButton =
+      document.getElementById(
+        "restoreBackupButton"
+      );
+
+    const restoreSaveMessage =
+      document.getElementById(
+        "restoreSaveMessage"
+      );
+
+    const restoreBackupForm =
+      document.getElementById(
+        "restoreBackupForm"
+      );
+
+    const restorePinField =
+      document.getElementById(
+        "restorePinField"
+      );
+
+    const restoreTypeField =
+      document.getElementById(
+        "restoreTypeField"
+      );
+
+    const restoreScreenField =
+      document.getElementById(
+        "restoreScreenField"
+      );
+
+    const restoreDataField =
+      document.getElementById(
+        "restoreDataField"
+      );
+
+    const restoreRequestIdField =
+      document.getElementById(
+        "restoreRequestIdField"
+      );
+
     const managerScreenSelect =
       document.getElementById(
         "managerScreenSelect"
@@ -4492,6 +4657,15 @@
       0;
 
     let selectedBackup =
+      null;
+
+    let restorePreviewData =
+      null;
+
+    let restoreInProgress =
+      false;
+
+    let activeRestoreRequestId =
       null;
 
     /*
@@ -8667,6 +8841,16 @@
         "click",
         closeRestorePreview
       );
+
+      restoreBackupButton.addEventListener(
+        "click",
+        restoreSelectedBackup
+      );
+
+      window.addEventListener(
+        "message",
+        handleRestoreResult
+      );
     }
 
 
@@ -9078,6 +9262,23 @@
         differences
       );
 
+      restorePreviewData = {
+        backup:
+          selectedBackup,
+        backupRows:
+          backupRows,
+        currentRows:
+          currentRows,
+        differences:
+          differences
+      };
+
+      restoreBackupButton.disabled =
+        differences.length === 0 ||
+        restoreInProgress;
+
+      hideRestoreSaveMessage();
+
       restorePreview.classList.add(
         "visible"
       );
@@ -9117,6 +9318,180 @@
 
       restoreChangeList.innerHTML =
         "";
+
+      restorePreviewData =
+        null;
+
+      restoreBackupButton.disabled =
+        true;
+
+      hideRestoreSaveMessage();
+    }
+
+
+    function restoreSelectedBackup() {
+      if (
+        !restorePreviewData ||
+        !selectedBackup
+      ) {
+        return;
+      }
+
+      const pin =
+        window.prompt(
+          `Enter the dashboard save PIN to restore "${selectedBackup.screen}":`
+        );
+
+      if (pin === null) {
+        return;
+      }
+
+      if (!String(pin).trim()) {
+        showRestoreSaveMessage(
+          "A restore PIN is required.",
+          "error"
+        );
+        return;
+      }
+
+      const confirmed =
+        window.confirm(
+          `Restore the selected ${selectedBackup.type === "holiday" ? "Holiday Override" : "regular schedule"} backup?\n\n` +
+          `Destination: ${selectedBackup.screen}\n` +
+          `Backup timestamp: ${selectedBackup.timestampDisplay}\n` +
+          `Rows to restore: ${restorePreviewData.backupRows.length}\n\n` +
+          `The current live data will be backed up again before restoration.`
+        );
+
+      if (!confirmed) {
+        return;
+      }
+
+      activeRestoreRequestId =
+        createSaveRequestId();
+
+      restoreInProgress =
+        true;
+
+      restoreBackupButton.disabled =
+        true;
+
+      restoreBackupButton.textContent =
+        "Restoring…";
+
+      showRestoreSaveMessage(
+        "Restoring the selected backup…",
+        "success"
+      );
+
+      restoreBackupForm.action =
+        SCHEDULE_FEED_URL;
+
+      restorePinField.value =
+        String(pin);
+
+      restoreTypeField.value =
+        selectedBackup.type;
+
+      restoreScreenField.value =
+        selectedBackup.screen;
+
+      restoreDataField.value =
+        JSON.stringify(
+          restorePreviewData.backupRows
+        );
+
+      restoreRequestIdField.value =
+        activeRestoreRequestId;
+
+      restoreBackupForm.submit();
+
+      restorePinField.value =
+        "";
+    }
+
+
+    function handleRestoreResult(event) {
+      const data =
+        event.data;
+
+      if (
+        !data ||
+        data.type !==
+          "miniGolfBackupRestoreResult" ||
+        data.requestId !==
+          activeRestoreRequestId
+      ) {
+        return;
+      }
+
+      restoreInProgress =
+        false;
+
+      activeRestoreRequestId =
+        null;
+
+      restoreBackupButton.textContent =
+        "Restore this backup";
+
+      if (data.success !== true) {
+        restoreBackupButton.disabled =
+          false;
+
+        showRestoreSaveMessage(
+          data.error ||
+          "Google Sheets did not accept the restore request.",
+          "error"
+        );
+
+        return;
+      }
+
+      showRestoreSaveMessage(
+        `Restored ${data.rowsWritten} row(s) to "${data.screen}". The previous live data was backed up first.`,
+        "success"
+      );
+
+      restoreBackupButton.disabled =
+        true;
+
+      /*
+       * Refresh every affected dashboard data source.
+       */
+      setTimeout(
+        function() {
+          refreshDashboard();
+          loadHolidayOverrides();
+          loadBackupHistory();
+
+          setTimeout(
+            prepareRestorePreview,
+            700
+          );
+        },
+        700
+      );
+    }
+
+
+    function showRestoreSaveMessage(
+      message,
+      type
+    ) {
+      restoreSaveMessage.textContent =
+        message;
+
+      restoreSaveMessage.className =
+        `restore-save-message visible ${type}`;
+    }
+
+
+    function hideRestoreSaveMessage() {
+      restoreSaveMessage.textContent =
+        "";
+
+      restoreSaveMessage.className =
+        "restore-save-message";
     }
 
 
