@@ -4274,15 +4274,13 @@
     .health-toolbar { display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:18px; padding:14px 16px; border:1px solid var(--border); border-radius:12px; background:var(--surface-light); }
     .health-summary {
       display: grid;
-      grid-template-columns:
-        repeat(auto-fit, minmax(190px, 1fr));
+      grid-template-columns: 1fr;
       gap: 14px;
       margin-bottom: 18px;
     }
     .health-grid {
       display: grid;
-      grid-template-columns:
-        repeat(auto-fit, minmax(300px, 1fr));
+      grid-template-columns: 1fr;
       gap: 18px;
       align-items: start;
     }
@@ -4503,7 +4501,7 @@
 
     .auto-health-item {
       display: grid;
-      grid-template-columns: 28px minmax(0, 1fr) auto;
+      grid-template-columns: 28px minmax(0, 1fr);
       align-items: center;
       gap: 10px;
 
@@ -4538,6 +4536,9 @@
     }
 
     .auto-health-status {
+      grid-column: 2;
+      justify-self: start;
+
       padding: 4px 7px;
 
       border-radius: 999px;
@@ -4602,8 +4603,7 @@
 
     .health-admin-buttons {
       display: grid;
-      grid-template-columns:
-        repeat(auto-fit, minmax(170px, 1fr));
+      grid-template-columns: 1fr;
       gap: 10px;
       margin-top: 14px;
     }
@@ -4658,8 +4658,7 @@
 
     .player-heartbeat-grid {
       display: grid;
-      grid-template-columns:
-        repeat(auto-fit, minmax(220px, 1fr));
+      grid-template-columns: 1fr;
       gap: 12px;
       margin-top: 14px;
     }
@@ -4769,6 +4768,27 @@
     }
 
 
+
+    .system-health *,
+    .health-summary > *,
+    .health-grid > *,
+    .health-score-panel,
+    .player-heartbeat-panel,
+    .auto-health-checks,
+    .health-admin-actions {
+      min-width: 0;
+      max-width: 100%;
+      box-sizing: border-box;
+    }
+
+    .health-admin-buttons .button,
+    .health-toolbar .button,
+    .player-heartbeat-panel .button,
+    .auto-health-checks .button {
+      width: 100%;
+      max-width: 100%;
+    }
+
     /*
      * =====================================================
      * ADVANCED SYSTEM HEALTH SCORING
@@ -4787,11 +4807,9 @@
 
     .health-score-layout {
       display: grid;
-      grid-template-columns:
-        minmax(150px, 220px)
-        minmax(0, 1fr);
+      grid-template-columns: 1fr;
       gap: 18px;
-      align-items: center;
+      align-items: stretch;
 
       margin-top: 14px;
     }
@@ -7913,7 +7931,7 @@
               id="healthScoreNumber"
               class="health-score-number"
             >
-              —
+              Waiting
               <span>/100</span>
             </div>
 
@@ -21563,6 +21581,36 @@
           telemetry.requests || 0
         );
 
+      const safeTelemetryForScore = {
+        requestCount:
+          requestCount,
+
+        successRate:
+          Number(
+            telemetry.successRate || 0
+          ),
+
+        failures:
+          Number(
+            telemetry.failures || 0
+          ),
+
+        averageDuration:
+          Number(
+            telemetry.averageDurationMs || 0
+          ),
+
+        maxDuration:
+          Number(
+            telemetry.maxDurationMs || 0
+          ),
+
+        cacheHitRate:
+          Number(
+            telemetry.cacheHitRate || 0
+          )
+      };
+
       const cacheHitRate =
         Number(
           telemetry.cacheHitRate || 0
@@ -21574,25 +21622,9 @@
         );
 
       const scoreResult =
-        calculateSystemHealthScore({
-          requestCount:
-            requestCount,
-
-          successRate:
-            successRate,
-
-          failures:
-            failures,
-
-          averageDuration:
-            averageDuration,
-
-          maxDuration:
-            maxDuration,
-
-          cacheHitRate:
-            cacheHitRate
-        });
+        calculateSystemHealthScore(
+          safeTelemetryForScore
+        );
 
       const state =
         scoreResult.state;
@@ -23534,13 +23566,36 @@
     function renderHealthScore(
       result
     ) {
+      if (
+        !healthScoreNumber ||
+        !healthScoreReasons
+      ) {
+        return;
+      }
+
+      const safeResult =
+        result || {
+          score:
+            null,
+
+          reasons: [
+            {
+              icon:
+                "⏳",
+
+              text:
+                "Waiting for telemetry."
+            }
+          ]
+        };
+
       healthScoreNumber.innerHTML =
-        result.score === null
-          ? `— <span>/100</span>`
-          : `${result.score} <span>/100</span>`;
+        safeResult.score === null
+          ? `Waiting <span>/100</span>`
+          : `${safeResult.score} <span>/100</span>`;
 
       healthScoreReasons.innerHTML =
-        result.reasons
+        (safeResult.reasons || [])
           .map(
             reason => `
               <div class="health-reason">
