@@ -10,7 +10,7 @@ All notable changes to the Mini Golf Signage project will be documented here.
 - Automatic recovery health check
 
 ## [3.0.0] - 2026-07-27
-Official realase of the Dashboard V3 with a bunch of new feature added to mix.
+Official realase of the Dashboard V3 with a bunch of new feature added to the mix.
 
 - Schedule Manager fully operational
 - Daily Schedule
