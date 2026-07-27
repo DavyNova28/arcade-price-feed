@@ -5018,6 +5018,98 @@
     }
 
     /*
+     * PLAYER VERSION COMPLIANCE
+     */
+
+    function renderPlayerVersionCompliance(
+      players
+    ) {
+      const normalizedPlayers =
+        Array.isArray(players)
+          ? players
+          : [];
+
+      const currentCount =
+        normalizedPlayers.filter(
+          player =>
+            player.playerVersion ===
+            EXPECTED_PLAYER_VERSION
+        ).length;
+
+      const outdatedCount =
+        normalizedPlayers.filter(
+          player =>
+            player.playerVersion &&
+            player.playerVersion !==
+              EXPECTED_PLAYER_VERSION
+        ).length;
+
+      const unknownCount =
+        normalizedPlayers.length -
+        currentCount -
+        outdatedCount;
+
+      playerVersionSummary.innerHTML =
+        `Expected version: <strong>${escapeHtml(EXPECTED_PLAYER_VERSION)}</strong>` +
+        ` · ${currentCount} current` +
+        ` · ${outdatedCount} outdated` +
+        ` · ${unknownCount} unknown`;
+
+      playerVersionList.innerHTML =
+        normalizedPlayers
+          .map(
+            player => {
+              let status =
+                "unknown";
+
+              let label =
+                "Unknown";
+
+              if (
+                player.playerVersion ===
+                EXPECTED_PLAYER_VERSION
+              ) {
+                status =
+                  "current";
+
+                label =
+                  "Current";
+
+              } else if (
+                player.playerVersion
+              ) {
+                status =
+                  "outdated";
+
+                label =
+                  "Outdated";
+              }
+
+              return `
+                <div class="player-version-row ${status}">
+                  <div class="player-version-top">
+                    <div class="player-version-name">
+                      ${escapeHtml(player.screen)}
+                    </div>
+
+                    <div class="player-version-badge ${status}">
+                      ${escapeHtml(label)}
+                    </div>
+                  </div>
+
+                  <div class="player-version-detail">
+                    Reported:
+                    ${escapeHtml(player.playerVersion || "Not reported")}
+                  </div>
+                </div>
+              `;
+            }
+          )
+          .join("");
+    }
+
+
+    /*
      * GO-LIVE READINESS
      */
 
@@ -5113,6 +5205,118 @@
       color: var(--muted);
       font-size: 10px;
       line-height: 1.45;
+    }
+
+
+    /*
+     * PLAYER VERSION COMPLIANCE
+     */
+
+    .player-version-panel {
+      width: 100%;
+      padding: 16px;
+
+      border: 1px solid var(--border);
+      border-radius: 12px;
+
+      background: var(--surface-light);
+    }
+
+    .player-version-list {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+
+      margin-top: 14px;
+    }
+
+    .player-version-row {
+      display: grid;
+      grid-template-columns:
+        minmax(0, 1fr);
+      gap: 6px;
+
+      padding: 11px 12px;
+
+      border: 1px solid var(--border);
+      border-radius: 10px;
+
+      background: var(--surface);
+    }
+
+    .player-version-row.current {
+      border-color: rgba(54, 201, 135, 0.48);
+    }
+
+    .player-version-row.outdated {
+      border-color: rgba(242, 170, 63, 0.58);
+    }
+
+    .player-version-row.unknown {
+      border-color: rgba(255, 104, 104, 0.52);
+    }
+
+    .player-version-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .player-version-name {
+      font-size: 12px;
+      font-weight: 850;
+    }
+
+    .player-version-badge {
+      padding: 5px 8px;
+
+      border-radius: 999px;
+
+      font-size: 9px;
+      font-weight: 850;
+      text-transform: uppercase;
+    }
+
+    .player-version-badge.current {
+      color: #caffea;
+      background: var(--regular-dark);
+    }
+
+    .player-version-badge.outdated {
+      color: #fff0cf;
+      background: var(--holiday-dark);
+    }
+
+    .player-version-badge.unknown {
+      color: #ffd6d6;
+      background: var(--error-dark);
+    }
+
+    html[data-theme="light"]
+    .player-version-badge.current {
+      color: #15543a;
+      background: #d9f7ea;
+    }
+
+    html[data-theme="light"]
+    .player-version-badge.outdated {
+      color: #7a5518;
+      background: #fff1d4;
+    }
+
+    html[data-theme="light"]
+    .player-version-badge.unknown {
+      color: #7e2525;
+      background: #ffe5e5;
+    }
+
+    .player-version-detail {
+      color: var(--muted);
+      font-size: 10px;
+      line-height: 1.45;
+      overflow-wrap: anywhere;
     }
 
     body,
@@ -8149,6 +8353,46 @@
           ></div>
         </section>
 
+        <section class="player-version-panel">
+          <div class="manager-header">
+            <div>
+              <div class="eyebrow">
+                Priority 7B
+              </div>
+
+              <h3 style="margin:5px 0 0;">
+                Player Version Compliance
+              </h3>
+
+              <p class="manager-description">
+                Confirms that each screen is running the approved player build before rollout.
+              </p>
+            </div>
+
+            <button
+              id="refreshPlayerVersionsButton"
+              class="button"
+              type="button"
+            >
+              Refresh versions
+            </button>
+          </div>
+
+          <div
+            id="playerVersionSummary"
+            class="manager-description"
+            style="margin-top:10px;"
+          >
+            Expected version:
+            <strong id="expectedPlayerVersionLabel"></strong>
+          </div>
+
+          <div
+            id="playerVersionList"
+            class="player-version-list"
+          ></div>
+        </section>
+
         <section class="go-live-readiness">
           <div class="manager-header">
             <div>
@@ -8546,6 +8790,13 @@
      */
     const GITHUB_IMAGE_INDEX_FILE =
       "image-index.json";
+
+    /*
+     * Player version expected before full rollout.
+     * Must match PLAYER_VERSION in index.html.
+     */
+    const EXPECTED_PLAYER_VERSION =
+      "v3.1-heartbeat-1";
 
     const DASHBOARD_OFFLINE_STORAGE_KEY =
       "miniGolfDashboardOfflineSnapshotV1";
@@ -9361,6 +9612,26 @@
     const healthActionsList = document.getElementById("healthActionsList");
     const healthScreensList = document.getElementById("healthScreensList");
     const healthErrorBox = document.getElementById("healthErrorBox");
+
+    const refreshPlayerVersionsButton =
+      document.getElementById(
+        "refreshPlayerVersionsButton"
+      );
+
+    const playerVersionSummary =
+      document.getElementById(
+        "playerVersionSummary"
+      );
+
+    const expectedPlayerVersionLabel =
+      document.getElementById(
+        "expectedPlayerVersionLabel"
+      );
+
+    const playerVersionList =
+      document.getElementById(
+        "playerVersionList"
+      );
 
     const refreshGoLiveReadinessButton =
       document.getElementById(
@@ -21818,6 +22089,14 @@
         "click",
         runGoLiveReadinessCheck
       );
+
+      refreshPlayerVersionsButton.addEventListener(
+        "click",
+        loadPlayerHeartbeats
+      );
+
+      expectedPlayerVersionLabel.textContent =
+        EXPECTED_PLAYER_VERSION;
     }
 
     function loadSystemHealth() {
@@ -23531,6 +23810,10 @@
           }
         );
 
+      renderPlayerVersionCompliance(
+        normalized
+      );
+
       const onlineCount =
         normalized.filter(
           item =>
@@ -24176,6 +24459,64 @@
             ]
           )
         );
+
+      const playersWithWrongVersion =
+        SCREEN_NAMES.filter(
+          screenName => {
+            const player =
+              heartbeatMap.get(
+                screenName
+              );
+
+            return (
+              player &&
+              player.playerVersion &&
+              player.playerVersion !==
+                EXPECTED_PLAYER_VERSION
+            );
+          }
+        );
+
+      const playersWithUnknownVersion =
+        SCREEN_NAMES.filter(
+          screenName => {
+            const player =
+              heartbeatMap.get(
+                screenName
+              );
+
+            return (
+              !player ||
+              !player.playerVersion
+            );
+          }
+        );
+
+      checks.push({
+        level:
+          playersWithWrongVersion.length > 0
+            ? "blocked"
+            : playersWithUnknownVersion.length > 0
+              ? "warning"
+              : "ok",
+
+        icon:
+          playersWithWrongVersion.length > 0
+            ? "🔴"
+            : playersWithUnknownVersion.length > 0
+              ? "🟠"
+              : "✅",
+
+        title:
+          "Player version compliance",
+
+        detail:
+          playersWithWrongVersion.length > 0
+            ? `Outdated player version on: ${playersWithWrongVersion.join(", ")}.`
+            : playersWithUnknownVersion.length > 0
+              ? `Version not yet reported by: ${playersWithUnknownVersion.join(", ")}.`
+              : `Every player reports ${EXPECTED_PLAYER_VERSION}.`
+      });
 
       const quietHours =
         typeof isPlayerQuietHours === "function"
