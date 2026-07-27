@@ -210,9 +210,24 @@
       schedule = payload.schedule
         .filter(isValidScheduleItem)
         .map(item => ({
-          time: String(item.time).trim(),
-          image: String(item.image).trim(),
-          fade: normalizeFade(item.fade)
+          time:
+            String(item.time).trim(),
+
+          image:
+            String(item.image).trim(),
+
+          fade:
+            normalizeFade(item.fade),
+
+          /*
+           * Optional column D. A blank value means the item
+           * remains eligible until another schedule item
+           * replaces it.
+           */
+          endTime:
+            normalizeOptionalTime(
+              item.endTime
+            )
         }))
         .sort((a, b) =>
           a.time.localeCompare(b.time)
@@ -235,14 +250,67 @@
     };
 
     function isValidScheduleItem(item) {
+      if (
+        !item ||
+        typeof item.time !== "string" ||
+        !isValidHHMM(item.time) ||
+        typeof item.image !== "string" ||
+        item.image.trim() === ""
+      ) {
+        return false;
+      }
+
+      /*
+       * End Time is optional. Invalid or overnight values are
+       * rejected by the backend, but this protects the player
+       * if an older or malformed feed is received.
+       */
+      if (
+        item.endTime !== undefined &&
+        item.endTime !== null &&
+        String(item.endTime).trim() !== ""
+      ) {
+        const endTime =
+          String(item.endTime).trim();
+
+        if (
+          !isValidHHMM(endTime) ||
+          endTime <= item.time
+        ) {
+          return false;
+        }
+      }
+
+      return true;
+    }
+
+
+    function isValidHHMM(value) {
       return (
-        item &&
-        typeof item.time === "string" &&
-        /^\d{2}:\d{2}$/.test(item.time) &&
-        typeof item.image === "string" &&
-        item.image.trim() !== ""
+        typeof value === "string" &&
+        /^([01]\d|2[0-3]):[0-5]\d$/
+          .test(value.trim())
       );
     }
+
+
+    function normalizeOptionalTime(value) {
+      if (
+        value === undefined ||
+        value === null ||
+        String(value).trim() === ""
+      ) {
+        return "";
+      }
+
+      const time =
+        String(value).trim();
+
+      return isValidHHMM(time)
+        ? time
+        : "";
+    }
+
 
     function normalizeFade(value) {
       const fade = Number(value);
@@ -318,6 +386,18 @@
      * =====================================================
      * TIME AND SCHEDULE SELECTION
      * =====================================================
+     *
+     * Column D is an optional End Time.
+     *
+     * Blank End Time:
+     *   The row stays eligible until another row replaces it.
+     *
+     * Filled End Time:
+     *   The row is eligible from Start Time up to, but not
+     *   including, End Time.
+     *
+     * If a temporary row expires, the player falls back to
+     * the most recent eligible row without an End Time.
      */
     function getCurrentHHMM() {
       const now = new Date();
@@ -337,22 +417,115 @@
       }
 
       /*
-       * Before the first scheduled time of the day,
-       * continue showing the final image from the previous
-       * day.
+       * First choice:
+       * Find every item that has started and has not expired.
+       * When multiple timed items overlap, the newest Start
+       * Time wins.
        */
       let activeItem =
-        schedule[schedule.length - 1];
+        null;
 
       for (const item of schedule) {
-        if (item.time <= currentTime) {
-          activeItem = item;
-        } else {
+        if (item.time > currentTime) {
           break;
+        }
+
+        if (
+          !item.endTime ||
+          currentTime < item.endTime
+        ) {
+          activeItem =
+            item;
         }
       }
 
-      return activeItem;
+      if (activeItem) {
+        return {
+          ...activeItem,
+          selectionReason:
+            activeItem.endTime
+              ? "active timed item"
+              : "active persistent item"
+        };
+      }
+
+      /*
+       * Safe fallback:
+       * If a temporary item expired and nothing newer is
+       * active, return to the most recent untimed item that
+       * has already started.
+       */
+      for (
+        let index =
+          schedule.length - 1;
+        index >= 0;
+        index -= 1
+      ) {
+        const item =
+          schedule[index];
+
+        if (
+          item.time <= currentTime &&
+          !item.endTime
+        ) {
+          return {
+            ...item,
+            selectionReason:
+              "fallback to persistent item"
+          };
+        }
+      }
+
+      /*
+       * Before the first item of the day, continue the final
+       * persistent image from the previous day when one is
+       * available.
+       */
+      for (
+        let index =
+          schedule.length - 1;
+        index >= 0;
+        index -= 1
+      ) {
+        const item =
+          schedule[index];
+
+        if (!item.endTime) {
+          return {
+            ...item,
+            selectionReason:
+              "previous-day persistent fallback"
+          };
+        }
+      }
+
+      /*
+       * Last-resort no-black-screen protection:
+       * If every row is temporary and none is currently
+       * eligible, keep the image already on screen. On first
+       * startup only, use the final scheduled row rather than
+       * clearing the display.
+       */
+      if (currentImageName) {
+        const currentItem =
+          schedule.find(item =>
+            item.image === currentImageName
+          );
+
+        if (currentItem) {
+          return {
+            ...currentItem,
+            selectionReason:
+              "keep current image to prevent blank screen"
+          };
+        }
+      }
+
+      return {
+        ...schedule[schedule.length - 1],
+        selectionReason:
+          "last-resort startup fallback"
+      };
     }
 
     function evaluateSchedule() {
@@ -376,7 +549,13 @@
       setStatus(
         `${SCREEN_NAME} — ` +
         `${currentTime} — ` +
-        `${activeItem.image}`
+        `${activeItem.image}` +
+        (
+          activeItem.endTime
+            ? ` — ends ${activeItem.endTime}`
+            : ""
+        ) +
+        ` — ${activeItem.selectionReason}`
       );
 
       if (
