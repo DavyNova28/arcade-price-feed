@@ -1212,23 +1212,27 @@
       text-transform: uppercase;
       letter-spacing: 0.08em;
     }
+
+
     .manager-select,
-.manager-input {
-  color: var(--text);
-  background: var(--surface);
-}
+    .manager-input {
+      color: var(--text);
+      background: var(--surface);
+    }
 
-.manager-select option,
-.manager-input option {
-  color: #f4f7fb;
-  background: #151a22;
-}
+    .manager-select option,
+    .manager-input option,
+    .holiday-screen-input option {
+      color: #f4f7fb;
+      background: #151a22;
+    }
 
-html[data-theme="light"] .manager-select option,
-html[data-theme="light"] .manager-input option {
-  color: #172033;
-  background: #ffffff;
-}
+    html[data-theme="light"] .manager-select option,
+    html[data-theme="light"] .manager-input option,
+    html[data-theme="light"] .holiday-screen-input option {
+      color: #172033;
+      background: #ffffff;
+    }
 
     .manager-select {
       min-height: 42px;
@@ -1242,15 +1246,6 @@ html[data-theme="light"] .manager-input option {
 
       font: inherit;
     }
-    .holiday-screen-input option {
-  color: #f4f7fb;
-  background: #151a22;
-}
-
-html[data-theme="light"] .holiday-screen-input option {
-  color: #172033;
-  background: #ffffff;
-}
 
     .manager-overview {
       display: grid;
@@ -1820,7 +1815,6 @@ html[data-theme="light"] .holiday-screen-input option {
       color: #15543a;
       background: #d9f7ea;
     }
-    
 
     .holiday-screen-input {
       min-width: 150px;
@@ -1854,6 +1848,166 @@ html[data-theme="light"] .holiday-screen-input option {
 
       .holiday-edit-note {
         margin-right: 0;
+      }
+    }
+
+
+    /*
+     * =====================================================
+     * BACKUP HISTORY — READ ONLY
+     * =====================================================
+     */
+
+    .backup-manager {
+      padding: 23px;
+
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+
+      background: var(--surface);
+      box-shadow: var(--shadow);
+    }
+
+    .backup-toolbar {
+      display: flex;
+      align-items: flex-end;
+      flex-wrap: wrap;
+      gap: 12px;
+
+      margin-bottom: 18px;
+      padding: 16px;
+
+      border: 1px solid var(--border);
+      border-radius: 13px;
+
+      background: var(--surface-light);
+    }
+
+    .backup-filter-field {
+      display: grid;
+      gap: 7px;
+
+      min-width: 210px;
+    }
+
+    .backup-summary-grid {
+      display: grid;
+      grid-template-columns:
+        repeat(4, minmax(150px, 1fr));
+      gap: 12px;
+
+      margin-bottom: 18px;
+    }
+
+    .backup-type-badge {
+      display: inline-flex;
+
+      padding: 5px 8px;
+
+      border-radius: 999px;
+
+      font-size: 11px;
+      font-weight: 800;
+    }
+
+    .backup-type-regular {
+      color: #caffea;
+      background: var(--regular-dark);
+    }
+
+    .backup-type-holiday {
+      color: #fff0cf;
+      background: var(--holiday-dark);
+    }
+
+    .backup-json {
+      max-width: 380px;
+
+      color: var(--muted);
+      font-family:
+        Consolas,
+        Monaco,
+        monospace;
+      font-size: 11px;
+
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .backup-details {
+      margin-top: 18px;
+      padding: 16px;
+
+      border: 1px solid var(--border);
+      border-radius: 12px;
+
+      background: var(--surface-light);
+    }
+
+    .backup-details.hidden {
+      display: none;
+    }
+
+    .backup-details-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 16px;
+      flex-wrap: wrap;
+
+      margin-bottom: 12px;
+    }
+
+    .backup-details pre {
+      max-height: 420px;
+      margin: 0;
+      padding: 14px;
+
+      overflow: auto;
+
+      border: 1px solid var(--border);
+      border-radius: 10px;
+
+      color: var(--text);
+      background: var(--surface);
+
+      font-family:
+        Consolas,
+        Monaco,
+        monospace;
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    @media (max-width: 720px) {
+      .backup-manager {
+        padding: 15px;
+      }
+
+      .backup-toolbar {
+        align-items: stretch;
+        flex-direction: column;
+      }
+
+      .backup-filter-field {
+        width: 100%;
+        min-width: 0;
+      }
+
+      .backup-toolbar .button {
+        width: 100%;
+      }
+
+      .backup-summary-grid {
+        grid-template-columns:
+          repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 480px) {
+      .backup-summary-grid {
+        grid-template-columns: 1fr;
       }
     }
 
@@ -2425,6 +2579,14 @@ html[data-theme="light"] .holiday-screen-input option {
         type="button"
       >
         Holiday Overrides
+      </button>
+
+      <button
+        id="backupHistoryTab"
+        class="workspace-tab"
+        type="button"
+      >
+        Backup History
       </button>
     </nav>
 
@@ -3156,6 +3318,194 @@ html[data-theme="light"] .holiday-screen-input option {
         </div>
       </section>
     </section>
+
+    <section
+      id="backupHistoryWorkspace"
+      class="workspace"
+    >
+      <section class="backup-manager">
+        <div class="manager-header">
+          <div>
+            <div class="eyebrow">
+              Dashboard V3
+            </div>
+
+            <h2 class="manager-title">
+              Backup History
+            </h2>
+
+            <p class="manager-description">
+              Review the automatic backups created before regular schedule and
+              Holiday Override saves. Restoration will be added after this history
+              view is verified.
+            </p>
+          </div>
+
+          <div class="manager-status">
+            Read-only
+          </div>
+        </div>
+
+        <div class="backup-toolbar">
+          <label class="backup-filter-field">
+            <span class="manager-label">
+              Backup type
+            </span>
+
+            <select
+              id="backupTypeFilter"
+              class="manager-select"
+            >
+              <option value="all">
+                All backups
+              </option>
+
+              <option value="regular">
+                Regular schedules
+              </option>
+
+              <option value="holiday">
+                Holiday Overrides
+              </option>
+            </select>
+          </label>
+
+          <label class="backup-filter-field">
+            <span class="manager-label">
+              Screen
+            </span>
+
+            <select
+              id="backupScreenFilter"
+              class="manager-select"
+            >
+              <option value="all">
+                All screens
+              </option>
+            </select>
+          </label>
+
+          <button
+            id="reloadBackupsButton"
+            class="button"
+            type="button"
+          >
+            ↻ Reload backups
+          </button>
+        </div>
+
+        <section class="backup-summary-grid">
+          <article class="manager-stat">
+            <div class="manager-stat-label">
+              Total backups
+            </div>
+
+            <div
+              id="backupTotalCount"
+              class="manager-stat-value"
+            >
+              0
+            </div>
+          </article>
+
+          <article class="manager-stat">
+            <div class="manager-stat-label">
+              Regular schedules
+            </div>
+
+            <div
+              id="backupRegularCount"
+              class="manager-stat-value"
+            >
+              0
+            </div>
+          </article>
+
+          <article class="manager-stat">
+            <div class="manager-stat-label">
+              Holiday Overrides
+            </div>
+
+            <div
+              id="backupHolidayCount"
+              class="manager-stat-value"
+            >
+              0
+            </div>
+          </article>
+
+          <article class="manager-stat">
+            <div class="manager-stat-label">
+              Latest backup
+            </div>
+
+            <div
+              id="backupLatestTime"
+              class="manager-stat-value manager-filename"
+            >
+              —
+            </div>
+          </article>
+        </section>
+
+        <div class="schedule-table-wrapper">
+          <table class="schedule-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Timestamp</th>
+                <th>Type</th>
+                <th>Screen</th>
+                <th>Rows</th>
+                <th>Saved data</th>
+                <th>Details</th>
+              </tr>
+            </thead>
+
+            <tbody id="backupTableBody">
+              <tr>
+                <td
+                  colspan="7"
+                  class="manager-empty"
+                >
+                  Open this workspace to load backup history.
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <section
+          id="backupDetails"
+          class="backup-details hidden"
+        >
+          <div class="backup-details-header">
+            <div>
+              <div class="eyebrow">
+                Selected backup
+              </div>
+
+              <div
+                id="backupDetailsTitle"
+                class="manager-stat-value"
+              >
+                —
+              </div>
+            </div>
+
+            <button
+              id="closeBackupDetailsButton"
+              class="button"
+              type="button"
+            >
+              Close details
+            </button>
+          </div>
+
+          <pre id="backupDetailsJson"></pre>
+        </section>
+      </section>
+    </section>
   </main>
 
   <iframe
@@ -3240,7 +3590,7 @@ html[data-theme="light"] .holiday-screen-input option {
      */
 
     const SCHEDULE_FEED_URL =
-      "https://script.google.com/macros/s/AKfycbwUINP9DCEUywwCU1YMjfnPT3H8ZUq1lsGVk8ShACrTp2EZIqMYrChADlk_uEh2F-DGXw/exec";
+      "PASTE_YOUR_APPS_SCRIPT_EXEC_URL_HERE";
 
     const SCREEN_NAMES = [
       "Arcade",
@@ -3583,6 +3933,76 @@ html[data-theme="light"] .holiday-screen-input option {
         "holidaySaveRequestIdField"
       );
 
+    const backupHistoryTab =
+      document.getElementById(
+        "backupHistoryTab"
+      );
+
+    const backupHistoryWorkspace =
+      document.getElementById(
+        "backupHistoryWorkspace"
+      );
+
+    const backupTypeFilter =
+      document.getElementById(
+        "backupTypeFilter"
+      );
+
+    const backupScreenFilter =
+      document.getElementById(
+        "backupScreenFilter"
+      );
+
+    const reloadBackupsButton =
+      document.getElementById(
+        "reloadBackupsButton"
+      );
+
+    const backupTotalCount =
+      document.getElementById(
+        "backupTotalCount"
+      );
+
+    const backupRegularCount =
+      document.getElementById(
+        "backupRegularCount"
+      );
+
+    const backupHolidayCount =
+      document.getElementById(
+        "backupHolidayCount"
+      );
+
+    const backupLatestTime =
+      document.getElementById(
+        "backupLatestTime"
+      );
+
+    const backupTableBody =
+      document.getElementById(
+        "backupTableBody"
+      );
+
+    const backupDetails =
+      document.getElementById(
+        "backupDetails"
+      );
+
+    const backupDetailsTitle =
+      document.getElementById(
+        "backupDetailsTitle"
+      );
+
+    const backupDetailsJson =
+      document.getElementById(
+        "backupDetailsJson"
+      );
+
+    const closeBackupDetailsButton =
+      document.getElementById(
+        "closeBackupDetailsButton"
+      );
+
     const managerScreenSelect =
       document.getElementById(
         "managerScreenSelect"
@@ -3722,6 +4142,12 @@ html[data-theme="light"] .holiday-screen-input option {
 
     let activeHolidaySaveRequestId =
       null;
+
+    let backupHistory =
+      [];
+
+    let backupRequestGeneration =
+      0;
 
     /*
      * =====================================================
@@ -5482,6 +5908,9 @@ html[data-theme="light"] .holiday-screen-input option {
       const showHoliday =
         workspaceName === "holiday";
 
+      const showBackups =
+        workspaceName === "backups";
+
       controlCenterTab.classList.toggle(
         "active",
         showControl
@@ -5495,6 +5924,11 @@ html[data-theme="light"] .holiday-screen-input option {
       holidayManagerTab.classList.toggle(
         "active",
         showHoliday
+      );
+
+      backupHistoryTab.classList.toggle(
+        "active",
+        showBackups
       );
 
       controlCenterWorkspace.classList.toggle(
@@ -5512,6 +5946,11 @@ html[data-theme="light"] .holiday-screen-input option {
         showHoliday
       );
 
+      backupHistoryWorkspace.classList.toggle(
+        "active",
+        showBackups
+      );
+
       if (showManager) {
         updateScheduleManager();
       }
@@ -5521,6 +5960,14 @@ html[data-theme="light"] .holiday-screen-input option {
           loadHolidayOverrides();
         } else {
           renderHolidayOverrides();
+        }
+      }
+
+      if (showBackups) {
+        if (backupHistory.length === 0) {
+          loadBackupHistory();
+        } else {
+          renderBackupHistory();
         }
       }
     }
@@ -7819,6 +8266,369 @@ html[data-theme="light"] .holiday-screen-input option {
 
     /*
      * =====================================================
+     * BACKUP HISTORY — READ ONLY
+     * =====================================================
+     */
+
+    function setupBackupHistory() {
+      backupScreenFilter.innerHTML =
+        `
+          <option value="all">
+            All screens
+          </option>
+          <option value="Holiday Overrides">
+            Holiday Overrides
+          </option>
+        ` +
+        SCREEN_NAMES
+          .map(screenName => `
+            <option value="${escapeHtml(screenName)}">
+              ${escapeHtml(screenName)}
+            </option>
+          `)
+          .join("");
+
+      backupTypeFilter.addEventListener(
+        "change",
+        renderBackupHistory
+      );
+
+      backupScreenFilter.addEventListener(
+        "change",
+        renderBackupHistory
+      );
+
+      reloadBackupsButton.addEventListener(
+        "click",
+        loadBackupHistory
+      );
+
+      backupTableBody.addEventListener(
+        "click",
+        handleBackupTableClick
+      );
+
+      closeBackupDetailsButton.addEventListener(
+        "click",
+        closeBackupDetails
+      );
+    }
+
+
+    function loadBackupHistory() {
+      backupRequestGeneration += 1;
+
+      const generation =
+        backupRequestGeneration;
+
+      const callbackName =
+        `backupHistoryCallback_${generation}`;
+
+      const scriptId =
+        "backup-history-feed";
+
+      const previousScript =
+        document.getElementById(
+          scriptId
+        );
+
+      if (previousScript) {
+        previousScript.remove();
+      }
+
+      backupTableBody.innerHTML = `
+        <tr>
+          <td
+            colspan="7"
+            class="manager-empty"
+          >
+            Loading backup history…
+          </td>
+        </tr>
+      `;
+
+      window[callbackName] =
+        function(payload) {
+          try {
+            if (
+              !payload ||
+              payload.success !== true ||
+              !Array.isArray(
+                payload.backups
+              )
+            ) {
+              throw new Error(
+                payload &&
+                payload.error
+                  ? payload.error
+                  : "The backup history feed is invalid."
+              );
+            }
+
+            backupHistory =
+              payload.backups;
+
+            closeBackupDetails();
+            renderBackupHistory();
+
+          } catch (error) {
+            backupTableBody.innerHTML = `
+              <tr>
+                <td
+                  colspan="7"
+                  class="manager-empty"
+                >
+                  ${escapeHtml(
+                    error.message || error
+                  )}
+                </td>
+              </tr>
+            `;
+          } finally {
+            delete window[callbackName];
+
+            const script =
+              document.getElementById(
+                scriptId
+              );
+
+            if (script) {
+              script.remove();
+            }
+          }
+        };
+
+      const script =
+        document.createElement("script");
+
+      script.id =
+        scriptId;
+
+      const separator =
+        SCHEDULE_FEED_URL.includes("?")
+          ? "&"
+          : "?";
+
+      script.src =
+        `${SCHEDULE_FEED_URL}` +
+        `${separator}action=backupManager` +
+        `&callback=${callbackName}` +
+        `&_=${Date.now()}`;
+
+      script.onerror =
+        function() {
+          delete window[callbackName];
+
+          backupTableBody.innerHTML = `
+            <tr>
+              <td
+                colspan="7"
+                class="manager-empty"
+              >
+                Could not load backup history from Apps Script.
+              </td>
+            </tr>
+          `;
+        };
+
+      document.head.appendChild(
+        script
+      );
+    }
+
+
+    function renderBackupHistory() {
+      const typeFilter =
+        backupTypeFilter.value;
+
+      const screenFilter =
+        backupScreenFilter.value;
+
+      const filtered =
+        backupHistory.filter(item => {
+          const typeMatches =
+            typeFilter === "all" ||
+            item.type === typeFilter;
+
+          const screenMatches =
+            screenFilter === "all" ||
+            item.screen ===
+              screenFilter;
+
+          return (
+            typeMatches &&
+            screenMatches
+          );
+        });
+
+      backupTotalCount.textContent =
+        String(
+          backupHistory.length
+        );
+
+      backupRegularCount.textContent =
+        String(
+          backupHistory.filter(
+            item =>
+              item.type === "regular"
+          ).length
+        );
+
+      backupHolidayCount.textContent =
+        String(
+          backupHistory.filter(
+            item =>
+              item.type === "holiday"
+          ).length
+        );
+
+      backupLatestTime.textContent =
+        backupHistory.length > 0
+          ? backupHistory[0].timestampDisplay
+          : "—";
+
+      if (filtered.length === 0) {
+        backupTableBody.innerHTML = `
+          <tr>
+            <td
+              colspan="7"
+              class="manager-empty"
+            >
+              No backups match these filters.
+            </td>
+          </tr>
+        `;
+
+        return;
+      }
+
+      backupTableBody.innerHTML =
+        filtered
+          .map((item, index) => `
+            <tr>
+              <td>
+                ${index + 1}
+              </td>
+
+              <td>
+                ${escapeHtml(item.timestampDisplay)}
+              </td>
+
+              <td>
+                <span
+                  class="backup-type-badge backup-type-${escapeHtml(item.type)}"
+                >
+                  ${
+                    item.type === "holiday"
+                      ? "Holiday"
+                      : "Regular"
+                  }
+                </span>
+              </td>
+
+              <td>
+                ${escapeHtml(item.screen)}
+              </td>
+
+              <td>
+                ${escapeHtml(item.rows)}
+              </td>
+
+              <td>
+                <div class="backup-json">
+                  ${escapeHtml(item.scheduleJson)}
+                </div>
+              </td>
+
+              <td>
+                <button
+                  class="button"
+                  type="button"
+                  data-backup-id="${escapeHtml(item.id)}"
+                >
+                  View
+                </button>
+              </td>
+            </tr>
+          `)
+          .join("");
+    }
+
+
+    function handleBackupTableClick(event) {
+      const button =
+        event.target.closest(
+          "[data-backup-id]"
+        );
+
+      if (!button) {
+        return;
+      }
+
+      const backup =
+        backupHistory.find(
+          item =>
+            item.id ===
+            button.dataset.backupId
+        );
+
+      if (!backup) {
+        return;
+      }
+
+      openBackupDetails(
+        backup
+      );
+    }
+
+
+    function openBackupDetails(backup) {
+      backupDetailsTitle.textContent =
+        `${backup.timestampDisplay} · ${backup.screen}`;
+
+      try {
+        const parsed =
+          JSON.parse(
+            backup.scheduleJson
+          );
+
+        backupDetailsJson.textContent =
+          JSON.stringify(
+            parsed,
+            null,
+            2
+          );
+
+      } catch (error) {
+        backupDetailsJson.textContent =
+          backup.scheduleJson;
+      }
+
+      backupDetails.classList.remove(
+        "hidden"
+      );
+
+      backupDetails.scrollIntoView({
+        behavior: "smooth",
+        block: "nearest"
+      });
+    }
+
+
+    function closeBackupDetails() {
+      backupDetails.classList.add(
+        "hidden"
+      );
+
+      backupDetailsTitle.textContent =
+        "—";
+
+      backupDetailsJson.textContent =
+        "";
+    }
+
+    /*
+     * =====================================================
      * GENERAL HELPERS
      * =====================================================
      */
@@ -7973,6 +8783,13 @@ html[data-theme="light"] .holiday-screen-input option {
       }
     );
 
+    backupHistoryTab.addEventListener(
+      "click",
+      function() {
+        openWorkspace("backups");
+      }
+    );
+
     reloadManagerButton.addEventListener(
       "click",
       function() {
@@ -7991,6 +8808,7 @@ html[data-theme="light"] .holiday-screen-input option {
     createScreenCards();
     setupScheduleManager();
     setupHolidayManager();
+    setupBackupHistory();
 
     refreshDashboard();
     updateOperationsPanel();
