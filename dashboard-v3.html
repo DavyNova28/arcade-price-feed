@@ -5176,6 +5176,31 @@
           </button>
         </div>
 
+        <section class="manager-github-scan">
+          <div
+            id="holidayGitHubScanStatus"
+            class="manager-github-scan-text"
+          >
+            Scan GitHub to validate Holiday Override filenames and load the image picker.
+          </div>
+
+          <button
+            id="holidayGitHubScanButton"
+            class="button"
+            type="button"
+          >
+            Scan GitHub images
+          </button>
+
+          <button
+            id="holidayOpenImageLibraryButton"
+            class="button"
+            type="button"
+          >
+            Open Image Library
+          </button>
+        </section>
+
         <div
           id="holidayDraftRecoveryBanner"
           class="draft-recovery-banner"
@@ -7249,6 +7274,21 @@
     const discardStoredScheduleDraftButton =
       document.getElementById(
         "discardStoredScheduleDraftButton"
+      );
+
+    const holidayGitHubScanButton =
+      document.getElementById(
+        "holidayGitHubScanButton"
+      );
+
+    const holidayGitHubScanStatus =
+      document.getElementById(
+        "holidayGitHubScanStatus"
+      );
+
+    const holidayOpenImageLibraryButton =
+      document.getElementById(
+        "holidayOpenImageLibraryButton"
       );
 
     const holidayDraftRecoveryBanner =
@@ -11627,6 +11667,20 @@
         handleHolidayTableClick
       );
 
+      holidayGitHubScanButton.addEventListener(
+        "click",
+        scanGitHubImagesFromHolidayManager
+      );
+
+      holidayOpenImageLibraryButton.addEventListener(
+        "click",
+        function() {
+          openWorkspace(
+            "images"
+          );
+        }
+      );
+
       holidayRepositoryWarning.addEventListener(
         "click",
         function(event) {
@@ -12075,6 +12129,16 @@
 
 
     function renderHolidayOverrides() {
+      if (
+        repositoryImages.length > 0
+      ) {
+        holidayGitHubScanStatus.className =
+          "manager-github-scan-text success";
+
+        holidayGitHubScanStatus.textContent =
+          `${repositoryImages.length} GitHub image(s) currently loaded.`;
+      }
+
       const sourceRows =
         holidayDraft ||
         holidayOverrides;
@@ -15153,6 +15217,68 @@
      * =====================================================
      */
 
+    async function scanGitHubImagesFromHolidayManager() {
+      holidayGitHubScanButton.disabled =
+        true;
+
+      holidayGitHubScanButton.textContent =
+        "Scanning…";
+
+      holidayGitHubScanStatus.className =
+        "manager-github-scan-text";
+
+      holidayGitHubScanStatus.textContent =
+        "Reading exact filenames from the GitHub repository…";
+
+      try {
+        await scanImageHealth();
+
+        if (!imageHealthScanned) {
+          throw new Error(
+            "The GitHub scan did not finish successfully."
+          );
+        }
+
+        holidayGitHubScanStatus.className =
+          "manager-github-scan-text success";
+
+        holidayGitHubScanStatus.textContent =
+          `${repositoryImages.length} repository image(s) loaded · ` +
+          `${missingReferencedImages.size} missing reference(s) · ` +
+          `${unusedRepositoryImages.size} unused file(s).`;
+
+        updateVisibleImagePickerStatuses();
+
+        const rows =
+          holidayDraft ||
+          holidayOverrides;
+
+        renderRepositoryWarning(
+          holidayRepositoryWarning,
+          validateRepositoryFilenames(
+            rows
+          ),
+          "holiday"
+        );
+
+      } catch (error) {
+        holidayGitHubScanStatus.className =
+          "manager-github-scan-text error";
+
+        holidayGitHubScanStatus.textContent =
+          error.message ||
+          "The GitHub image scan failed.";
+
+      } finally {
+        holidayGitHubScanButton.disabled =
+          false;
+
+        holidayGitHubScanButton.textContent =
+          "Scan GitHub images";
+      }
+    }
+
+
     async function scanGitHubImagesFromScheduleManager() {
       managerGitHubScanButton.disabled =
         true;
@@ -15308,6 +15434,18 @@
 
         imageHealthStatus.textContent =
           `Scan complete · ${new Date().toLocaleTimeString()}`;
+
+        managerGitHubScanStatus.className =
+          "manager-github-scan-text success";
+
+        managerGitHubScanStatus.textContent =
+          `${repositoryImages.length} GitHub image(s) currently loaded.`;
+
+        holidayGitHubScanStatus.className =
+          "manager-github-scan-text success";
+
+        holidayGitHubScanStatus.textContent =
+          `${repositoryImages.length} GitHub image(s) currently loaded.`;
 
         renderImageHealthList();
         renderImageLibrary();
