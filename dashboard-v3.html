@@ -1574,6 +1574,125 @@
       background: #ffe5e5;
     }
 
+
+    /*
+     * =====================================================
+     * HOLIDAY OVERRIDE MANAGER — READ ONLY
+     * =====================================================
+     */
+
+    .holiday-manager {
+      padding: 23px;
+
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+
+      background: var(--surface);
+      box-shadow: var(--shadow);
+    }
+
+    .holiday-toolbar {
+      display: flex;
+      align-items: flex-end;
+      flex-wrap: wrap;
+      gap: 12px;
+
+      margin-bottom: 18px;
+      padding: 16px;
+
+      border: 1px solid var(--border);
+      border-radius: 13px;
+
+      background: var(--surface-light);
+    }
+
+    .holiday-filter-field {
+      display: grid;
+      gap: 7px;
+
+      min-width: 210px;
+    }
+
+    .holiday-summary-grid {
+      display: grid;
+      grid-template-columns:
+        repeat(4, minmax(150px, 1fr));
+      gap: 12px;
+
+      margin-bottom: 18px;
+    }
+
+    .holiday-status-badge {
+      display: inline-flex;
+
+      padding: 5px 8px;
+
+      border-radius: 999px;
+
+      font-size: 11px;
+      font-weight: 800;
+    }
+
+    .holiday-status-active {
+      color: #fff0cf;
+      background: var(--holiday-dark);
+    }
+
+    .holiday-status-upcoming {
+      color: #d9eaff;
+      background: #234a73;
+    }
+
+    .holiday-status-expired {
+      color: var(--muted);
+      background: var(--surface-hover);
+    }
+
+    .holiday-status-invalid {
+      color: #ffd6d6;
+      background: var(--error-dark);
+    }
+
+    .holiday-date-range {
+      white-space: nowrap;
+    }
+
+    .holiday-image-name {
+      min-width: 230px;
+      overflow-wrap: anywhere;
+    }
+
+    @media (max-width: 720px) {
+      .holiday-manager {
+        padding: 15px;
+      }
+
+      .holiday-toolbar {
+        align-items: stretch;
+        flex-direction: column;
+      }
+
+      .holiday-filter-field {
+        width: 100%;
+        min-width: 0;
+      }
+
+      .holiday-toolbar .button {
+        width: 100%;
+      }
+
+      .holiday-summary-grid {
+        grid-template-columns:
+          repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 480px) {
+      .holiday-summary-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
     body,
     header,
     .system-banner,
@@ -2135,6 +2254,14 @@
       >
         Schedule Manager
       </button>
+
+      <button
+        id="holidayManagerTab"
+        class="workspace-tab"
+        type="button"
+      >
+        Holiday Overrides
+      </button>
     </nav>
 
     <section
@@ -2638,6 +2765,172 @@
         </div>
       </section>
     </section>
+
+    <section
+      id="holidayManagerWorkspace"
+      class="workspace"
+    >
+      <section class="holiday-manager">
+        <div class="manager-header">
+          <div>
+            <div class="eyebrow">
+              Dashboard V3
+            </div>
+
+            <h2 class="manager-title">
+              Holiday Override Manager
+            </h2>
+
+            <p class="manager-description">
+              Review every row in the Holiday Overrides tab. This stage is read-only;
+              editing and saving will be added after the view is confirmed stable.
+            </p>
+          </div>
+
+          <div class="manager-status">
+            Read-only
+          </div>
+        </div>
+
+        <div class="holiday-toolbar">
+          <label class="holiday-filter-field">
+            <span class="manager-label">
+              Screen
+            </span>
+
+            <select
+              id="holidayScreenFilter"
+              class="manager-select"
+            >
+              <option value="all">
+                All screens
+              </option>
+            </select>
+          </label>
+
+          <label class="holiday-filter-field">
+            <span class="manager-label">
+              Status
+            </span>
+
+            <select
+              id="holidayStatusFilter"
+              class="manager-select"
+            >
+              <option value="all">
+                All statuses
+              </option>
+
+              <option value="active">
+                Active
+              </option>
+
+              <option value="upcoming">
+                Upcoming
+              </option>
+
+              <option value="expired">
+                Expired
+              </option>
+
+              <option value="invalid">
+                Invalid
+              </option>
+            </select>
+          </label>
+
+          <button
+            id="reloadHolidayButton"
+            class="button"
+            type="button"
+          >
+            ↻ Reload overrides
+          </button>
+        </div>
+
+        <section class="holiday-summary-grid">
+          <article class="manager-stat">
+            <div class="manager-stat-label">
+              Total rows
+            </div>
+
+            <div
+              id="holidayTotalCount"
+              class="manager-stat-value"
+            >
+              0
+            </div>
+          </article>
+
+          <article class="manager-stat">
+            <div class="manager-stat-label">
+              Active now
+            </div>
+
+            <div
+              id="holidayActiveCount"
+              class="manager-stat-value"
+            >
+              0
+            </div>
+          </article>
+
+          <article class="manager-stat">
+            <div class="manager-stat-label">
+              Upcoming
+            </div>
+
+            <div
+              id="holidayUpcomingCount"
+              class="manager-stat-value"
+            >
+              0
+            </div>
+          </article>
+
+          <article class="manager-stat">
+            <div class="manager-stat-label">
+              Invalid rows
+            </div>
+
+            <div
+              id="holidayInvalidCount"
+              class="manager-stat-value"
+            >
+              0
+            </div>
+          </article>
+        </section>
+
+        <div class="schedule-table-wrapper">
+          <table class="schedule-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Screen</th>
+                <th>Date range</th>
+                <th>Start time</th>
+                <th>Image filename</th>
+                <th>Fade</th>
+                <th>Status</th>
+                <th>Preview</th>
+              </tr>
+            </thead>
+
+            <tbody id="holidayTableBody">
+              <tr>
+                <td
+                  colspan="8"
+                  class="manager-empty"
+                >
+                  Open this workspace to load Holiday Overrides.
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </section>
   </main>
 
   <iframe
@@ -2688,7 +2981,7 @@
      */
 
     const SCHEDULE_FEED_URL =
-      "https://script.google.com/macros/s/AKfycbwUINP9DCEUywwCU1YMjfnPT3H8ZUq1lsGVk8ShACrTp2EZIqMYrChADlk_uEh2F-DGXw/exec";
+      "PASTE_YOUR_APPS_SCRIPT_EXEC_URL_HERE";
 
     const SCREEN_NAMES = [
       "Arcade",
@@ -2921,6 +3214,56 @@
         "scheduleManagerWorkspace"
       );
 
+    const holidayManagerTab =
+      document.getElementById(
+        "holidayManagerTab"
+      );
+
+    const holidayManagerWorkspace =
+      document.getElementById(
+        "holidayManagerWorkspace"
+      );
+
+    const holidayScreenFilter =
+      document.getElementById(
+        "holidayScreenFilter"
+      );
+
+    const holidayStatusFilter =
+      document.getElementById(
+        "holidayStatusFilter"
+      );
+
+    const reloadHolidayButton =
+      document.getElementById(
+        "reloadHolidayButton"
+      );
+
+    const holidayTotalCount =
+      document.getElementById(
+        "holidayTotalCount"
+      );
+
+    const holidayActiveCount =
+      document.getElementById(
+        "holidayActiveCount"
+      );
+
+    const holidayUpcomingCount =
+      document.getElementById(
+        "holidayUpcomingCount"
+      );
+
+    const holidayInvalidCount =
+      document.getElementById(
+        "holidayInvalidCount"
+      );
+
+    const holidayTableBody =
+      document.getElementById(
+        "holidayTableBody"
+      );
+
     const managerScreenSelect =
       document.getElementById(
         "managerScreenSelect"
@@ -3042,6 +3385,12 @@
 
     let managerSaveInProgress =
       false;
+
+    let holidayOverrides =
+      [];
+
+    let holidayRequestGeneration =
+      0;
 
     /*
      * =====================================================
@@ -4793,12 +5142,18 @@
      */
 
     function openWorkspace(workspaceName) {
+      const showControl =
+        workspaceName === "control";
+
       const showManager =
         workspaceName === "manager";
 
+      const showHoliday =
+        workspaceName === "holiday";
+
       controlCenterTab.classList.toggle(
         "active",
-        !showManager
+        showControl
       );
 
       scheduleManagerTab.classList.toggle(
@@ -4806,9 +5161,14 @@
         showManager
       );
 
+      holidayManagerTab.classList.toggle(
+        "active",
+        showHoliday
+      );
+
       controlCenterWorkspace.classList.toggle(
         "active",
-        !showManager
+        showControl
       );
 
       scheduleManagerWorkspace.classList.toggle(
@@ -4816,10 +5176,24 @@
         showManager
       );
 
+      holidayManagerWorkspace.classList.toggle(
+        "active",
+        showHoliday
+      );
+
       if (showManager) {
         updateScheduleManager();
       }
+
+      if (showHoliday) {
+        if (holidayOverrides.length === 0) {
+          loadHolidayOverrides();
+        } else {
+          renderHolidayOverrides();
+        }
+      }
     }
+
 
     function setupScheduleManager() {
       managerScreenSelect.innerHTML =
@@ -5065,6 +5439,19 @@
           input.value === ""
             ? ""
             : Number(input.value);
+
+      } else if (field === "time") {
+        const formattedTime =
+          formatManagerTimeInput(
+            input.value
+          );
+
+        input.value =
+          formattedTime;
+
+        draft[rowIndex][field] =
+          formattedTime;
+
       } else {
         draft[rowIndex][field] =
           input.value;
@@ -5481,8 +5868,10 @@
                   <td>
                     <input
                       class="manager-input manager-time-input ${rowErrors.time ? "invalid" : ""}"
-                      type="time"
-                      step="60"
+                      type="text"
+                      inputmode="numeric"
+                      maxlength="5"
+                      placeholder="HH:MM"
                       value="${escapeHtml(item.time)}"
                       data-row-index="${index}"
                       data-manager-field="time"
@@ -5822,9 +6211,343 @@
 
     /*
      * =====================================================
+     * HOLIDAY OVERRIDE MANAGER — READ ONLY
+     * =====================================================
+     */
+
+    function setupHolidayManager() {
+      holidayScreenFilter.innerHTML =
+        `
+          <option value="all">
+            All screens
+          </option>
+          <option value="All">
+            All (global override)
+          </option>
+        ` +
+        SCREEN_NAMES
+          .map(screenName => `
+            <option value="${escapeHtml(screenName)}">
+              ${escapeHtml(screenName)}
+            </option>
+          `)
+          .join("");
+
+      holidayScreenFilter.addEventListener(
+        "change",
+        renderHolidayOverrides
+      );
+
+      holidayStatusFilter.addEventListener(
+        "change",
+        renderHolidayOverrides
+      );
+
+      reloadHolidayButton.addEventListener(
+        "click",
+        loadHolidayOverrides
+      );
+    }
+
+
+    function loadHolidayOverrides() {
+      holidayRequestGeneration += 1;
+
+      const generation =
+        holidayRequestGeneration;
+
+      const callbackName =
+        `holidayManagerCallback_${generation}`;
+
+      const scriptId =
+        "holiday-manager-feed";
+
+      const previousScript =
+        document.getElementById(
+          scriptId
+        );
+
+      if (previousScript) {
+        previousScript.remove();
+      }
+
+      holidayTableBody.innerHTML = `
+        <tr>
+          <td
+            colspan="8"
+            class="manager-empty"
+          >
+            Loading Holiday Overrides…
+          </td>
+        </tr>
+      `;
+
+      window[callbackName] =
+        function(payload) {
+          try {
+            if (
+              !payload ||
+              payload.success !== true ||
+              !Array.isArray(
+                payload.overrides
+              )
+            ) {
+              throw new Error(
+                payload &&
+                payload.error
+                  ? payload.error
+                  : "The Holiday Overrides feed is invalid."
+              );
+            }
+
+            holidayOverrides =
+              payload.overrides;
+
+            renderHolidayOverrides();
+
+          } catch (error) {
+            holidayTableBody.innerHTML = `
+              <tr>
+                <td
+                  colspan="8"
+                  class="manager-empty"
+                >
+                  ${escapeHtml(
+                    error.message || error
+                  )}
+                </td>
+              </tr>
+            `;
+          } finally {
+            delete window[callbackName];
+
+            const script =
+              document.getElementById(
+                scriptId
+              );
+
+            if (script) {
+              script.remove();
+            }
+          }
+        };
+
+      const script =
+        document.createElement("script");
+
+      script.id =
+        scriptId;
+
+      const separator =
+        SCHEDULE_FEED_URL.includes("?")
+          ? "&"
+          : "?";
+
+      script.src =
+        `${SCHEDULE_FEED_URL}` +
+        `${separator}action=holidayManager` +
+        `&callback=${callbackName}` +
+        `&_=${Date.now()}`;
+
+      script.onerror =
+        function() {
+          delete window[callbackName];
+
+          holidayTableBody.innerHTML = `
+            <tr>
+              <td
+                colspan="8"
+                class="manager-empty"
+              >
+                Could not load Holiday Overrides from Apps Script.
+              </td>
+            </tr>
+          `;
+        };
+
+      document.head.appendChild(
+        script
+      );
+    }
+
+
+    function renderHolidayOverrides() {
+      const screenFilter =
+        holidayScreenFilter.value;
+
+      const statusFilter =
+        holidayStatusFilter.value;
+
+      const filtered =
+        holidayOverrides.filter(item => {
+          const screenMatches =
+            screenFilter === "all" ||
+            item.screen === screenFilter;
+
+          const statusMatches =
+            statusFilter === "all" ||
+            item.status === statusFilter;
+
+          return (
+            screenMatches &&
+            statusMatches
+          );
+        });
+
+      holidayTotalCount.textContent =
+        String(
+          holidayOverrides.length
+        );
+
+      holidayActiveCount.textContent =
+        String(
+          holidayOverrides.filter(
+            item =>
+              item.status === "active"
+          ).length
+        );
+
+      holidayUpcomingCount.textContent =
+        String(
+          holidayOverrides.filter(
+            item =>
+              item.status === "upcoming"
+          ).length
+        );
+
+      holidayInvalidCount.textContent =
+        String(
+          holidayOverrides.filter(
+            item =>
+              item.status === "invalid"
+          ).length
+        );
+
+      if (filtered.length === 0) {
+        holidayTableBody.innerHTML = `
+          <tr>
+            <td
+              colspan="8"
+              class="manager-empty"
+            >
+              No Holiday Override rows match these filters.
+            </td>
+          </tr>
+        `;
+
+        return;
+      }
+
+      holidayTableBody.innerHTML =
+        filtered
+          .map(item => `
+            <tr>
+              <td>
+                ${item.rowNumber}
+              </td>
+
+              <td>
+                ${escapeHtml(item.screen)}
+              </td>
+
+              <td class="holiday-date-range">
+                ${escapeHtml(item.startDate || "—")}
+                →
+                ${escapeHtml(item.endDate || "—")}
+              </td>
+
+              <td class="manager-time">
+                ${escapeHtml(item.startTime || "—")}
+              </td>
+
+              <td class="holiday-image-name">
+                ${escapeHtml(item.image || "—")}
+              </td>
+
+              <td class="manager-fade">
+                ${escapeHtml(item.fade)} ms
+              </td>
+
+              <td>
+                <span
+                  class="holiday-status-badge holiday-status-${escapeHtml(item.status)}"
+                  title="${escapeHtml(item.validationMessage || "")}"
+                >
+                  ${escapeHtml(
+                    capitalizeDashboardText(
+                      item.status
+                    )
+                  )}
+                </span>
+              </td>
+
+              <td>
+                ${
+                  item.image
+                    ? `
+                      <img
+                        class="manager-preview"
+                        src="${buildImageUrl(item.image)}"
+                        alt=""
+                        onerror="
+                          this.style.display='none';
+                          this.nextElementSibling.style.display='block';
+                        "
+                      >
+
+                      <div
+                        class="manager-preview-error"
+                        style="display:none"
+                      >
+                        Image unavailable
+                      </div>
+                    `
+                    : "—"
+                }
+              </td>
+            </tr>
+          `)
+          .join("");
+    }
+
+
+    function capitalizeDashboardText(value) {
+      const text =
+        String(value || "");
+
+      if (!text) {
+        return "";
+      }
+
+      return (
+        text.charAt(0).toUpperCase() +
+        text.slice(1)
+      );
+    }
+
+    /*
+     * =====================================================
      * GENERAL HELPERS
      * =====================================================
      */
+
+    function formatManagerTimeInput(value) {
+      const digits =
+        String(value)
+          .replace(/\D/g, "")
+          .slice(0, 4);
+
+      if (digits.length <= 2) {
+        return digits;
+      }
+
+      return (
+        digits.slice(0, 2) +
+        ":" +
+        digits.slice(2)
+      );
+    }
+
 
     function getCurrentHHMM(date) {
       return (
@@ -5951,6 +6674,13 @@
       }
     );
 
+    holidayManagerTab.addEventListener(
+      "click",
+      function() {
+        openWorkspace("holiday");
+      }
+    );
+
     reloadManagerButton.addEventListener(
       "click",
       function() {
@@ -5968,6 +6698,7 @@
 
     createScreenCards();
     setupScheduleManager();
+    setupHolidayManager();
 
     refreshDashboard();
     updateOperationsPanel();
