@@ -4269,8 +4269,39 @@
     }
 
 
-    /* SYSTEM HEALTH */
-    .system-health { padding:23px; border:1px solid var(--border); border-radius:var(--radius); background:var(--surface); box-shadow:var(--shadow); }
+    /* SYSTEM HEALTH WORKSPACE */
+    .system-health-workspace {
+      display: block;
+      width: 100%;
+      min-width: 0;
+      max-width: 100%;
+      padding: 23px;
+      overflow: hidden;
+
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+
+      background: var(--surface);
+      box-shadow: var(--shadow);
+    }
+
+    .system-health-workspace > * {
+      display: block;
+      width: 100%;
+      min-width: 0;
+      max-width: 100%;
+      box-sizing: border-box;
+    }
+
+    .health-page-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 18px;
+      flex-wrap: wrap;
+
+      margin-bottom: 18px;
+    }
     .health-toolbar { display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:18px; padding:14px 16px; border:1px solid var(--border); border-radius:12px; background:var(--surface-light); }
     .health-summary {
       display: grid;
@@ -4320,7 +4351,7 @@
     .health-error-box { display:none; margin-top:16px; padding:13px 14px; border:1px solid rgba(255,104,104,.48); border-radius:10px; color:#ffd6d6; background:rgba(103,40,40,.52); font-size:12px; line-height:1.5; }
     .health-error-box.visible { display:block; }
     @media (max-width: 720px) {
-      .system-health {
+      .system-health-workspace {
         padding: 15px;
       }
 
@@ -4769,7 +4800,7 @@
 
 
 
-    .system-health *,
+    .system-health-workspace *,
     .health-summary > *,
     .health-grid > *,
     .health-score-panel,
@@ -4787,6 +4818,117 @@
     .auto-health-checks .button {
       width: 100%;
       max-width: 100%;
+    }
+
+
+    /*
+     * Final full-width health page layout.
+     * These selectors intentionally override older grid/flex rules.
+     */
+    #systemHealthWorkspace {
+      width: 100%;
+      min-width: 0;
+      max-width: 100%;
+      overflow-x: hidden;
+    }
+
+    #systemHealthWorkspace .system-health-workspace {
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      gap: 18px;
+    }
+
+    #systemHealthWorkspace .health-page-header,
+    #systemHealthWorkspace .health-toolbar,
+    #systemHealthWorkspace .health-summary,
+    #systemHealthWorkspace .health-grid,
+    #systemHealthWorkspace .auto-health-checks,
+    #systemHealthWorkspace .health-score-panel,
+    #systemHealthWorkspace .player-heartbeat-panel,
+    #systemHealthWorkspace .health-admin-actions,
+    #systemHealthWorkspace .health-error-box {
+      position: static;
+      float: none;
+
+      width: 100%;
+      min-width: 0;
+      max-width: 100%;
+
+      margin: 0;
+      box-sizing: border-box;
+    }
+
+    #systemHealthWorkspace .health-summary,
+    #systemHealthWorkspace .health-grid,
+    #systemHealthWorkspace .health-score-layout,
+    #systemHealthWorkspace .player-heartbeat-grid,
+    #systemHealthWorkspace .health-admin-buttons {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr);
+      gap: 12px;
+    }
+
+    #systemHealthWorkspace .health-panel,
+    #systemHealthWorkspace .manager-stat,
+    #systemHealthWorkspace .health-row,
+    #systemHealthWorkspace .auto-health-item,
+    #systemHealthWorkspace .health-reason,
+    #systemHealthWorkspace .player-heartbeat-card {
+      width: 100%;
+      min-width: 0;
+      max-width: 100%;
+      box-sizing: border-box;
+    }
+
+    #systemHealthWorkspace .health-toolbar {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr);
+      gap: 12px;
+    }
+
+    #systemHealthWorkspace .health-toolbar .button,
+    #systemHealthWorkspace .manager-header .button,
+    #systemHealthWorkspace .health-admin-buttons .button {
+      width: 100%;
+      max-width: 100%;
+    }
+
+    #systemHealthWorkspace .health-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr);
+      gap: 5px;
+    }
+
+    #systemHealthWorkspace .health-row-value {
+      text-align: left;
+    }
+
+    #systemHealthWorkspace .health-score-number {
+      width: 100%;
+      min-height: 112px;
+      font-size: clamp(38px, 8vw, 64px);
+      overflow-wrap: anywhere;
+    }
+
+    #systemHealthWorkspace .auto-health-item {
+      grid-template-columns: 28px minmax(0, 1fr);
+    }
+
+    #systemHealthWorkspace .auto-health-status {
+      grid-column: 2;
+      justify-self: start;
+    }
+
+    @media (min-width: 900px) {
+      #systemHealthWorkspace .health-toolbar {
+        grid-template-columns: minmax(0, 1fr) 220px;
+        align-items: center;
+      }
+
+      #systemHealthWorkspace .health-toolbar .button {
+        width: 220px;
+      }
     }
 
     /*
@@ -7827,8 +7969,8 @@
       id="systemHealthWorkspace"
       class="workspace"
     >
-      <section class="system-health">
-        <div class="manager-header">
+      <section class="system-health-workspace">
+        <div class="health-page-header">
           <div>
             <div class="eyebrow">Priority 1</div>
             <h2 class="manager-title">System Health</h2>
@@ -21632,8 +21774,15 @@
       const stateText =
         scoreResult.label;
 
-      healthOverallState.className = `health-state health-state-${state}`;
-      healthOverallState.textContent = stateText;
+      healthOverallState.className =
+        `health-state health-state-${state}`;
+
+      healthOverallState.textContent =
+        stateText;
+
+      renderHealthScore(
+        scoreResult
+      );
       healthLastUpdated.textContent =
         requestCount === 0
           ? "Telemetry is ready and waiting for live requests."
@@ -21677,8 +21826,18 @@
       renderHealthMap(healthScreensList, telemetry.screens, "No screen data yet.");
 
       if (telemetry.lastError) {
-        healthErrorBox.className = "health-error-box visible";
-        healthErrorBox.textContent = `Last recorded error: ${telemetry.lastError}`;
+        healthErrorBox.className =
+          "health-error-box visible";
+
+        healthErrorBox.textContent =
+          `Last recorded error: ${telemetry.lastError}`;
+
+      } else {
+        healthErrorBox.className =
+          "health-error-box";
+
+        healthErrorBox.textContent =
+          "";
       }
     }
 
