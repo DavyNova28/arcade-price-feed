@@ -2011,6 +2011,170 @@
       }
     }
 
+
+    /*
+     * =====================================================
+     * RESTORE PREVIEW — READ ONLY
+     * =====================================================
+     */
+
+    .restore-preview {
+      display: none;
+
+      margin-top: 18px;
+      padding: 18px;
+
+      border: 1px solid var(--border);
+      border-radius: 12px;
+
+      background: var(--surface);
+    }
+
+    .restore-preview.visible {
+      display: block;
+    }
+
+    .restore-preview-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 16px;
+      flex-wrap: wrap;
+
+      margin-bottom: 16px;
+    }
+
+    .restore-preview-grid {
+      display: grid;
+      grid-template-columns:
+        repeat(4, minmax(140px, 1fr));
+      gap: 12px;
+
+      margin-bottom: 16px;
+    }
+
+    .restore-comparison {
+      display: grid;
+      grid-template-columns:
+        repeat(2, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    .restore-column {
+      min-width: 0;
+      padding: 14px;
+
+      border: 1px solid var(--border);
+      border-radius: 10px;
+
+      background: var(--surface-light);
+    }
+
+    .restore-column h3 {
+      margin: 0 0 10px;
+
+      font-size: 16px;
+    }
+
+    .restore-data {
+      max-height: 440px;
+      margin: 0;
+      padding: 12px;
+
+      overflow: auto;
+
+      border: 1px solid var(--border);
+      border-radius: 8px;
+
+      color: var(--text);
+      background: var(--surface);
+
+      font-family:
+        Consolas,
+        Monaco,
+        monospace;
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    .restore-changes {
+      margin-top: 16px;
+      padding: 14px;
+
+      border: 1px solid var(--border);
+      border-radius: 10px;
+
+      background: var(--surface-light);
+    }
+
+    .restore-change-list {
+      display: grid;
+      gap: 8px;
+
+      margin-top: 10px;
+    }
+
+    .restore-change-item {
+      padding: 10px 12px;
+
+      border-radius: 8px;
+
+      font-size: 12px;
+      line-height: 1.45;
+    }
+
+    .restore-change-added {
+      color: #caffea;
+      background: rgba(23, 75, 56, 0.66);
+    }
+
+    .restore-change-removed {
+      color: #ffd6d6;
+      background: rgba(103, 40, 40, 0.58);
+    }
+
+    .restore-change-modified {
+      color: #fff0cf;
+      background: rgba(101, 69, 24, 0.66);
+    }
+
+    .restore-change-none {
+      color: var(--muted);
+      background: var(--surface-hover);
+    }
+
+    html[data-theme="light"] .restore-change-added {
+      color: #15543a;
+      background: #d9f7ea;
+    }
+
+    html[data-theme="light"] .restore-change-removed {
+      color: #7e2525;
+      background: #ffe5e5;
+    }
+
+    html[data-theme="light"] .restore-change-modified {
+      color: #7a5518;
+      background: #fff1d4;
+    }
+
+    @media (max-width: 900px) {
+      .restore-comparison {
+        grid-template-columns: 1fr;
+      }
+
+      .restore-preview-grid {
+        grid-template-columns:
+          repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 480px) {
+      .restore-preview-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
     body,
     header,
     .system-banner,
@@ -3493,16 +3657,139 @@
               </div>
             </div>
 
-            <button
-              id="closeBackupDetailsButton"
-              class="button"
-              type="button"
-            >
-              Close details
-            </button>
+            <div style="display:flex; gap:10px; flex-wrap:wrap;">
+              <button
+                id="prepareRestoreButton"
+                class="button button-primary"
+                type="button"
+              >
+                Prepare restore preview
+              </button>
+
+              <button
+                id="closeBackupDetailsButton"
+                class="button"
+                type="button"
+              >
+                Close details
+              </button>
+            </div>
           </div>
 
           <pre id="backupDetailsJson"></pre>
+
+          <section
+            id="restorePreview"
+            class="restore-preview"
+          >
+            <div class="restore-preview-header">
+              <div>
+                <div class="eyebrow">
+                  Read-only comparison
+                </div>
+
+                <h3
+                  id="restorePreviewTitle"
+                  style="margin:5px 0 0;"
+                >
+                  Restore preview
+                </h3>
+              </div>
+
+              <button
+                id="closeRestorePreviewButton"
+                class="button"
+                type="button"
+              >
+                Close preview
+              </button>
+            </div>
+
+            <section class="restore-preview-grid">
+              <article class="manager-stat">
+                <div class="manager-stat-label">
+                  Destination
+                </div>
+
+                <div
+                  id="restoreDestination"
+                  class="manager-stat-value manager-filename"
+                >
+                  —
+                </div>
+              </article>
+
+              <article class="manager-stat">
+                <div class="manager-stat-label">
+                  Current rows
+                </div>
+
+                <div
+                  id="restoreCurrentRows"
+                  class="manager-stat-value"
+                >
+                  0
+                </div>
+              </article>
+
+              <article class="manager-stat">
+                <div class="manager-stat-label">
+                  Backup rows
+                </div>
+
+                <div
+                  id="restoreBackupRows"
+                  class="manager-stat-value"
+                >
+                  0
+                </div>
+              </article>
+
+              <article class="manager-stat">
+                <div class="manager-stat-label">
+                  Differences
+                </div>
+
+                <div
+                  id="restoreDifferenceCount"
+                  class="manager-stat-value"
+                >
+                  0
+                </div>
+              </article>
+            </section>
+
+            <div class="restore-comparison">
+              <section class="restore-column">
+                <h3>Current live data</h3>
+
+                <pre
+                  id="restoreCurrentData"
+                  class="restore-data"
+                ></pre>
+              </section>
+
+              <section class="restore-column">
+                <h3>Selected backup</h3>
+
+                <pre
+                  id="restoreBackupData"
+                  class="restore-data"
+                ></pre>
+              </section>
+            </div>
+
+            <section class="restore-changes">
+              <div class="eyebrow">
+                Difference summary
+              </div>
+
+              <div
+                id="restoreChangeList"
+                class="restore-change-list"
+              ></div>
+            </section>
+          </section>
         </section>
       </section>
     </section>
@@ -3590,7 +3877,7 @@
      */
 
     const SCHEDULE_FEED_URL =
-      "https://script.google.com/macros/s/AKfycbwUINP9DCEUywwCU1YMjfnPT3H8ZUq1lsGVk8ShACrTp2EZIqMYrChADlk_uEh2F-DGXw/exec";
+      "PASTE_YOUR_APPS_SCRIPT_EXEC_URL_HERE";
 
     const SCREEN_NAMES = [
       "Arcade",
@@ -4003,6 +4290,61 @@
         "closeBackupDetailsButton"
       );
 
+    const prepareRestoreButton =
+      document.getElementById(
+        "prepareRestoreButton"
+      );
+
+    const restorePreview =
+      document.getElementById(
+        "restorePreview"
+      );
+
+    const closeRestorePreviewButton =
+      document.getElementById(
+        "closeRestorePreviewButton"
+      );
+
+    const restorePreviewTitle =
+      document.getElementById(
+        "restorePreviewTitle"
+      );
+
+    const restoreDestination =
+      document.getElementById(
+        "restoreDestination"
+      );
+
+    const restoreCurrentRows =
+      document.getElementById(
+        "restoreCurrentRows"
+      );
+
+    const restoreBackupRows =
+      document.getElementById(
+        "restoreBackupRows"
+      );
+
+    const restoreDifferenceCount =
+      document.getElementById(
+        "restoreDifferenceCount"
+      );
+
+    const restoreCurrentData =
+      document.getElementById(
+        "restoreCurrentData"
+      );
+
+    const restoreBackupData =
+      document.getElementById(
+        "restoreBackupData"
+      );
+
+    const restoreChangeList =
+      document.getElementById(
+        "restoreChangeList"
+      );
+
     const managerScreenSelect =
       document.getElementById(
         "managerScreenSelect"
@@ -4148,6 +4490,9 @@
 
     let backupRequestGeneration =
       0;
+
+    let selectedBackup =
+      null;
 
     /*
      * =====================================================
@@ -8312,6 +8657,16 @@
         "click",
         closeBackupDetails
       );
+
+      prepareRestoreButton.addEventListener(
+        "click",
+        prepareRestorePreview
+      );
+
+      closeRestorePreviewButton.addEventListener(
+        "click",
+        closeRestorePreview
+      );
     }
 
 
@@ -8583,6 +8938,11 @@
 
 
     function openBackupDetails(backup) {
+      selectedBackup =
+        backup;
+
+      closeRestorePreview();
+
       backupDetailsTitle.textContent =
         `${backup.timestampDisplay} · ${backup.screen}`;
 
@@ -8616,6 +8976,11 @@
 
 
     function closeBackupDetails() {
+      selectedBackup =
+        null;
+
+      closeRestorePreview();
+
       backupDetails.classList.add(
         "hidden"
       );
@@ -8625,6 +8990,402 @@
 
       backupDetailsJson.textContent =
         "";
+    }
+
+
+    function prepareRestorePreview() {
+      if (!selectedBackup) {
+        return;
+      }
+
+      let backupRows;
+
+      try {
+        backupRows =
+          JSON.parse(
+            selectedBackup.scheduleJson
+          );
+      } catch (error) {
+        restoreChangeList.innerHTML = `
+          <div class="restore-change-item restore-change-removed">
+            The selected backup contains invalid JSON and cannot be compared.
+          </div>
+        `;
+
+        restorePreview.classList.add(
+          "visible"
+        );
+
+        return;
+      }
+
+      if (!Array.isArray(backupRows)) {
+        restoreChangeList.innerHTML = `
+          <div class="restore-change-item restore-change-removed">
+            The selected backup is not a schedule array.
+          </div>
+        `;
+
+        restorePreview.classList.add(
+          "visible"
+        );
+
+        return;
+      }
+
+      const currentRows =
+        getCurrentRowsForBackup(
+          selectedBackup
+        );
+
+      const differences =
+        compareBackupRows(
+          currentRows,
+          backupRows,
+          selectedBackup.type
+        );
+
+      restorePreviewTitle.textContent =
+        `Preview restore · ${selectedBackup.timestampDisplay}`;
+
+      restoreDestination.textContent =
+        selectedBackup.screen;
+
+      restoreCurrentRows.textContent =
+        String(currentRows.length);
+
+      restoreBackupRows.textContent =
+        String(backupRows.length);
+
+      restoreDifferenceCount.textContent =
+        String(differences.length);
+
+      restoreCurrentData.textContent =
+        JSON.stringify(
+          currentRows,
+          null,
+          2
+        );
+
+      restoreBackupData.textContent =
+        JSON.stringify(
+          backupRows,
+          null,
+          2
+        );
+
+      renderRestoreDifferences(
+        differences
+      );
+
+      restorePreview.classList.add(
+        "visible"
+      );
+
+      restorePreview.scrollIntoView({
+        behavior: "smooth",
+        block: "nearest"
+      });
+    }
+
+
+    function closeRestorePreview() {
+      restorePreview.classList.remove(
+        "visible"
+      );
+
+      restorePreviewTitle.textContent =
+        "Restore preview";
+
+      restoreDestination.textContent =
+        "—";
+
+      restoreCurrentRows.textContent =
+        "0";
+
+      restoreBackupRows.textContent =
+        "0";
+
+      restoreDifferenceCount.textContent =
+        "0";
+
+      restoreCurrentData.textContent =
+        "";
+
+      restoreBackupData.textContent =
+        "";
+
+      restoreChangeList.innerHTML =
+        "";
+    }
+
+
+    function getCurrentRowsForBackup(
+      backup
+    ) {
+      if (backup.type === "holiday") {
+        return holidayOverrides.map(
+          item => ({
+            screen:
+              item.screen,
+
+            startDate:
+              item.startDate,
+
+            endDate:
+              item.endDate,
+
+            startTime:
+              item.startTime,
+
+            image:
+              item.image,
+
+            fade:
+              Number(item.fade)
+          })
+        );
+      }
+
+      const state =
+        screenStates.get(
+          backup.screen
+        );
+
+      if (
+        !state ||
+        state.error ||
+        !Array.isArray(state.schedule)
+      ) {
+        return [];
+      }
+
+      return state.schedule.map(
+        item => ({
+          time:
+            item.time,
+
+          image:
+            item.image,
+
+          fade:
+            Number(item.fade)
+        })
+      );
+    }
+
+
+    function compareBackupRows(
+      currentRows,
+      backupRows,
+      backupType
+    ) {
+      const keyFunction =
+        backupType === "holiday"
+          ? createHolidayComparisonKey
+          : createScheduleComparisonKey;
+
+      const currentMap =
+        createRowComparisonMap(
+          currentRows,
+          keyFunction
+        );
+
+      const backupMap =
+        createRowComparisonMap(
+          backupRows,
+          keyFunction
+        );
+
+      const differences = [];
+
+      backupMap.forEach(
+        (backupRow, key) => {
+          if (!currentMap.has(key)) {
+            differences.push({
+              type:
+                "added",
+
+              message:
+                `Backup would add: ${describeComparisonRow(backupRow, backupType)}`
+            });
+
+            return;
+          }
+
+          const currentRow =
+            currentMap.get(key);
+
+          if (
+            JSON.stringify(currentRow) !==
+            JSON.stringify(backupRow)
+          ) {
+            differences.push({
+              type:
+                "modified",
+
+              message:
+                `Backup differs at ${describeComparisonKey(backupRow, backupType)}.`,
+
+              current:
+                currentRow,
+
+              backup:
+                backupRow
+            });
+          }
+        }
+      );
+
+      currentMap.forEach(
+        (currentRow, key) => {
+          if (!backupMap.has(key)) {
+            differences.push({
+              type:
+                "removed",
+
+              message:
+                `Restore would remove: ${describeComparisonRow(currentRow, backupType)}`
+            });
+          }
+        }
+      );
+
+      return differences;
+    }
+
+
+    function createRowComparisonMap(
+      rows,
+      keyFunction
+    ) {
+      const map =
+        new Map();
+
+      rows.forEach(
+        (row, index) => {
+          let key =
+            keyFunction(row);
+
+          if (map.has(key)) {
+            key =
+              `${key}#${index}`;
+          }
+
+          map.set(
+            key,
+            normalizeComparisonRow(row)
+          );
+        }
+      );
+
+      return map;
+    }
+
+
+    function normalizeComparisonRow(row) {
+      const normalized = {};
+
+      Object.keys(row)
+        .sort()
+        .forEach(key => {
+          normalized[key] =
+            row[key];
+        });
+
+      return normalized;
+    }
+
+
+    function createScheduleComparisonKey(row) {
+      return String(
+        row.time || ""
+      );
+    }
+
+
+    function createHolidayComparisonKey(row) {
+      return [
+        row.screen || "",
+        row.startDate || "",
+        row.endDate || "",
+        row.startTime || ""
+      ].join("|");
+    }
+
+
+    function describeComparisonKey(
+      row,
+      backupType
+    ) {
+      if (backupType === "holiday") {
+        return (
+          `${row.screen} · ` +
+          `${row.startDate} → ${row.endDate} · ` +
+          `${row.startTime}`
+        );
+      }
+
+      return row.time;
+    }
+
+
+    function describeComparisonRow(
+      row,
+      backupType
+    ) {
+      if (backupType === "holiday") {
+        return (
+          `${row.screen} · ` +
+          `${row.startDate} → ${row.endDate} · ` +
+          `${row.startTime} · ` +
+          `${row.image}`
+        );
+      }
+
+      return (
+        `${row.time} · ` +
+        `${row.image} · ` +
+        `${row.fade} ms`
+      );
+    }
+
+
+    function renderRestoreDifferences(
+      differences
+    ) {
+      if (differences.length === 0) {
+        restoreChangeList.innerHTML = `
+          <div class="restore-change-item restore-change-none">
+            The selected backup matches the current live data. Restoring it would make no changes.
+          </div>
+        `;
+
+        return;
+      }
+
+      restoreChangeList.innerHTML =
+        differences
+          .map(item => {
+            if (item.type === "modified") {
+              return `
+                <div class="restore-change-item restore-change-modified">
+                  <strong>${escapeHtml(item.message)}</strong><br>
+                  Current:
+                  <code>${escapeHtml(JSON.stringify(item.current))}</code><br>
+                  Backup:
+                  <code>${escapeHtml(JSON.stringify(item.backup))}</code>
+                </div>
+              `;
+            }
+
+            return `
+              <div class="restore-change-item restore-change-${escapeHtml(item.type)}">
+                ${escapeHtml(item.message)}
+              </div>
+            `;
+          })
+          .join("");
     }
 
     /*
