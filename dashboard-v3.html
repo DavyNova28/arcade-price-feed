@@ -14161,13 +14161,24 @@
     }
 
 
+    function normalizeImagePickerSearchText(
+      value
+    ) {
+      return String(value || "")
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .toLowerCase()
+        .replace(/[_-]+/g, " ")
+        .replace(/\s+/g, " ")
+        .trim();
+    }
+
+
     function renderGitHubImagePicker() {
       const query =
-        String(
-          imagePickerSearch.value || ""
-        )
-          .trim()
-          .toLowerCase();
+        normalizeImagePickerSearchText(
+          imagePickerSearch.value
+        );
 
       const images =
         repositoryImages
@@ -14180,9 +14191,9 @@
           .filter(
             filename =>
               !query ||
-              filename
-                .toLowerCase()
-                .includes(query)
+              normalizeImagePickerSearchText(
+                filename
+              ).includes(query)
           )
           .sort((a, b) =>
             a.localeCompare(
@@ -16080,6 +16091,7 @@
     setupHolidayManager();
     setupBackupHistory();
     setupImageLibrary();
+    setupGitHubImagePicker();
     setupAuditLog();
     setupHolidayCalendar();
     initializeDraftRecovery();
