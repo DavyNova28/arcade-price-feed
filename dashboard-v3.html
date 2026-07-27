@@ -2663,6 +2663,130 @@
       background: #e7f1fb;
     }
 
+
+    /*
+     * =====================================================
+     * CHANGE AUDIT LOG
+     * =====================================================
+     */
+
+    .audit-manager {
+      padding: 23px;
+
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+
+      background: var(--surface);
+      box-shadow: var(--shadow);
+    }
+
+    .audit-toolbar {
+      display: flex;
+      align-items: flex-end;
+      flex-wrap: wrap;
+      gap: 12px;
+
+      margin-bottom: 18px;
+      padding: 16px;
+
+      border: 1px solid var(--border);
+      border-radius: 13px;
+
+      background: var(--surface-light);
+    }
+
+    .audit-filter-field {
+      display: grid;
+      gap: 7px;
+
+      min-width: 210px;
+    }
+
+    .audit-summary-grid {
+      display: grid;
+      grid-template-columns:
+        repeat(4, minmax(150px, 1fr));
+      gap: 12px;
+
+      margin-bottom: 18px;
+    }
+
+    .audit-status {
+      display: inline-flex;
+
+      padding: 5px 8px;
+
+      border-radius: 999px;
+
+      font-size: 10px;
+      font-weight: 800;
+      text-transform: uppercase;
+    }
+
+    .audit-status-success {
+      color: #caffea;
+      background: var(--regular-dark);
+    }
+
+    .audit-status-error {
+      color: #ffd6d6;
+      background: var(--error-dark);
+    }
+
+    .audit-action {
+      display: inline-flex;
+
+      padding: 5px 8px;
+
+      border-radius: 999px;
+
+      color: #d9eaff;
+      background: #234a73;
+
+      font-size: 10px;
+      font-weight: 800;
+    }
+
+    .audit-details {
+      max-width: 420px;
+
+      color: var(--muted);
+      font-size: 12px;
+
+      overflow-wrap: anywhere;
+    }
+
+    @media (max-width: 720px) {
+      .audit-manager {
+        padding: 15px;
+      }
+
+      .audit-toolbar {
+        align-items: stretch;
+        flex-direction: column;
+      }
+
+      .audit-filter-field {
+        width: 100%;
+        min-width: 0;
+      }
+
+      .audit-toolbar .button {
+        width: 100%;
+      }
+
+      .audit-summary-grid {
+        grid-template-columns:
+          repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 480px) {
+      .audit-summary-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
     body,
     header,
     .system-banner,
@@ -3247,6 +3371,14 @@
         type="button"
       >
         Image Library
+      </button>
+
+      <button
+        id="auditLogTab"
+        class="workspace-tab"
+        type="button"
+      >
+        Audit Log
       </button>
     </nav>
 
@@ -4591,6 +4723,189 @@
         </div>
       </section>
     </section>
+
+    <section
+      id="auditLogWorkspace"
+      class="workspace"
+    >
+      <section class="audit-manager">
+        <div class="manager-header">
+          <div>
+            <div class="eyebrow">
+              Dashboard V3
+            </div>
+
+            <h2 class="manager-title">
+              Change Audit Log
+            </h2>
+
+            <p class="manager-description">
+              Review every dashboard save and restore attempt. The PIN is never stored.
+            </p>
+          </div>
+
+          <div class="manager-status">
+            Read-only
+          </div>
+        </div>
+
+        <div class="audit-toolbar">
+          <label class="audit-filter-field">
+            <span class="manager-label">
+              Action
+            </span>
+
+            <select
+              id="auditActionFilter"
+              class="manager-select"
+            >
+              <option value="all">
+                All actions
+              </option>
+
+              <option value="saveSchedule">
+                Regular schedule save
+              </option>
+
+              <option value="saveHolidayOverrides">
+                Holiday Override save
+              </option>
+
+              <option value="restoreBackup">
+                Backup restore
+              </option>
+            </select>
+          </label>
+
+          <label class="audit-filter-field">
+            <span class="manager-label">
+              Status
+            </span>
+
+            <select
+              id="auditStatusFilter"
+              class="manager-select"
+            >
+              <option value="all">
+                All statuses
+              </option>
+
+              <option value="success">
+                Success
+              </option>
+
+              <option value="error">
+                Error
+              </option>
+            </select>
+          </label>
+
+          <label class="audit-filter-field">
+            <span class="manager-label">
+              Destination
+            </span>
+
+            <select
+              id="auditDestinationFilter"
+              class="manager-select"
+            >
+              <option value="all">
+                All destinations
+              </option>
+            </select>
+          </label>
+
+          <button
+            id="reloadAuditButton"
+            class="button"
+            type="button"
+          >
+            ↻ Reload audit log
+          </button>
+        </div>
+
+        <section class="audit-summary-grid">
+          <article class="manager-stat">
+            <div class="manager-stat-label">
+              Total actions
+            </div>
+
+            <div
+              id="auditTotalCount"
+              class="manager-stat-value"
+            >
+              0
+            </div>
+          </article>
+
+          <article class="manager-stat">
+            <div class="manager-stat-label">
+              Successful
+            </div>
+
+            <div
+              id="auditSuccessCount"
+              class="manager-stat-value"
+            >
+              0
+            </div>
+          </article>
+
+          <article class="manager-stat">
+            <div class="manager-stat-label">
+              Failed
+            </div>
+
+            <div
+              id="auditErrorCount"
+              class="manager-stat-value"
+            >
+              0
+            </div>
+          </article>
+
+          <article class="manager-stat">
+            <div class="manager-stat-label">
+              Latest action
+            </div>
+
+            <div
+              id="auditLatestTime"
+              class="manager-stat-value manager-filename"
+            >
+              —
+            </div>
+          </article>
+        </section>
+
+        <div class="schedule-table-wrapper">
+          <table class="schedule-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Timestamp</th>
+                <th>Action</th>
+                <th>Status</th>
+                <th>Destination</th>
+                <th>Rows</th>
+                <th>Details</th>
+              </tr>
+            </thead>
+
+            <tbody id="auditTableBody">
+              <tr>
+                <td
+                  colspan="7"
+                  class="manager-empty"
+                >
+                  Open this workspace to load the audit log.
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </section>
   </main>
 
   <iframe
@@ -4719,7 +5034,7 @@
      */
 
     const SCHEDULE_FEED_URL =
-      "https://script.google.com/macros/s/AKfycbwUINP9DCEUywwCU1YMjfnPT3H8ZUq1lsGVk8ShACrTp2EZIqMYrChADlk_uEh2F-DGXw/exec";
+      "PASTE_YOUR_APPS_SCRIPT_EXEC_URL_HERE";
 
     const SCREEN_NAMES = [
       "Arcade",
@@ -5255,6 +5570,61 @@
         "imageHealthList"
       );
 
+    const auditLogTab =
+      document.getElementById(
+        "auditLogTab"
+      );
+
+    const auditLogWorkspace =
+      document.getElementById(
+        "auditLogWorkspace"
+      );
+
+    const auditActionFilter =
+      document.getElementById(
+        "auditActionFilter"
+      );
+
+    const auditStatusFilter =
+      document.getElementById(
+        "auditStatusFilter"
+      );
+
+    const auditDestinationFilter =
+      document.getElementById(
+        "auditDestinationFilter"
+      );
+
+    const reloadAuditButton =
+      document.getElementById(
+        "reloadAuditButton"
+      );
+
+    const auditTotalCount =
+      document.getElementById(
+        "auditTotalCount"
+      );
+
+    const auditSuccessCount =
+      document.getElementById(
+        "auditSuccessCount"
+      );
+
+    const auditErrorCount =
+      document.getElementById(
+        "auditErrorCount"
+      );
+
+    const auditLatestTime =
+      document.getElementById(
+        "auditLatestTime"
+      );
+
+    const auditTableBody =
+      document.getElementById(
+        "auditTableBody"
+      );
+
     const scheduleDraftRecoveryBanner =
       document.getElementById(
         "scheduleDraftRecoveryBanner"
@@ -5547,6 +5917,12 @@
 
     let imageHealthScanned =
       false;
+
+    let auditEntries =
+      [];
+
+    let auditRequestGeneration =
+      0;
 
     /*
      * =====================================================
@@ -7321,6 +7697,9 @@
       const showImages =
         workspaceName === "images";
 
+      const showAudit =
+        workspaceName === "audit";
+
       controlCenterTab.classList.toggle(
         "active",
         showControl
@@ -7344,6 +7723,11 @@
       imageLibraryTab.classList.toggle(
         "active",
         showImages
+      );
+
+      auditLogTab.classList.toggle(
+        "active",
+        showAudit
       );
 
       controlCenterWorkspace.classList.toggle(
@@ -7371,6 +7755,11 @@
         showImages
       );
 
+      auditLogWorkspace.classList.toggle(
+        "active",
+        showAudit
+      );
+
       if (showManager) {
         updateScheduleManager();
       }
@@ -7393,6 +7782,14 @@
 
       if (showImages) {
         rebuildImageLibrary();
+      }
+
+      if (showAudit) {
+        if (auditEntries.length === 0) {
+          loadAuditLog();
+        } else {
+          renderAuditLog();
+        }
       }
     }
 
@@ -7920,6 +8317,14 @@
         `Saved ${data.rowsWritten} row(s) to "${screenName}". A backup was created.`,
         "success"
       );
+
+      if (
+        auditLogWorkspace.classList.contains(
+          "active"
+        )
+      ) {
+        loadAuditLog();
+      }
 
       updateManagerEditingControls();
 
@@ -9759,6 +10164,14 @@
         "success"
       );
 
+      if (
+        auditLogWorkspace.classList.contains(
+          "active"
+        )
+      ) {
+        loadAuditLog();
+      }
+
       updateHolidayEditingControls();
 
       setTimeout(
@@ -10484,6 +10897,14 @@
         `Restored ${data.rowsWritten} row(s) to "${data.screen}". The previous live data was backed up first.`,
         "success"
       );
+
+      if (
+        auditLogWorkspace.classList.contains(
+          "active"
+        )
+      ) {
+        loadAuditLog();
+      }
 
       restoreBackupButton.disabled =
         true;
@@ -11925,6 +12346,316 @@
 
     /*
      * =====================================================
+     * CHANGE AUDIT LOG
+     * =====================================================
+     */
+
+    function setupAuditLog() {
+      auditDestinationFilter.innerHTML =
+        `
+          <option value="all">
+            All destinations
+          </option>
+          <option value="Holiday Overrides">
+            Holiday Overrides
+          </option>
+        ` +
+        SCREEN_NAMES
+          .map(screenName => `
+            <option value="${escapeHtml(screenName)}">
+              ${escapeHtml(screenName)}
+            </option>
+          `)
+          .join("");
+
+      auditActionFilter.addEventListener(
+        "change",
+        renderAuditLog
+      );
+
+      auditStatusFilter.addEventListener(
+        "change",
+        renderAuditLog
+      );
+
+      auditDestinationFilter.addEventListener(
+        "change",
+        renderAuditLog
+      );
+
+      reloadAuditButton.addEventListener(
+        "click",
+        loadAuditLog
+      );
+    }
+
+
+    function loadAuditLog() {
+      auditRequestGeneration += 1;
+
+      const generation =
+        auditRequestGeneration;
+
+      const callbackName =
+        `auditLogCallback_${generation}`;
+
+      const scriptId =
+        "audit-log-feed";
+
+      const previousScript =
+        document.getElementById(
+          scriptId
+        );
+
+      if (previousScript) {
+        previousScript.remove();
+      }
+
+      auditTableBody.innerHTML = `
+        <tr>
+          <td
+            colspan="7"
+            class="manager-empty"
+          >
+            Loading audit log…
+          </td>
+        </tr>
+      `;
+
+      window[callbackName] =
+        function(payload) {
+          try {
+            if (
+              !payload ||
+              payload.success !== true ||
+              !Array.isArray(
+                payload.entries
+              )
+            ) {
+              throw new Error(
+                payload &&
+                payload.error
+                  ? payload.error
+                  : "The audit log feed is invalid."
+              );
+            }
+
+            auditEntries =
+              payload.entries;
+
+            renderAuditLog();
+
+          } catch (error) {
+            auditTableBody.innerHTML = `
+              <tr>
+                <td
+                  colspan="7"
+                  class="manager-empty"
+                >
+                  ${escapeHtml(
+                    error.message || error
+                  )}
+                </td>
+              </tr>
+            `;
+          } finally {
+            delete window[callbackName];
+
+            const script =
+              document.getElementById(
+                scriptId
+              );
+
+            if (script) {
+              script.remove();
+            }
+          }
+        };
+
+      const script =
+        document.createElement("script");
+
+      script.id =
+        scriptId;
+
+      const separator =
+        SCHEDULE_FEED_URL.includes("?")
+          ? "&"
+          : "?";
+
+      script.src =
+        `${SCHEDULE_FEED_URL}` +
+        `${separator}action=auditManager` +
+        `&callback=${callbackName}` +
+        `&_=${Date.now()}`;
+
+      script.onerror =
+        function() {
+          delete window[callbackName];
+
+          auditTableBody.innerHTML = `
+            <tr>
+              <td
+                colspan="7"
+                class="manager-empty"
+              >
+                Could not load the audit log from Apps Script.
+              </td>
+            </tr>
+          `;
+        };
+
+      document.head.appendChild(
+        script
+      );
+    }
+
+
+    function renderAuditLog() {
+      const actionFilter =
+        auditActionFilter.value;
+
+      const statusFilter =
+        auditStatusFilter.value;
+
+      const destinationFilter =
+        auditDestinationFilter.value;
+
+      const filtered =
+        auditEntries.filter(item => {
+          const actionMatches =
+            actionFilter === "all" ||
+            item.action ===
+              actionFilter;
+
+          const statusMatches =
+            statusFilter === "all" ||
+            item.status ===
+              statusFilter;
+
+          const destinationMatches =
+            destinationFilter === "all" ||
+            item.destination ===
+              destinationFilter;
+
+          return (
+            actionMatches &&
+            statusMatches &&
+            destinationMatches
+          );
+        });
+
+      auditTotalCount.textContent =
+        String(
+          auditEntries.length
+        );
+
+      auditSuccessCount.textContent =
+        String(
+          auditEntries.filter(
+            item =>
+              item.status === "success"
+          ).length
+        );
+
+      auditErrorCount.textContent =
+        String(
+          auditEntries.filter(
+            item =>
+              item.status === "error"
+          ).length
+        );
+
+      auditLatestTime.textContent =
+        auditEntries.length > 0
+          ? auditEntries[0].timestampDisplay
+          : "—";
+
+      if (filtered.length === 0) {
+        auditTableBody.innerHTML = `
+          <tr>
+            <td
+              colspan="7"
+              class="manager-empty"
+            >
+              No audit entries match these filters.
+            </td>
+          </tr>
+        `;
+
+        return;
+      }
+
+      auditTableBody.innerHTML =
+        filtered
+          .map((item, index) => `
+            <tr>
+              <td>
+                ${index + 1}
+              </td>
+
+              <td>
+                ${escapeHtml(item.timestampDisplay)}
+              </td>
+
+              <td>
+                <span class="audit-action">
+                  ${escapeHtml(
+                    getAuditActionLabel(
+                      item.action
+                    )
+                  )}
+                </span>
+              </td>
+
+              <td>
+                <span
+                  class="audit-status audit-status-${escapeHtml(item.status)}"
+                >
+                  ${escapeHtml(item.status)}
+                </span>
+              </td>
+
+              <td>
+                ${escapeHtml(item.destination || "—")}
+              </td>
+
+              <td>
+                ${escapeHtml(item.rows)}
+              </td>
+
+              <td class="audit-details">
+                ${escapeHtml(item.details || "—")}
+              </td>
+            </tr>
+          `)
+          .join("");
+    }
+
+
+    function getAuditActionLabel(
+      action
+    ) {
+      if (action === "saveSchedule") {
+        return "Schedule save";
+      }
+
+      if (
+        action ===
+        "saveHolidayOverrides"
+      ) {
+        return "Holiday save";
+      }
+
+      if (action === "restoreBackup") {
+        return "Restore";
+      }
+
+      return action || "Unknown";
+    }
+
+    /*
+     * =====================================================
      * GENERAL HELPERS
      * =====================================================
      */
@@ -12093,6 +12824,13 @@
       }
     );
 
+    auditLogTab.addEventListener(
+      "click",
+      function() {
+        openWorkspace("audit");
+      }
+    );
+
     reloadManagerButton.addEventListener(
       "click",
       function() {
@@ -12113,6 +12851,7 @@
     setupHolidayManager();
     setupBackupHistory();
     setupImageLibrary();
+    setupAuditLog();
     initializeDraftRecovery();
 
     refreshDashboard();
