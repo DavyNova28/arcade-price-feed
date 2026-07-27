@@ -4638,6 +4638,104 @@
       background: #ffe5e5;
     }
 
+    /*
+     * PLAYER HEARTBEAT
+     */
+
+    .player-heartbeat-panel {
+      margin-top: 18px;
+      padding: 16px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: var(--surface-light);
+    }
+
+    .player-heartbeat-grid {
+      display: grid;
+      grid-template-columns:
+        repeat(auto-fit, minmax(220px, 1fr));
+      gap: 12px;
+      margin-top: 14px;
+    }
+
+    .player-heartbeat-card {
+      padding: 13px;
+      border: 1px solid var(--border);
+      border-radius: 11px;
+      background: var(--surface);
+    }
+
+    .player-heartbeat-card.online {
+      border-color: rgba(54, 201, 135, 0.52);
+    }
+
+    .player-heartbeat-card.stale {
+      border-color: rgba(242, 170, 63, 0.58);
+    }
+
+    .player-heartbeat-card.offline {
+      border-color: rgba(255, 104, 104, 0.55);
+    }
+
+    .player-heartbeat-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .player-heartbeat-name {
+      font-size: 13px;
+      font-weight: 850;
+    }
+
+    .player-heartbeat-status {
+      padding: 5px 8px;
+      border-radius: 999px;
+      font-size: 9px;
+      font-weight: 850;
+      text-transform: uppercase;
+    }
+
+    .player-heartbeat-status.online {
+      color: #caffea;
+      background: var(--regular-dark);
+    }
+
+    .player-heartbeat-status.stale {
+      color: #fff0cf;
+      background: var(--holiday-dark);
+    }
+
+    .player-heartbeat-status.offline {
+      color: #ffd6d6;
+      background: var(--error-dark);
+    }
+
+    .player-heartbeat-details {
+      display: grid;
+      gap: 6px;
+      margin-top: 11px;
+      color: var(--muted);
+      font-size: 10px;
+      line-height: 1.4;
+    }
+
+    html[data-theme="light"] .player-heartbeat-status.online {
+      color: #15543a;
+      background: #d9f7ea;
+    }
+
+    html[data-theme="light"] .player-heartbeat-status.stale {
+      color: #7a5518;
+      background: #fff1d4;
+    }
+
+    html[data-theme="light"] .player-heartbeat-status.offline {
+      color: #7e2525;
+      background: #ffe5e5;
+    }
+
     body,
     header,
     .system-banner,
@@ -7672,6 +7770,39 @@
           ></div>
         </section>
 
+        <section class="player-heartbeat-panel">
+          <div class="manager-header">
+            <div>
+              <div class="eyebrow">Priority 5</div>
+              <h3 style="margin:5px 0 0;">Player Heartbeat</h3>
+              <p class="manager-description">
+                Uses each player's normal schedule request—no extra polling.
+              </p>
+            </div>
+
+            <button
+              id="refreshPlayerHeartbeatsButton"
+              class="button"
+              type="button"
+            >
+              Refresh players
+            </button>
+          </div>
+
+          <div
+            id="playerHeartbeatSummary"
+            class="manager-description"
+            style="margin-top:10px;"
+          >
+            Player status has not loaded yet.
+          </div>
+
+          <div
+            id="playerHeartbeatGrid"
+            class="player-heartbeat-grid"
+          ></div>
+        </section>
+
         <section class="health-admin-actions">
           <div class="manager-header">
             <div>
@@ -7905,7 +8036,7 @@
      */
 
     const SCHEDULE_FEED_URL =
-      "https://script.google.com/macros/s/AKfycbwUINP9DCEUywwCU1YMjfnPT3H8ZUq1lsGVk8ShACrTp2EZIqMYrChADlk_uEh2F-DGXw/exec";
+      "PASTE_YOUR_APPS_SCRIPT_EXEC_URL_HERE";
 
     const SCREEN_NAMES = [
       "Arcade",
@@ -8752,6 +8883,21 @@
     const healthActionsList = document.getElementById("healthActionsList");
     const healthScreensList = document.getElementById("healthScreensList");
     const healthErrorBox = document.getElementById("healthErrorBox");
+
+    const refreshPlayerHeartbeatsButton =
+      document.getElementById(
+        "refreshPlayerHeartbeatsButton"
+      );
+
+    const playerHeartbeatSummary =
+      document.getElementById(
+        "playerHeartbeatSummary"
+      );
+
+    const playerHeartbeatGrid =
+      document.getElementById(
+        "playerHeartbeatGrid"
+      );
 
     const testHealthConnectionButton =
       document.getElementById("testHealthConnectionButton");
@@ -11364,6 +11510,7 @@
 
       if (showSystemHealth) {
         loadSystemHealth();
+        loadPlayerHeartbeats();
         runAutomaticHealthChecks();
         startAutomaticHealthChecks();
       } else {
@@ -21126,6 +21273,11 @@
         "click",
         exportHealthTelemetry
       );
+
+      refreshPlayerHeartbeatsButton.addEventListener(
+        "click",
+        loadPlayerHeartbeats
+      );
     }
 
     function loadSystemHealth() {
@@ -22604,6 +22756,158 @@
         "Telemetry JSON exported.",
         "success"
       );
+    }
+
+
+
+    /*
+     * PLAYER HEARTBEAT
+     */
+
+    async function loadPlayerHeartbeats() {
+      refreshPlayerHeartbeatsButton.disabled =
+        true;
+
+      refreshPlayerHeartbeatsButton.textContent =
+        "Loading…";
+
+      playerHeartbeatSummary.textContent =
+        "Reading player heartbeat data…";
+
+      try {
+        const payload =
+          await fetchJsonpPayload(
+            "heartbeatManager"
+          );
+
+        if (
+          !payload ||
+          payload.success !== true ||
+          !Array.isArray(payload.players)
+        ) {
+          throw new Error(
+            payload && payload.error
+              ? payload.error
+              : "Heartbeat data was unavailable."
+          );
+        }
+
+        renderPlayerHeartbeats(
+          payload.players
+        );
+
+      } catch (error) {
+        playerHeartbeatSummary.textContent =
+          error.message ||
+          "Could not load player heartbeat data.";
+
+        playerHeartbeatGrid.innerHTML =
+          "";
+
+      } finally {
+        refreshPlayerHeartbeatsButton.disabled =
+          false;
+
+        refreshPlayerHeartbeatsButton.textContent =
+          "Refresh players";
+      }
+    }
+
+
+    function renderPlayerHeartbeats(players) {
+      const playerMap =
+        new Map(
+          players.map(
+            item => [
+              item.screen,
+              item
+            ]
+          )
+        );
+
+      const normalized =
+        SCREEN_NAMES.map(
+          screenName =>
+            playerMap.get(screenName) || {
+              screen:
+                screenName,
+
+              status:
+                "offline",
+
+              lastSeenAt:
+                "",
+
+              currentImage:
+                "",
+
+              playerVersion:
+                ""
+            }
+        );
+
+      const onlineCount =
+        normalized.filter(
+          item =>
+            item.status === "online"
+        ).length;
+
+      const staleCount =
+        normalized.filter(
+          item =>
+            item.status === "stale"
+        ).length;
+
+      playerHeartbeatSummary.textContent =
+        `${onlineCount} online · ${staleCount} stale · ` +
+        `${normalized.length - onlineCount - staleCount} offline`;
+
+      playerHeartbeatGrid.innerHTML =
+        normalized.map(item => {
+          const status =
+            ["online", "stale"].includes(
+              item.status
+            )
+              ? item.status
+              : "offline";
+
+          const lastSeen =
+            item.lastSeenAt
+              ? new Date(
+                  item.lastSeenAt
+                ).toLocaleString()
+              : "Never seen";
+
+          return `
+            <article class="player-heartbeat-card ${status}">
+              <div class="player-heartbeat-header">
+                <div class="player-heartbeat-name">
+                  ${escapeHtml(item.screen)}
+                </div>
+
+                <div class="player-heartbeat-status ${status}">
+                  ${escapeHtml(status)}
+                </div>
+              </div>
+
+              <div class="player-heartbeat-details">
+                <div>
+                  Last seen: ${escapeHtml(lastSeen)}
+                </div>
+
+                <div>
+                  Current image:
+                  ${escapeHtml(item.currentImage || "Unknown")}
+                </div>
+
+                <div>
+                  Player version:
+                  ${escapeHtml(item.playerVersion || "Unknown")}
+                </div>
+              </div>
+            </article>
+          `;
+        }).join("");
     }
 
 
