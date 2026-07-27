@@ -3973,9 +3973,15 @@
 
     .daily-calendar-block {
       position: absolute;
-      left: 6px;
-      right: 6px;
       z-index: 3;
+
+      /*
+       * Horizontal position and width are calculated in
+       * JavaScript so each block stays inside its own screen
+       * column.
+       */
+      left: 0;
+      width: 0;
 
       box-sizing: border-box;
       min-height: 8px;
@@ -19065,6 +19071,38 @@
         "click",
         closeDailyCalendarDetails
       );
+
+      let dailyCalendarResizeFrame =
+        null;
+
+      window.addEventListener(
+        "resize",
+        function() {
+          if (
+            !dailyScheduleCalendarWorkspace.classList.contains(
+              "active"
+            )
+          ) {
+            return;
+          }
+
+          if (dailyCalendarResizeFrame) {
+            cancelAnimationFrame(
+              dailyCalendarResizeFrame
+            );
+          }
+
+          dailyCalendarResizeFrame =
+            requestAnimationFrame(
+              function() {
+                dailyCalendarResizeFrame =
+                  null;
+
+                renderDailyScheduleCalendar();
+              }
+            );
+        }
+      );
     }
 
 
@@ -19086,6 +19124,25 @@
 
       const rowHeight =
         48;
+
+      const timeColumnWidth =
+        76;
+
+      /*
+       * The calendar has one fixed time column and six equal
+       * screen columns. Calculate the exact pixel width after
+       * the grid has rendered.
+       */
+      const calendarWidth =
+        dailyCalendarGrid.clientWidth ||
+        1100;
+
+      const screenColumnWidth =
+        (
+          calendarWidth -
+          timeColumnWidth
+        ) /
+        SCREEN_NAMES.length;
 
       const hourCount =
         Math.ceil(
@@ -19215,8 +19272,21 @@
                   4
                 );
 
-              const leftColumn =
-                screenIndex + 2;
+              const horizontalGap =
+                6;
+
+              const blockLeft =
+                timeColumnWidth +
+                screenIndex *
+                  screenColumnWidth +
+                horizontalGap;
+
+              const blockWidth =
+                Math.max(
+                  20,
+                  screenColumnWidth -
+                  horizontalGap * 2
+                );
 
               const block =
                 document.createElement(
@@ -19243,8 +19313,11 @@
                 );
               }
 
-              block.style.gridColumn =
-                String(leftColumn);
+              block.style.left =
+                `${blockLeft}px`;
+
+              block.style.width =
+                `${blockWidth}px`;
 
               block.style.top =
                 `${top}px`;
