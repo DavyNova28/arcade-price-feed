@@ -5017,6 +5017,104 @@
       }
     }
 
+    /*
+     * GO-LIVE READINESS
+     */
+
+    .go-live-readiness {
+      width: 100%;
+      padding: 16px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: var(--surface-light);
+    }
+
+    .go-live-readiness-summary {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      flex-wrap: wrap;
+      margin-top: 14px;
+      padding: 14px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: var(--surface);
+    }
+
+    .go-live-readiness-state {
+      padding: 7px 10px;
+      border-radius: 999px;
+      font-size: 10px;
+      font-weight: 900;
+      text-transform: uppercase;
+    }
+
+    .go-live-ready {
+      color: #caffea;
+      background: var(--regular-dark);
+    }
+
+    .go-live-warning {
+      color: #fff0cf;
+      background: var(--holiday-dark);
+    }
+
+    .go-live-blocked {
+      color: #ffd6d6;
+      background: var(--error-dark);
+    }
+
+    html[data-theme="light"] .go-live-ready {
+      color: #15543a;
+      background: #d9f7ea;
+    }
+
+    html[data-theme="light"] .go-live-warning {
+      color: #7a5518;
+      background: #fff1d4;
+    }
+
+    html[data-theme="light"] .go-live-blocked {
+      color: #7e2525;
+      background: #ffe5e5;
+    }
+
+    .go-live-readiness-list {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .go-live-readiness-item {
+      display: grid;
+      grid-template-columns: 28px minmax(0, 1fr);
+      gap: 10px;
+      align-items: start;
+      padding: 11px 12px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: var(--surface);
+    }
+
+    .go-live-readiness-icon {
+      font-size: 16px;
+      text-align: center;
+    }
+
+    .go-live-readiness-title {
+      font-size: 12px;
+      font-weight: 850;
+    }
+
+    .go-live-readiness-detail {
+      margin-top: 3px;
+      color: var(--muted);
+      font-size: 10px;
+      line-height: 1.45;
+    }
+
     body,
     header,
     .system-banner,
@@ -8051,6 +8149,58 @@
           ></div>
         </section>
 
+        <section class="go-live-readiness">
+          <div class="manager-header">
+            <div>
+              <div class="eyebrow">Priority 7</div>
+              <h3 style="margin:5px 0 0;">Go-Live Readiness</h3>
+              <p class="manager-description">
+                Final preflight check before returning the store screens to the custom player.
+              </p>
+            </div>
+
+            <button
+              id="refreshGoLiveReadinessButton"
+              class="button"
+              type="button"
+            >
+              Run preflight
+            </button>
+          </div>
+
+          <div class="go-live-readiness-summary">
+            <div>
+              <div
+                id="goLiveReadinessHeadline"
+                class="health-panel-title"
+                style="margin:0;"
+              >
+                Waiting for checks
+              </div>
+
+              <div
+                id="goLiveReadinessDescription"
+                class="manager-description"
+                style="margin-top:4px;"
+              >
+                Open System Health or run the preflight manually.
+              </div>
+            </div>
+
+            <div
+              id="goLiveReadinessState"
+              class="go-live-readiness-state go-live-warning"
+            >
+              Waiting
+            </div>
+          </div>
+
+          <div
+            id="goLiveReadinessList"
+            class="go-live-readiness-list"
+          ></div>
+        </section>
+
         <section class="health-score-panel">
           <div class="manager-header">
             <div>
@@ -9212,6 +9362,31 @@
     const healthScreensList = document.getElementById("healthScreensList");
     const healthErrorBox = document.getElementById("healthErrorBox");
 
+    const refreshGoLiveReadinessButton =
+      document.getElementById(
+        "refreshGoLiveReadinessButton"
+      );
+
+    const goLiveReadinessHeadline =
+      document.getElementById(
+        "goLiveReadinessHeadline"
+      );
+
+    const goLiveReadinessDescription =
+      document.getElementById(
+        "goLiveReadinessDescription"
+      );
+
+    const goLiveReadinessState =
+      document.getElementById(
+        "goLiveReadinessState"
+      );
+
+    const goLiveReadinessList =
+      document.getElementById(
+        "goLiveReadinessList"
+      );
+
     const healthScoreNumber =
       document.getElementById(
         "healthScoreNumber"
@@ -9779,6 +9954,12 @@
       null;
 
     let playerHeartbeatRefreshTimer =
+      null;
+
+    let latestPlayerHeartbeats =
+      [];
+
+    let latestHealthScoreResult =
       null;
 
     let calendarCursor =
@@ -11858,6 +12039,7 @@
         loadSystemHealth();
         loadPlayerHeartbeats();
         runAutomaticHealthChecks();
+        runGoLiveReadinessCheck();
         startAutomaticHealthChecks();
         startPlayerHeartbeatAutoRefresh();
       } else {
@@ -21631,6 +21813,11 @@
         "click",
         loadPlayerHeartbeats
       );
+
+      refreshGoLiveReadinessButton.addEventListener(
+        "click",
+        runGoLiveReadinessCheck
+      );
     }
 
     function loadSystemHealth() {
@@ -21767,6 +21954,9 @@
         calculateSystemHealthScore(
           safeTelemetryForScore
         );
+
+      latestHealthScoreResult =
+        scoreResult;
 
       const state =
         scoreResult.state;
@@ -23282,6 +23472,11 @@
 
 
     function renderPlayerHeartbeats(players) {
+      latestPlayerHeartbeats =
+        Array.isArray(players)
+          ? players
+          : [];
+
       const playerMap =
         new Map(
           players.map(
@@ -23787,6 +23982,375 @@
 
                 <div class="health-reason-text">
                   ${escapeHtml(reason.text)}
+                </div>
+              </div>
+            `
+          )
+          .join("");
+
+      runGoLiveReadinessCheck();
+    }
+
+
+    /*
+     * GO-LIVE READINESS
+     */
+
+    function runGoLiveReadinessCheck() {
+      renderGoLiveReadiness(
+        buildGoLiveReadinessChecks()
+      );
+    }
+
+
+    function buildGoLiveReadinessChecks() {
+      const checks =
+        [];
+
+      const loadedStates =
+        SCREEN_NAMES
+          .map(
+            screenName =>
+              screenStates.get(
+                screenName
+              )
+          )
+          .filter(Boolean);
+
+      const missingScreens =
+        SCREEN_NAMES.filter(
+          screenName =>
+            !screenStates.has(
+              screenName
+            )
+        );
+
+      checks.push({
+        level:
+          missingScreens.length === 0
+            ? "ok"
+            : "blocked",
+
+        icon:
+          missingScreens.length === 0
+            ? "✅"
+            : "🔴",
+
+        title:
+          "All schedules loaded",
+
+        detail:
+          missingScreens.length === 0
+            ? `All ${SCREEN_NAMES.length} configured screens have schedule data.`
+            : `Missing schedule data for: ${missingScreens.join(", ")}.`
+      });
+
+      const screensWithoutFallback =
+        loadedStates
+          .filter(
+            state =>
+              !state.schedule.some(
+                item =>
+                  !item.endTime
+              )
+          )
+          .map(
+            state =>
+              state.screenName
+          );
+
+      checks.push({
+        level:
+          screensWithoutFallback.length === 0
+            ? "ok"
+            : "warning",
+
+        icon:
+          screensWithoutFallback.length === 0
+            ? "✅"
+            : "🟠",
+
+        title:
+          "Fallback rows",
+
+        detail:
+          screensWithoutFallback.length === 0
+            ? "Every screen has at least one row with a blank End Time."
+            : `Add a blank-End-Time fallback row for: ${screensWithoutFallback.join(", ")}.`
+      });
+
+      const offlineDataCount =
+        loadedStates.filter(
+          state =>
+            state.offlineSnapshot === true
+        ).length;
+
+      checks.push({
+        level:
+          offlineDataCount === 0
+            ? "ok"
+            : "warning",
+
+        icon:
+          offlineDataCount === 0
+            ? "✅"
+            : "💾",
+
+        title:
+          "Live Apps Script data",
+
+        detail:
+          offlineDataCount === 0
+            ? "All loaded schedules are live."
+            : `${offlineDataCount} screen(s) are using cached dashboard data.`
+      });
+
+      const score =
+        latestHealthScoreResult &&
+        Number.isFinite(
+          latestHealthScoreResult.score
+        )
+          ? latestHealthScoreResult.score
+          : null;
+
+      checks.push({
+        level:
+          score === null
+            ? "warning"
+            : score >= 88
+              ? "ok"
+              : score >= 65
+                ? "warning"
+                : "blocked",
+
+        icon:
+          score === null
+            ? "⏳"
+            : score >= 88
+              ? "✅"
+              : score >= 65
+                ? "🟠"
+                : "🔴",
+
+        title:
+          "System health score",
+
+        detail:
+          score === null
+            ? "Health score is still waiting for telemetry."
+            : `Current health score: ${score}/100.`
+      });
+
+      const imageIssueCount =
+        loadedStates.filter(
+          state =>
+            state.imageMissing === true
+        ).length;
+
+      checks.push({
+        level:
+          imageIssueCount === 0
+            ? "ok"
+            : "blocked",
+
+        icon:
+          imageIssueCount === 0
+            ? "✅"
+            : "🔴",
+
+        title:
+          "Image validation",
+
+        detail:
+          imageIssueCount === 0
+            ? "No missing active images are detected."
+            : `${imageIssueCount} screen(s) reference a missing active image.`
+      });
+
+      const heartbeatMap =
+        new Map(
+          latestPlayerHeartbeats.map(
+            player => [
+              player.screen,
+              player
+            ]
+          )
+        );
+
+      const quietHours =
+        typeof isPlayerQuietHours === "function"
+          ? isPlayerQuietHours()
+          : false;
+
+      const unavailablePlayers =
+        SCREEN_NAMES.filter(
+          screenName => {
+            if (quietHours) {
+              return false;
+            }
+
+            const player =
+              heartbeatMap.get(
+                screenName
+              );
+
+            return (
+              !player ||
+              player.status === "offline"
+            );
+          }
+        );
+
+      checks.push({
+        level:
+          quietHours ||
+          unavailablePlayers.length === 0
+            ? "ok"
+            : "warning",
+
+        icon:
+          quietHours
+            ? "🌙"
+            : unavailablePlayers.length === 0
+              ? "✅"
+              : "🟠",
+
+        title:
+          "Player heartbeat",
+
+        detail:
+          quietHours
+            ? "Quiet hours are active; sleeping players are expected."
+            : unavailablePlayers.length === 0
+              ? "All configured players have checked in."
+              : `No recent heartbeat from: ${unavailablePlayers.join(", ")}.`
+      });
+
+      const savedAt =
+        dashboardOfflineSnapshot &&
+        dashboardOfflineSnapshot.savedAt
+          ? new Date(
+              dashboardOfflineSnapshot.savedAt
+            )
+          : null;
+
+      const snapshotValid =
+        savedAt &&
+        Number.isFinite(
+          savedAt.getTime()
+        ) &&
+        Date.now() -
+          savedAt.getTime() <=
+          DASHBOARD_OFFLINE_MAX_AGE_MS;
+
+      checks.push({
+        level:
+          snapshotValid
+            ? "ok"
+            : "warning",
+
+        icon:
+          snapshotValid
+            ? "✅"
+            : "🟠",
+
+        title:
+          "Offline recovery snapshot",
+
+        detail:
+          snapshotValid
+            ? `Recovery snapshot available (${formatOfflineSnapshotAge(savedAt)}).`
+            : "No recent offline recovery snapshot is available."
+      });
+
+      return checks;
+    }
+
+
+    function renderGoLiveReadiness(
+      checks
+    ) {
+      const blocked =
+        checks.filter(
+          check =>
+            check.level === "blocked"
+        ).length;
+
+      const warnings =
+        checks.filter(
+          check =>
+            check.level === "warning"
+        ).length;
+
+      let stateClass =
+        "go-live-ready";
+
+      let stateText =
+        "Ready";
+
+      let headline =
+        "Ready for controlled testing";
+
+      let description =
+        "No blocking issues were detected. Start with one test screen before restoring every store display.";
+
+      if (warnings > 0) {
+        stateClass =
+          "go-live-warning";
+
+        stateText =
+          "Review";
+
+        headline =
+          "Ready with observations";
+
+        description =
+          `${warnings} warning(s) should be reviewed before a full rollout.`;
+      }
+
+      if (blocked > 0) {
+        stateClass =
+          "go-live-blocked";
+
+        stateText =
+          "Blocked";
+
+        headline =
+          "Not ready for rollout";
+
+        description =
+          `${blocked} blocking issue(s) must be corrected first.`;
+      }
+
+      goLiveReadinessState.className =
+        `go-live-readiness-state ${stateClass}`;
+
+      goLiveReadinessState.textContent =
+        stateText;
+
+      goLiveReadinessHeadline.textContent =
+        headline;
+
+      goLiveReadinessDescription.textContent =
+        description;
+
+      goLiveReadinessList.innerHTML =
+        checks
+          .map(
+            check => `
+              <div class="go-live-readiness-item">
+                <div class="go-live-readiness-icon">
+                  ${escapeHtml(check.icon)}
+                </div>
+
+                <div>
+                  <div class="go-live-readiness-title">
+                    ${escapeHtml(check.title)}
+                  </div>
+
+                  <div class="go-live-readiness-detail">
+                    ${escapeHtml(check.detail)}
+                  </div>
                 </div>
               </div>
             `
