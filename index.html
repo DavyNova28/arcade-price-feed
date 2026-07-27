@@ -111,7 +111,12 @@
     /*
      * Re-read Google Sheets every 30 seconds.
      */
-    const SCHEDULE_REFRESH_MS = 30000;
+    const ACTIVE_FEED_POLL_MS = 30000;
+const QUIET_FEED_POLL_MS = 10 * 60 * 1000;
+    const HIDDEN_FEED_POLL_MS = 15 * 60 * 1000;
+    const FEED_REQUEST_TIMEOUT_MS = 20000;
+    const QUIET_HOUR_START = 0;
+    const QUIET_HOUR_END = 8;
 
     /*
      * Check the current time every second.
@@ -153,6 +158,11 @@
     let visibleLayer = "A";
     let feedRequestNumber = 0;
     let transitionInProgress = false;
+    let currentScheduleSignature="";
+    let feedPollTimer=null;
+    let feedRequestTimeout=null;
+    let feedRequestInProgress=false;
+    let consecutiveFeedErrors=0;
 
     const imageA =
       document.getElementById("imageA");
@@ -763,20 +773,59 @@
       console.error(message);
     }
 
-    /*
+    
+
+    function createScheduleSignature(scheduleItems){
+      return JSON.stringify(scheduleItems.map(i=>[i.time,i.endTime||"",i.image,i.fade]));
+    }
+    
+function getFeedPollInterval() {
+  const hour = new Date().getHours();
+
+  // Between 22:00 and 09:00, disable background polling.
+  if (hour >= QUIET_HOUR_START || hour < QUIET_HOUR_END) {
+    return null;
+  }
+
+  return ACTIVE_FEED_POLL_MS;
+}
+
+    
+function scheduleNextFeedPoll(afterError = false) {
+  clearScheduledFeedPoll();
+
+  const delay = getFeedPollInterval();
+
+  if (delay === null) {
+    // Wake up at the next 09:00.
+    const now = new Date();
+    const next = new Date(now);
+    if (now.getHours() >= QUIET_HOUR_START) {
+      next.setDate(next.getDate() + 1);
+    }
+    next.setHours(QUIET_HOUR_END, 0, 0, 0);
+
+    const ms = Math.max(1000, next.getTime() - now.getTime());
+
+    feedPollTimer = setTimeout(() => {
+      loadScheduleFeed({ force: true });
+    }, ms);
+
+    return;
+  }
+
+  feedPollTimer = setTimeout(() => {
+    loadScheduleFeed();
+  }, delay);
+}
+
+/*
      * =====================================================
      * STARTUP
      * =====================================================
      */
     loadScheduleFeed();
-
-    /*
-     * Re-read Google Sheets periodically.
-     */
-    setInterval(
-      loadScheduleFeed,
-      SCHEDULE_REFRESH_MS
-    );
+    scheduleNextFeedPoll();
 
     /*
      * Check for scheduled changes every second.
