@@ -21213,29 +21213,88 @@
       const successRate = Number(telemetry.successRate || 0);
       const averageDuration = Number(telemetry.averageDurationMs || 0);
 
-      let state = "healthy";
-      let stateText = "Healthy";
+      const requestCount =
+        Number(
+          telemetry.requests || 0
+        );
 
-      if (failures > 0 || successRate < 98 || averageDuration > 1500) {
-        state = "warning";
-        stateText = "Needs attention";
+      let state =
+        "healthy";
+
+      let stateText =
+        "Healthy";
+
+      if (requestCount === 0) {
+        state =
+          "warning";
+
+        stateText =
+          "Waiting for data";
+
+      } else if (
+        failures > 0 ||
+        successRate < 98 ||
+        averageDuration > 1500
+      ) {
+        state =
+          "warning";
+
+        stateText =
+          "Needs attention";
       }
 
-      if (successRate < 90 || failures >= 5 || averageDuration > 5000) {
-        state = "error";
-        stateText = "Unhealthy";
+      if (
+        requestCount >= 5 &&
+        (
+          successRate < 90 ||
+          failures >= 5 ||
+          averageDuration > 5000
+        )
+      ) {
+        state =
+          "error";
+
+        stateText =
+          "Unhealthy";
       }
 
       healthOverallState.className = `health-state health-state-${state}`;
       healthOverallState.textContent = stateText;
-      healthLastUpdated.textContent = `Updated ${new Date().toLocaleTimeString()}`;
+      healthLastUpdated.textContent =
+        requestCount === 0
+          ? "Telemetry is ready and waiting for live requests."
+          : `Updated ${new Date().toLocaleTimeString()}`;
       healthRequestCount.textContent = String(telemetry.requests || 0);
-      healthSuccessRate.textContent = `${Number(telemetry.successRate || 0).toFixed(1)}%`;
-      healthCacheHitRate.textContent = `${Number(telemetry.cacheHitRate || 0).toFixed(1)}%`;
-      healthAverageResponse.textContent = `${telemetry.averageDurationMs || 0} ms`;
+      healthSuccessRate.textContent =
+        requestCount === 0
+          ? "Waiting"
+          : `${Number(
+              telemetry.successRate || 0
+            ).toFixed(1)}%`;
+      const cacheMeasurementCount =
+        Number(
+          telemetry.cacheHits || 0
+        ) +
+        Number(
+          telemetry.cacheMisses || 0
+        );
+
+      healthCacheHitRate.textContent =
+        cacheMeasurementCount === 0
+          ? "Waiting"
+          : `${Number(
+              telemetry.cacheHitRate || 0
+            ).toFixed(1)}%`;
+      healthAverageResponse.textContent =
+        requestCount === 0
+          ? "Waiting"
+          : `${telemetry.averageDurationMs || 0} ms`;
       healthSuccessCount.textContent = String(telemetry.successes || 0);
       healthFailureCount.textContent = String(telemetry.failures || 0);
-      healthMaxResponse.textContent = `${telemetry.maxDurationMs || 0} ms`;
+      healthMaxResponse.textContent =
+        requestCount === 0
+          ? "Waiting"
+          : `${telemetry.maxDurationMs || 0} ms`;
       healthLastRequest.textContent = telemetry.lastRequestAt ? new Date(telemetry.lastRequestAt).toLocaleString() : "—";
       healthCacheHits.textContent = String(telemetry.cacheHits || 0);
       healthCacheMisses.textContent = String(telemetry.cacheMisses || 0);
