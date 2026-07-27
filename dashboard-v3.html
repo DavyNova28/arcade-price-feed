@@ -2467,6 +2467,160 @@
       }
     }
 
+
+    /*
+     * =====================================================
+     * IMAGE HEALTH — MISSING AND UNUSED DETECTION
+     * =====================================================
+     */
+
+    .image-health-panel {
+      margin-bottom: 18px;
+      padding: 16px;
+
+      border: 1px solid var(--border);
+      border-radius: 12px;
+
+      background: var(--surface-light);
+    }
+
+    .image-health-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 14px;
+      flex-wrap: wrap;
+
+      margin-bottom: 12px;
+    }
+
+    .image-health-status {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .image-health-status.error {
+      color: var(--error);
+    }
+
+    .image-health-grid {
+      display: grid;
+      grid-template-columns:
+        repeat(3, minmax(150px, 1fr));
+      gap: 12px;
+    }
+
+    .image-health-list {
+      display: grid;
+      gap: 8px;
+
+      margin-top: 14px;
+    }
+
+    .image-health-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+
+      padding: 10px 12px;
+
+      border: 1px solid var(--border);
+      border-radius: 9px;
+
+      background: var(--surface);
+    }
+
+    .image-health-name {
+      min-width: 0;
+
+      font-size: 12px;
+      font-weight: 750;
+
+      overflow-wrap: anywhere;
+    }
+
+    .image-health-tag {
+      display: inline-flex;
+
+      padding: 5px 8px;
+
+      border-radius: 999px;
+
+      font-size: 10px;
+      font-weight: 800;
+      text-transform: uppercase;
+    }
+
+    .image-health-tag-missing {
+      color: #ffd6d6;
+      background: var(--error-dark);
+    }
+
+    .image-health-tag-unused {
+      color: #fff0cf;
+      background: var(--holiday-dark);
+    }
+
+    .image-health-tag-ok {
+      color: #caffea;
+      background: var(--regular-dark);
+    }
+
+    .image-library-card.image-missing {
+      border-color:
+        rgba(255, 104, 104, 0.8);
+    }
+
+    .image-library-card.image-unused {
+      border-color:
+        rgba(242, 170, 63, 0.72);
+    }
+
+    .image-library-card-status {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      z-index: 3;
+
+      display: inline-flex;
+
+      padding: 6px 9px;
+
+      border-radius: 999px;
+
+      font-size: 10px;
+      font-weight: 850;
+      text-transform: uppercase;
+
+      backdrop-filter: blur(6px);
+    }
+
+    .image-library-card-status.missing {
+      color: #fff;
+      background:
+        rgba(155, 54, 54, 0.92);
+    }
+
+    .image-library-card-status.unused {
+      color: #fff;
+      background:
+        rgba(139, 91, 18, 0.92);
+    }
+
+    .image-library-card-status.healthy {
+      color: #fff;
+      background:
+        rgba(35, 122, 85, 0.92);
+    }
+
+    @media (max-width: 720px) {
+      .image-health-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
     body,
     header,
     .system-banner,
@@ -4195,7 +4349,87 @@
           >
             ↻ Rebuild index
           </button>
+
+          <button
+            id="scanImageHealthButton"
+            class="button button-primary"
+            type="button"
+          >
+            Scan GitHub images
+          </button>
         </div>
+
+        <section class="image-health-panel">
+          <div class="image-health-header">
+            <div>
+              <div class="eyebrow">
+                Repository image health
+              </div>
+
+              <div
+                id="imageHealthStatus"
+                class="image-health-status"
+              >
+                Not scanned yet.
+              </div>
+            </div>
+
+            <button
+              id="clearImageHealthButton"
+              class="button"
+              type="button"
+              disabled
+            >
+              Clear scan
+            </button>
+          </div>
+
+          <div class="image-health-grid">
+            <article class="manager-stat">
+              <div class="manager-stat-label">
+                Repository images
+              </div>
+
+              <div
+                id="repositoryImageCount"
+                class="manager-stat-value"
+              >
+                —
+              </div>
+            </article>
+
+            <article class="manager-stat">
+              <div class="manager-stat-label">
+                Missing references
+              </div>
+
+              <div
+                id="missingImageCount"
+                class="manager-stat-value"
+              >
+                —
+              </div>
+            </article>
+
+            <article class="manager-stat">
+              <div class="manager-stat-label">
+                Unused files
+              </div>
+
+              <div
+                id="unusedImageCount"
+                class="manager-stat-value"
+              >
+                —
+              </div>
+            </article>
+          </div>
+
+          <div
+            id="imageHealthList"
+            class="image-health-list"
+          ></div>
+        </section>
 
         <section class="image-library-summary">
           <article class="manager-stat">
@@ -4389,7 +4623,7 @@
      */
 
     const SCHEDULE_FEED_URL =
-      "https://script.google.com/macros/s/AKfycbwUINP9DCEUywwCU1YMjfnPT3H8ZUq1lsGVk8ShACrTp2EZIqMYrChADlk_uEh2F-DGXw/exec";
+      "PASTE_YOUR_APPS_SCRIPT_EXEC_URL_HERE";
 
     const SCREEN_NAMES = [
       "Arcade",
@@ -4403,6 +4637,16 @@
     const DATA_REFRESH_MS = 30000;
     const LIVE_UPDATE_MS = 1000;
     const SIGNAGE_PAGE = "index.html";
+
+    /*
+     * GitHub repository used for unused-image detection.
+     * Change only when the repository name or branch changes.
+     */
+    const GITHUB_REPOSITORY =
+      "davynova28/arcadepricefeed";
+
+    const GITHUB_BRANCH =
+      "main";
 
     /*
      * =====================================================
@@ -4872,6 +5116,41 @@
         "imageLibraryGrid"
       );
 
+    const scanImageHealthButton =
+      document.getElementById(
+        "scanImageHealthButton"
+      );
+
+    const clearImageHealthButton =
+      document.getElementById(
+        "clearImageHealthButton"
+      );
+
+    const imageHealthStatus =
+      document.getElementById(
+        "imageHealthStatus"
+      );
+
+    const repositoryImageCount =
+      document.getElementById(
+        "repositoryImageCount"
+      );
+
+    const missingImageCount =
+      document.getElementById(
+        "missingImageCount"
+      );
+
+    const unusedImageCount =
+      document.getElementById(
+        "unusedImageCount"
+      );
+
+    const imageHealthList =
+      document.getElementById(
+        "imageHealthList"
+      );
+
     const restorePreviewTitle =
       document.getElementById(
         "restorePreviewTitle"
@@ -5112,6 +5391,18 @@
 
     let imageLibraryIndex =
       [];
+
+    let repositoryImages =
+      [];
+
+    let missingReferencedImages =
+      new Set();
+
+    let unusedRepositoryImages =
+      new Set();
+
+    let imageHealthScanned =
+      false;
 
     /*
      * =====================================================
@@ -10284,6 +10575,16 @@
         "click",
         rebuildImageLibrary
       );
+
+      scanImageHealthButton.addEventListener(
+        "click",
+        scanImageHealth
+      );
+
+      clearImageHealthButton.addEventListener(
+        "click",
+        clearImageHealthScan
+      );
     }
 
 
@@ -10598,9 +10899,28 @@
           image.filename
         );
 
+      const normalizedFilename =
+        normalizeRepositoryPath(
+          image.filename
+        );
+
+      const isMissing =
+        missingReferencedImages.has(
+          normalizedFilename
+        );
+
       return `
-        <article class="image-library-card">
+        <article class="image-library-card ${isMissing ? "image-missing" : ""}">
           <div class="image-library-preview">
+            ${
+              imageHealthScanned
+                ? `
+                  <span class="image-library-card-status ${isMissing ? "missing" : "healthy"}">
+                    ${isMissing ? "Missing" : "Available"}
+                  </span>
+                `
+                : ""
+            }
             <img
               src="${buildImageUrl(image.filename)}"
               alt="${escapeHtml(image.filename)}"
@@ -10708,6 +11028,329 @@
           </div>
         </div>
       `;
+    }
+
+    /*
+     * =====================================================
+     * IMAGE HEALTH — MISSING AND UNUSED DETECTION
+     * =====================================================
+     */
+
+    async function scanImageHealth() {
+      scanImageHealthButton.disabled =
+        true;
+
+      scanImageHealthButton.textContent =
+        "Scanning…";
+
+      clearImageHealthButton.disabled =
+        true;
+
+      imageHealthStatus.className =
+        "image-health-status";
+
+      imageHealthStatus.textContent =
+        "Reading repository files and checking referenced images…";
+
+      try {
+        repositoryImages =
+          await fetchRepositoryImageFiles();
+
+        const repositorySet =
+          new Set(
+            repositoryImages.map(
+              normalizeRepositoryPath
+            )
+          );
+
+        const referencedSet =
+          new Set(
+            imageLibraryIndex.map(
+              image =>
+                normalizeRepositoryPath(
+                  image.filename
+                )
+            )
+          );
+
+        missingReferencedImages =
+          new Set(
+            Array.from(
+              referencedSet
+            ).filter(
+              filename =>
+                !repositorySet.has(
+                  filename
+                )
+            )
+          );
+
+        unusedRepositoryImages =
+          new Set(
+            Array.from(
+              repositorySet
+            ).filter(
+              filename =>
+                !referencedSet.has(
+                  filename
+                ) &&
+                !isDashboardAsset(
+                  filename
+                )
+            )
+          );
+
+        imageHealthScanned =
+          true;
+
+        repositoryImageCount.textContent =
+          String(
+            repositoryImages.length
+          );
+
+        missingImageCount.textContent =
+          String(
+            missingReferencedImages.size
+          );
+
+        unusedImageCount.textContent =
+          String(
+            unusedRepositoryImages.size
+          );
+
+        imageHealthStatus.textContent =
+          `Scan complete · ${new Date().toLocaleTimeString()}`;
+
+        renderImageHealthList();
+        renderImageLibrary();
+
+        clearImageHealthButton.disabled =
+          false;
+
+      } catch (error) {
+        imageHealthStatus.className =
+          "image-health-status error";
+
+        imageHealthStatus.textContent =
+          error.message ||
+          "The GitHub image scan failed.";
+
+      } finally {
+        scanImageHealthButton.disabled =
+          false;
+
+        scanImageHealthButton.textContent =
+          "Scan GitHub images";
+      }
+    }
+
+
+    async function fetchRepositoryImageFiles() {
+      const url =
+        `https://api.github.com/repos/` +
+        `${GITHUB_REPOSITORY}/git/trees/` +
+        `${encodeURIComponent(GITHUB_BRANCH)}` +
+        `?recursive=1`;
+
+      const response =
+        await fetch(
+          url,
+          {
+            headers: {
+              Accept:
+                "application/vnd.github+json"
+            }
+          }
+        );
+
+      if (!response.ok) {
+        if (
+          response.status === 403 ||
+          response.status === 429
+        ) {
+          throw new Error(
+            "GitHub API rate limit reached. Try the scan again later."
+          );
+        }
+
+        if (
+          response.status === 404
+        ) {
+          throw new Error(
+            "The configured GitHub repository or branch could not be found."
+          );
+        }
+
+        throw new Error(
+          `GitHub returned HTTP ${response.status}.`
+        );
+      }
+
+      const payload =
+        await response.json();
+
+      if (
+        !payload ||
+        !Array.isArray(
+          payload.tree
+        )
+      ) {
+        throw new Error(
+          "GitHub returned an invalid repository file list."
+        );
+      }
+
+      if (
+        payload.truncated === true
+      ) {
+        throw new Error(
+          "The GitHub repository file list was truncated and cannot be checked safely."
+        );
+      }
+
+      return payload.tree
+        .filter(item =>
+          item.type === "blob" &&
+          isImageFilename(
+            item.path
+          )
+        )
+        .map(item =>
+          item.path
+        );
+    }
+
+
+    function isImageFilename(filename) {
+      return /\.(png|jpe?g|gif|webp|avif|svg)$/i
+        .test(
+          String(filename || "")
+        );
+    }
+
+
+    function normalizeRepositoryPath(path) {
+      return decodeURIComponent(
+        String(path || "")
+      )
+        .replace(/^\.?\//, "")
+        .replace(/\\/g, "/")
+        .trim()
+        .toLowerCase();
+    }
+
+
+    function isDashboardAsset(filename) {
+      const basename =
+        filename
+          .split("/")
+          .pop();
+
+      return [
+        "dashboard-logo.png",
+        "favicon.png",
+        "favicon.jpg",
+        "dashboard-logo.jpg"
+      ].includes(
+        basename
+      );
+    }
+
+
+    function renderImageHealthList() {
+      const items = [];
+
+      Array.from(
+        missingReferencedImages
+      )
+        .sort()
+        .forEach(filename => {
+          items.push(`
+            <div class="image-health-item">
+              <div class="image-health-name">
+                ${escapeHtml(filename)}
+              </div>
+
+              <span class="image-health-tag image-health-tag-missing">
+                Missing
+              </span>
+            </div>
+          `);
+        });
+
+      Array.from(
+        unusedRepositoryImages
+      )
+        .sort()
+        .forEach(filename => {
+          items.push(`
+            <div class="image-health-item">
+              <div class="image-health-name">
+                ${escapeHtml(filename)}
+              </div>
+
+              <span class="image-health-tag image-health-tag-unused">
+                Unused
+              </span>
+            </div>
+          `);
+        });
+
+      if (items.length === 0) {
+        imageHealthList.innerHTML = `
+          <div class="image-health-item">
+            <div class="image-health-name">
+              Every referenced image exists, and no unused signage images were detected.
+            </div>
+
+            <span class="image-health-tag image-health-tag-ok">
+              Healthy
+            </span>
+          </div>
+        `;
+
+        return;
+      }
+
+      imageHealthList.innerHTML =
+        items.join("");
+    }
+
+
+    function clearImageHealthScan() {
+      repositoryImages = [];
+
+      missingReferencedImages =
+        new Set();
+
+      unusedRepositoryImages =
+        new Set();
+
+      imageHealthScanned =
+        false;
+
+      repositoryImageCount.textContent =
+        "—";
+
+      missingImageCount.textContent =
+        "—";
+
+      unusedImageCount.textContent =
+        "—";
+
+      imageHealthStatus.className =
+        "image-health-status";
+
+      imageHealthStatus.textContent =
+        "Not scanned yet.";
+
+      imageHealthList.innerHTML =
+        "";
+
+      clearImageHealthButton.disabled =
+        true;
+
+      renderImageLibrary();
     }
 
     /*
