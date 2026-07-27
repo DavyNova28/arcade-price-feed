@@ -2787,6 +2787,257 @@
       }
     }
 
+
+    /*
+     * =====================================================
+     * HOLIDAY CALENDAR — READ ONLY
+     * =====================================================
+     */
+
+    .holiday-calendar {
+      padding: 23px;
+
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+
+      background: var(--surface);
+      box-shadow: var(--shadow);
+    }
+
+    .calendar-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+
+      margin-bottom: 18px;
+      padding: 14px 16px;
+
+      border: 1px solid var(--border);
+      border-radius: 13px;
+
+      background: var(--surface-light);
+    }
+
+    .calendar-toolbar-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .calendar-month-label {
+      min-width: 210px;
+
+      font-size: 18px;
+      font-weight: 800;
+      text-align: center;
+    }
+
+    .calendar-grid {
+      display: grid;
+      grid-template-columns:
+        repeat(7, minmax(110px, 1fr));
+
+      border: 1px solid var(--border);
+      border-radius: 12px;
+
+      overflow: hidden;
+    }
+
+    .calendar-weekday {
+      padding: 10px;
+
+      border-right: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+
+      color: var(--muted);
+      background: var(--surface-light);
+
+      font-size: 11px;
+      font-weight: 800;
+      text-align: center;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    .calendar-weekday:nth-child(7n) {
+      border-right: 0;
+    }
+
+    .calendar-day {
+      min-height: 135px;
+      padding: 9px;
+
+      border-right: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+
+      background: var(--surface);
+
+      cursor: pointer;
+    }
+
+    .calendar-day:nth-child(7n) {
+      border-right: 0;
+    }
+
+    .calendar-day.outside-month {
+      opacity: 0.42;
+      background: var(--surface-light);
+    }
+
+    .calendar-day.today {
+      box-shadow:
+        inset 0 0 0 2px var(--blue);
+    }
+
+    .calendar-day.selected {
+      background:
+        linear-gradient(
+          135deg,
+          rgba(95, 168, 255, 0.12),
+          rgba(242, 170, 63, 0.08)
+        );
+    }
+
+    .calendar-day-number {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+
+      margin-bottom: 8px;
+
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .calendar-entry-count {
+      color: var(--muted);
+      font-size: 10px;
+      font-weight: 700;
+    }
+
+    .calendar-events {
+      display: grid;
+      gap: 5px;
+    }
+
+    .calendar-event {
+      padding: 5px 7px;
+
+      border-radius: 7px;
+
+      font-size: 10px;
+      line-height: 1.3;
+
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .calendar-event-active {
+      color: #caffea;
+      background: var(--regular-dark);
+    }
+
+    .calendar-event-upcoming {
+      color: #d9eaff;
+      background: #234a73;
+    }
+
+    .calendar-event-expired {
+      color: var(--muted);
+      background: var(--surface-hover);
+    }
+
+    .calendar-event-invalid {
+      color: #ffd6d6;
+      background: var(--error-dark);
+    }
+
+    .calendar-more {
+      color: var(--muted);
+      font-size: 10px;
+    }
+
+    .calendar-details {
+      margin-top: 18px;
+      padding: 16px;
+
+      border: 1px solid var(--border);
+      border-radius: 12px;
+
+      background: var(--surface-light);
+    }
+
+    .calendar-details.hidden {
+      display: none;
+    }
+
+    .calendar-details-list {
+      display: grid;
+      gap: 10px;
+
+      margin-top: 12px;
+    }
+
+    .calendar-details-item {
+      padding: 12px;
+
+      border: 1px solid var(--border);
+      border-radius: 10px;
+
+      background: var(--surface);
+    }
+
+    .calendar-details-title {
+      font-weight: 800;
+    }
+
+    .calendar-details-meta {
+      margin-top: 4px;
+
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.45;
+    }
+
+    @media (max-width: 1000px) {
+      .calendar-grid {
+        min-width: 840px;
+      }
+
+      .holiday-calendar {
+        overflow-x: auto;
+      }
+    }
+
+    @media (max-width: 720px) {
+      .holiday-calendar {
+        padding: 15px;
+      }
+
+      .calendar-toolbar {
+        align-items: stretch;
+        flex-direction: column;
+      }
+
+      .calendar-toolbar-group {
+        width: 100%;
+      }
+
+      .calendar-toolbar-group .button {
+        flex: 1;
+      }
+
+      .calendar-month-label {
+        width: 100%;
+        text-align: left;
+      }
+    }
+
     body,
     header,
     .system-banner,
@@ -3379,6 +3630,14 @@
         type="button"
       >
         Audit Log
+      </button>
+
+      <button
+        id="holidayCalendarTab"
+        class="workspace-tab"
+        type="button"
+      >
+        Holiday Calendar
       </button>
     </nav>
 
@@ -4906,6 +5165,116 @@
         </div>
       </section>
     </section>
+
+    <section
+      id="holidayCalendarWorkspace"
+      class="workspace"
+    >
+      <section class="holiday-calendar">
+        <div class="manager-header">
+          <div>
+            <div class="eyebrow">
+              Dashboard V3
+            </div>
+
+            <h2 class="manager-title">
+              Holiday Calendar
+            </h2>
+
+            <p class="manager-description">
+              Review Holiday Overrides by date. This calendar is read-only.
+            </p>
+          </div>
+
+          <div class="manager-status">
+            Read-only
+          </div>
+        </div>
+
+        <div class="calendar-toolbar">
+          <div class="calendar-toolbar-group">
+            <button
+              id="previousCalendarMonthButton"
+              class="button"
+              type="button"
+            >
+              ← Previous
+            </button>
+
+            <button
+              id="todayCalendarButton"
+              class="button"
+              type="button"
+            >
+              Today
+            </button>
+
+            <button
+              id="nextCalendarMonthButton"
+              class="button"
+              type="button"
+            >
+              Next →
+            </button>
+          </div>
+
+          <div
+            id="calendarMonthLabel"
+            class="calendar-month-label"
+          >
+            —
+          </div>
+
+          <div class="calendar-toolbar-group">
+            <button
+              id="reloadCalendarButton"
+              class="button"
+              type="button"
+            >
+              ↻ Reload overrides
+            </button>
+          </div>
+        </div>
+
+        <div
+          id="holidayCalendarGrid"
+          class="calendar-grid"
+        ></div>
+
+        <section
+          id="calendarDetails"
+          class="calendar-details hidden"
+        >
+          <div class="manager-header">
+            <div>
+              <div class="eyebrow">
+                Selected date
+              </div>
+
+              <div
+                id="calendarDetailsTitle"
+                class="manager-stat-value"
+              >
+                —
+              </div>
+            </div>
+
+            <button
+              id="closeCalendarDetailsButton"
+              class="button"
+              type="button"
+            >
+              Close details
+            </button>
+          </div>
+
+          <div
+            id="calendarDetailsList"
+            class="calendar-details-list"
+          ></div>
+        </section>
+      </section>
+    </section>
   </main>
 
   <iframe
@@ -5625,6 +5994,66 @@
         "auditTableBody"
       );
 
+    const holidayCalendarTab =
+      document.getElementById(
+        "holidayCalendarTab"
+      );
+
+    const holidayCalendarWorkspace =
+      document.getElementById(
+        "holidayCalendarWorkspace"
+      );
+
+    const previousCalendarMonthButton =
+      document.getElementById(
+        "previousCalendarMonthButton"
+      );
+
+    const todayCalendarButton =
+      document.getElementById(
+        "todayCalendarButton"
+      );
+
+    const nextCalendarMonthButton =
+      document.getElementById(
+        "nextCalendarMonthButton"
+      );
+
+    const reloadCalendarButton =
+      document.getElementById(
+        "reloadCalendarButton"
+      );
+
+    const calendarMonthLabel =
+      document.getElementById(
+        "calendarMonthLabel"
+      );
+
+    const holidayCalendarGrid =
+      document.getElementById(
+        "holidayCalendarGrid"
+      );
+
+    const calendarDetails =
+      document.getElementById(
+        "calendarDetails"
+      );
+
+    const calendarDetailsTitle =
+      document.getElementById(
+        "calendarDetailsTitle"
+      );
+
+    const calendarDetailsList =
+      document.getElementById(
+        "calendarDetailsList"
+      );
+
+    const closeCalendarDetailsButton =
+      document.getElementById(
+        "closeCalendarDetailsButton"
+      );
+
     const scheduleDraftRecoveryBanner =
       document.getElementById(
         "scheduleDraftRecoveryBanner"
@@ -5923,6 +6352,12 @@
 
     let auditRequestGeneration =
       0;
+
+    let calendarCursor =
+      new Date();
+
+    let selectedCalendarDate =
+      null;
 
     /*
      * =====================================================
@@ -7700,6 +8135,9 @@
       const showAudit =
         workspaceName === "audit";
 
+      const showCalendar =
+        workspaceName === "calendar";
+
       controlCenterTab.classList.toggle(
         "active",
         showControl
@@ -7728,6 +8166,11 @@
       auditLogTab.classList.toggle(
         "active",
         showAudit
+      );
+
+      holidayCalendarTab.classList.toggle(
+        "active",
+        showCalendar
       );
 
       controlCenterWorkspace.classList.toggle(
@@ -7760,6 +8203,11 @@
         showAudit
       );
 
+      holidayCalendarWorkspace.classList.toggle(
+        "active",
+        showCalendar
+      );
+
       if (showManager) {
         updateScheduleManager();
       }
@@ -7790,6 +8238,14 @@
         } else {
           renderAuditLog();
         }
+      }
+
+      if (showCalendar) {
+        if (holidayOverrides.length === 0) {
+          loadHolidayOverrides();
+        }
+
+        renderHolidayCalendar();
       }
     }
 
@@ -9268,6 +9724,14 @@
               )
             ) {
               rebuildImageLibrary();
+            }
+
+            if (
+              holidayCalendarWorkspace.classList.contains(
+                "active"
+              )
+            ) {
+              renderHolidayCalendar();
             }
 
           } catch (error) {
@@ -12656,6 +13120,378 @@
 
     /*
      * =====================================================
+     * HOLIDAY CALENDAR — READ ONLY
+     * =====================================================
+     */
+
+    function setupHolidayCalendar() {
+      previousCalendarMonthButton.addEventListener(
+        "click",
+        function() {
+          calendarCursor.setMonth(
+            calendarCursor.getMonth() - 1
+          );
+
+          selectedCalendarDate =
+            null;
+
+          closeCalendarDetails();
+          renderHolidayCalendar();
+        }
+      );
+
+      nextCalendarMonthButton.addEventListener(
+        "click",
+        function() {
+          calendarCursor.setMonth(
+            calendarCursor.getMonth() + 1
+          );
+
+          selectedCalendarDate =
+            null;
+
+          closeCalendarDetails();
+          renderHolidayCalendar();
+        }
+      );
+
+      todayCalendarButton.addEventListener(
+        "click",
+        function() {
+          calendarCursor =
+            new Date();
+
+          selectedCalendarDate =
+            formatDateForInput(
+              new Date()
+            );
+
+          renderHolidayCalendar();
+          openCalendarDetails(
+            selectedCalendarDate
+          );
+        }
+      );
+
+      reloadCalendarButton.addEventListener(
+        "click",
+        function() {
+          loadHolidayOverrides();
+
+          setTimeout(
+            renderHolidayCalendar,
+            500
+          );
+        }
+      );
+
+      holidayCalendarGrid.addEventListener(
+        "click",
+        function(event) {
+          const day =
+            event.target.closest(
+              "[data-calendar-date]"
+            );
+
+          if (!day) {
+            return;
+          }
+
+          selectedCalendarDate =
+            day.dataset.calendarDate;
+
+          renderHolidayCalendar();
+
+          openCalendarDetails(
+            selectedCalendarDate
+          );
+        }
+      );
+
+      closeCalendarDetailsButton.addEventListener(
+        "click",
+        closeCalendarDetails
+      );
+    }
+
+
+    function renderHolidayCalendar() {
+      const year =
+        calendarCursor.getFullYear();
+
+      const month =
+        calendarCursor.getMonth();
+
+      calendarMonthLabel.textContent =
+        calendarCursor.toLocaleDateString(
+          [],
+          {
+            month: "long",
+            year: "numeric"
+          }
+        );
+
+      const firstDay =
+        new Date(
+          year,
+          month,
+          1
+        );
+
+      const startDate =
+        new Date(firstDay);
+
+      startDate.setDate(
+        startDate.getDate() -
+        startDate.getDay()
+      );
+
+      const weekdays = [
+        "Sun",
+        "Mon",
+        "Tue",
+        "Wed",
+        "Thu",
+        "Fri",
+        "Sat"
+      ];
+
+      let html =
+        weekdays
+          .map(day => `
+            <div class="calendar-weekday">
+              ${day}
+            </div>
+          `)
+          .join("");
+
+      const today =
+        formatDateForInput(
+          new Date()
+        );
+
+      for (
+        let index = 0;
+        index < 42;
+        index += 1
+      ) {
+        const date =
+          new Date(startDate);
+
+        date.setDate(
+          startDate.getDate() +
+          index
+        );
+
+        const dateText =
+          formatDateForInput(date);
+
+        const events =
+          getHolidayEventsForDate(
+            dateText
+          );
+
+        const outsideMonth =
+          date.getMonth() !==
+          month;
+
+        const isToday =
+          dateText === today;
+
+        const isSelected =
+          dateText ===
+          selectedCalendarDate;
+
+        html += `
+          <div
+            class="calendar-day
+              ${outsideMonth ? "outside-month" : ""}
+              ${isToday ? "today" : ""}
+              ${isSelected ? "selected" : ""}
+            "
+            data-calendar-date="${dateText}"
+          >
+            <div class="calendar-day-number">
+              <span>
+                ${date.getDate()}
+              </span>
+
+              ${
+                events.length > 0
+                  ? `
+                    <span class="calendar-entry-count">
+                      ${events.length}
+                    </span>
+                  `
+                  : ""
+              }
+            </div>
+
+            <div class="calendar-events">
+              ${events
+                .slice(0, 3)
+                .map(item => `
+                  <div
+                    class="calendar-event calendar-event-${escapeHtml(item.status)}"
+                    title="${escapeHtml(item.screen)} · ${escapeHtml(item.startTime)} · ${escapeHtml(item.image)}"
+                  >
+                    ${escapeHtml(item.screen)}
+                    ·
+                    ${escapeHtml(item.startTime)}
+                  </div>
+                `)
+                .join("")}
+
+              ${
+                events.length > 3
+                  ? `
+                    <div class="calendar-more">
+                      +${events.length - 3} more
+                    </div>
+                  `
+                  : ""
+              }
+            </div>
+          </div>
+        `;
+      }
+
+      holidayCalendarGrid.innerHTML =
+        html;
+    }
+
+
+    function getHolidayEventsForDate(
+      dateText
+    ) {
+      return holidayOverrides
+        .filter(item => {
+          if (
+            item.status === "invalid" ||
+            !item.startDate ||
+            !item.endDate
+          ) {
+            return false;
+          }
+
+          return (
+            dateText >= item.startDate &&
+            dateText <= item.endDate
+          );
+        })
+        .map(item => ({
+          ...item,
+          status:
+            getCalendarEventStatus(
+              item,
+              dateText
+            )
+        }))
+        .sort((a, b) =>
+          String(a.startTime)
+            .localeCompare(
+              String(b.startTime)
+            )
+        );
+    }
+
+
+    function getCalendarEventStatus(
+      item,
+      dateText
+    ) {
+      const today =
+        formatDateForInput(
+          new Date()
+        );
+
+      if (dateText < today) {
+        return "expired";
+      }
+
+      if (dateText > today) {
+        return "upcoming";
+      }
+
+      return getHolidayRowStatus(
+        item
+      );
+    }
+
+
+    function openCalendarDetails(
+      dateText
+    ) {
+      const events =
+        getHolidayEventsForDate(
+          dateText
+        );
+
+      calendarDetailsTitle.textContent =
+        new Date(
+          `${dateText}T12:00:00`
+        ).toLocaleDateString(
+          [],
+          {
+            weekday: "long",
+            year: "numeric",
+            month: "long",
+            day: "numeric"
+          }
+        );
+
+      if (events.length === 0) {
+        calendarDetailsList.innerHTML = `
+          <div class="calendar-details-item">
+            No Holiday Overrides are active on this date.
+          </div>
+        `;
+
+      } else {
+        calendarDetailsList.innerHTML =
+          events
+            .map(item => `
+              <div class="calendar-details-item">
+                <div class="calendar-details-title">
+                  ${escapeHtml(item.screen)}
+                  ·
+                  ${escapeHtml(item.startTime)}
+                </div>
+
+                <div class="calendar-details-meta">
+                  ${escapeHtml(item.startDate)}
+                  →
+                  ${escapeHtml(item.endDate)}
+                  <br>
+                  ${escapeHtml(item.image)}
+                  ·
+                  ${escapeHtml(item.fade)} ms
+                </div>
+              </div>
+            `)
+            .join("");
+      }
+
+      calendarDetails.classList.remove(
+        "hidden"
+      );
+    }
+
+
+    function closeCalendarDetails() {
+      calendarDetails.classList.add(
+        "hidden"
+      );
+
+      calendarDetailsTitle.textContent =
+        "—";
+
+      calendarDetailsList.innerHTML =
+        "";
+    }
+
+    /*
+     * =====================================================
      * GENERAL HELPERS
      * =====================================================
      */
@@ -12831,6 +13667,13 @@
       }
     );
 
+    holidayCalendarTab.addEventListener(
+      "click",
+      function() {
+        openWorkspace("calendar");
+      }
+    );
+
     reloadManagerButton.addEventListener(
       "click",
       function() {
@@ -12852,6 +13695,7 @@
     setupBackupHistory();
     setupImageLibrary();
     setupAuditLog();
+    setupHolidayCalendar();
     initializeDraftRecovery();
 
     refreshDashboard();
