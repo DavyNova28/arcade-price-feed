@@ -4262,6 +4262,27 @@
       line-height: 1.45;
     }
 
+
+    /* SYSTEM HEALTH */
+    .system-health { padding:23px; border:1px solid var(--border); border-radius:var(--radius); background:var(--surface); box-shadow:var(--shadow); }
+    .health-toolbar { display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:18px; padding:14px 16px; border:1px solid var(--border); border-radius:12px; background:var(--surface-light); }
+    .health-summary { display:grid; grid-template-columns:repeat(4,minmax(150px,1fr)); gap:12px; margin-bottom:18px; }
+    .health-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; }
+    .health-panel { padding:16px; border:1px solid var(--border); border-radius:12px; background:var(--surface-light); }
+    .health-panel-title { margin:0 0 12px; font-size:15px; font-weight:800; }
+    .health-list { display:grid; gap:9px; }
+    .health-row { display:flex; justify-content:space-between; align-items:center; gap:12px; padding:9px 10px; border:1px solid var(--border); border-radius:9px; background:var(--surface); }
+    .health-row-label { min-width:0; color:var(--muted); font-size:12px; overflow-wrap:anywhere; }
+    .health-row-value { flex:0 0 auto; font-size:12px; font-weight:800; }
+    .health-state { display:inline-flex; padding:6px 9px; border-radius:999px; font-size:11px; font-weight:800; text-transform:uppercase; }
+    .health-state-healthy { color:#caffea; background:var(--regular-dark); }
+    .health-state-warning { color:#fff0cf; background:var(--holiday-dark); }
+    .health-state-error { color:#ffd6d6; background:var(--error-dark); }
+    .health-error-box { display:none; margin-top:16px; padding:13px 14px; border:1px solid rgba(255,104,104,.48); border-radius:10px; color:#ffd6d6; background:rgba(103,40,40,.52); font-size:12px; line-height:1.5; }
+    .health-error-box.visible { display:block; }
+    @media (max-width:900px) { .health-summary { grid-template-columns:repeat(2,minmax(0,1fr)); } .health-grid { grid-template-columns:1fr; } }
+    @media (max-width:480px) { .health-summary { grid-template-columns:1fr; } }
+
     body,
     header,
     .system-banner,
@@ -4880,6 +4901,15 @@
       >
         V3.1 Audit
       </button>
+
+      <button
+        id="systemHealthTab"
+        class="workspace-tab"
+        type="button"
+      >
+        System Health
+      </button>
+
 </nav>
 
     <section
@@ -7176,6 +7206,58 @@
         </section>
       </section>
     </section>
+
+
+    <section
+      id="systemHealthWorkspace"
+      class="workspace"
+    >
+      <section class="system-health">
+        <div class="manager-header">
+          <div>
+            <div class="eyebrow">Priority 1</div>
+            <h2 class="manager-title">System Health</h2>
+            <p class="manager-description">Live Apps Script telemetry from the temporary script cache.</p>
+          </div>
+          <div id="healthOverallState" class="health-state health-state-warning">Not loaded</div>
+        </div>
+
+        <div class="health-toolbar">
+          <div id="healthLastUpdated" class="manager-description">Open this workspace to load telemetry.</div>
+          <button id="refreshSystemHealthButton" class="button button-primary" type="button">Refresh health</button>
+        </div>
+
+        <section class="health-summary">
+          <article class="manager-stat"><div class="manager-stat-label">Requests today</div><div id="healthRequestCount" class="manager-stat-value">0</div></article>
+          <article class="manager-stat"><div class="manager-stat-label">Success rate</div><div id="healthSuccessRate" class="manager-stat-value">—</div></article>
+          <article class="manager-stat"><div class="manager-stat-label">Cache hit rate</div><div id="healthCacheHitRate" class="manager-stat-value">—</div></article>
+          <article class="manager-stat"><div class="manager-stat-label">Average response</div><div id="healthAverageResponse" class="manager-stat-value">—</div></article>
+        </section>
+
+        <section class="health-grid">
+          <article class="health-panel">
+            <h3 class="health-panel-title">Performance</h3>
+            <div class="health-list">
+              <div class="health-row"><div class="health-row-label">Successful requests</div><div id="healthSuccessCount" class="health-row-value">0</div></div>
+              <div class="health-row"><div class="health-row-label">Failed requests</div><div id="healthFailureCount" class="health-row-value">0</div></div>
+              <div class="health-row"><div class="health-row-label">Slowest response</div><div id="healthMaxResponse" class="health-row-value">—</div></div>
+              <div class="health-row"><div class="health-row-label">Last request</div><div id="healthLastRequest" class="health-row-value">—</div></div>
+            </div>
+          </article>
+          <article class="health-panel">
+            <h3 class="health-panel-title">Cache</h3>
+            <div class="health-list">
+              <div class="health-row"><div class="health-row-label">Cache hits</div><div id="healthCacheHits" class="health-row-value">0</div></div>
+              <div class="health-row"><div class="health-row-label">Cache misses</div><div id="healthCacheMisses" class="health-row-value">0</div></div>
+            </div>
+          </article>
+          <article class="health-panel"><h3 class="health-panel-title">Requests by action</h3><div id="healthActionsList" class="health-list"></div></article>
+          <article class="health-panel"><h3 class="health-panel-title">Requests by screen</h3><div id="healthScreensList" class="health-list"></div></article>
+        </section>
+
+        <div id="healthErrorBox" class="health-error-box"></div>
+      </section>
+    </section>
   </main>
 
   <iframe
@@ -7365,7 +7447,7 @@
      */
 
     const SCHEDULE_FEED_URL =
-      "https://script.google.com/macros/s/AKfycbwUINP9DCEUywwCU1YMjfnPT3H8ZUq1lsGVk8ShACrTp2EZIqMYrChADlk_uEh2F-DGXw/exec";
+      "PASTE_YOUR_APPS_SCRIPT_EXEC_URL_HERE";
 
     const SCREEN_NAMES = [
       "Arcade",
@@ -8163,6 +8245,26 @@
       document.getElementById(
         "closeDailyCalendarDetailsButton"
       );
+
+
+    const systemHealthTab = document.getElementById("systemHealthTab");
+    const systemHealthWorkspace = document.getElementById("systemHealthWorkspace");
+    const refreshSystemHealthButton = document.getElementById("refreshSystemHealthButton");
+    const healthOverallState = document.getElementById("healthOverallState");
+    const healthLastUpdated = document.getElementById("healthLastUpdated");
+    const healthRequestCount = document.getElementById("healthRequestCount");
+    const healthSuccessRate = document.getElementById("healthSuccessRate");
+    const healthCacheHitRate = document.getElementById("healthCacheHitRate");
+    const healthAverageResponse = document.getElementById("healthAverageResponse");
+    const healthSuccessCount = document.getElementById("healthSuccessCount");
+    const healthFailureCount = document.getElementById("healthFailureCount");
+    const healthMaxResponse = document.getElementById("healthMaxResponse");
+    const healthLastRequest = document.getElementById("healthLastRequest");
+    const healthCacheHits = document.getElementById("healthCacheHits");
+    const healthCacheMisses = document.getElementById("healthCacheMisses");
+    const healthActionsList = document.getElementById("healthActionsList");
+    const healthScreensList = document.getElementById("healthScreensList");
+    const healthErrorBox = document.getElementById("healthErrorBox");
 
     const dailyCalendarHoverPreview =
       document.getElementById(
@@ -10506,6 +10608,9 @@
       const showDailyCalendar =
         workspaceName === "dailyCalendar";
 
+      const showSystemHealth =
+        workspaceName === "systemHealth";
+
       controlCenterTab.classList.toggle(
         "active",
         showControl
@@ -10551,6 +10656,11 @@
         showDailyCalendar
       );
 
+      systemHealthTab.classList.toggle(
+        "active",
+        showSystemHealth
+      );
+
       controlCenterWorkspace.classList.toggle(
         "active",
         showControl
@@ -10594,6 +10704,11 @@
       dailyScheduleCalendarWorkspace.classList.toggle(
         "active",
         showDailyCalendar
+      );
+
+      systemHealthWorkspace.classList.toggle(
+        "active",
+        showSystemHealth
       );
 
       if (showManager) {
@@ -10642,6 +10757,10 @@
 
       if (showDailyCalendar) {
         renderDailyScheduleCalendar();
+      }
+
+      if (showSystemHealth) {
+        loadSystemHealth();
       }
     }
 
@@ -20208,6 +20327,129 @@
         "";
     }
 
+
+    /*
+     * =====================================================
+     * SYSTEM HEALTH
+     * =====================================================
+     */
+
+    function setupSystemHealth() {
+      refreshSystemHealthButton.addEventListener("click", loadSystemHealth);
+    }
+
+    function loadSystemHealth() {
+      refreshSystemHealthButton.disabled = true;
+      refreshSystemHealthButton.textContent = "Loading…";
+      healthLastUpdated.textContent = "Reading Apps Script telemetry…";
+      healthErrorBox.className = "health-error-box";
+      healthErrorBox.textContent = "";
+
+      const callbackName = `systemHealthCallback_${Date.now()}`;
+      const script = document.createElement("script");
+      const separator = SCHEDULE_FEED_URL.includes("?") ? "&" : "?";
+
+      window[callbackName] = function(payload) {
+        try {
+          if (!payload || payload.success !== true || !payload.telemetry) {
+            throw new Error(payload && payload.error ? payload.error : "System Health returned no telemetry.");
+          }
+          renderSystemHealth(payload.telemetry);
+        } catch (error) {
+          showSystemHealthError(error.message || "System Health could not be loaded.");
+        } finally {
+          cleanupSystemHealthRequest(callbackName, script);
+        }
+      };
+
+      script.onerror = function() {
+        showSystemHealthError("Could not connect to the Apps Script health endpoint.");
+        cleanupSystemHealthRequest(callbackName, script);
+      };
+
+      script.src = `${SCHEDULE_FEED_URL}${separator}action=healthManager&callback=${encodeURIComponent(callbackName)}&_=${Date.now()}`;
+      document.head.appendChild(script);
+
+      setTimeout(function() {
+        if (typeof window[callbackName] === "function") {
+          showSystemHealthError("The Apps Script health request timed out.");
+          cleanupSystemHealthRequest(callbackName, script);
+        }
+      }, 20000);
+    }
+
+    function cleanupSystemHealthRequest(callbackName, script) {
+      if (script && script.remove) script.remove();
+      try { delete window[callbackName]; } catch (error) { window[callbackName] = undefined; }
+      refreshSystemHealthButton.disabled = false;
+      refreshSystemHealthButton.textContent = "Refresh health";
+    }
+
+    function renderSystemHealth(telemetry) {
+      const failures = Number(telemetry.failures || 0);
+      const successRate = Number(telemetry.successRate || 0);
+      const averageDuration = Number(telemetry.averageDurationMs || 0);
+
+      let state = "healthy";
+      let stateText = "Healthy";
+
+      if (failures > 0 || successRate < 98 || averageDuration > 1500) {
+        state = "warning";
+        stateText = "Needs attention";
+      }
+
+      if (successRate < 90 || failures >= 5 || averageDuration > 5000) {
+        state = "error";
+        stateText = "Unhealthy";
+      }
+
+      healthOverallState.className = `health-state health-state-${state}`;
+      healthOverallState.textContent = stateText;
+      healthLastUpdated.textContent = `Updated ${new Date().toLocaleTimeString()}`;
+      healthRequestCount.textContent = String(telemetry.requests || 0);
+      healthSuccessRate.textContent = `${Number(telemetry.successRate || 0).toFixed(1)}%`;
+      healthCacheHitRate.textContent = `${Number(telemetry.cacheHitRate || 0).toFixed(1)}%`;
+      healthAverageResponse.textContent = `${telemetry.averageDurationMs || 0} ms`;
+      healthSuccessCount.textContent = String(telemetry.successes || 0);
+      healthFailureCount.textContent = String(telemetry.failures || 0);
+      healthMaxResponse.textContent = `${telemetry.maxDurationMs || 0} ms`;
+      healthLastRequest.textContent = telemetry.lastRequestAt ? new Date(telemetry.lastRequestAt).toLocaleString() : "—";
+      healthCacheHits.textContent = String(telemetry.cacheHits || 0);
+      healthCacheMisses.textContent = String(telemetry.cacheMisses || 0);
+
+      renderHealthMap(healthActionsList, telemetry.actions, "No action data yet.");
+      renderHealthMap(healthScreensList, telemetry.screens, "No screen data yet.");
+
+      if (telemetry.lastError) {
+        healthErrorBox.className = "health-error-box visible";
+        healthErrorBox.textContent = `Last recorded error: ${telemetry.lastError}`;
+      }
+    }
+
+    function renderHealthMap(container, values, emptyText) {
+      const entries = Object.entries(values || {}).sort((a, b) => Number(b[1]) - Number(a[1]));
+
+      if (entries.length === 0) {
+        container.innerHTML = `<div class="health-row"><div class="health-row-label">${escapeHtml(emptyText)}</div><div class="health-row-value">—</div></div>`;
+        return;
+      }
+
+      container.innerHTML = entries.map(([label, value]) => `
+        <div class="health-row">
+          <div class="health-row-label">${escapeHtml(label)}</div>
+          <div class="health-row-value">${escapeHtml(String(value))}</div>
+        </div>
+      `).join("");
+    }
+
+    function showSystemHealthError(message) {
+      healthOverallState.className = "health-state health-state-error";
+      healthOverallState.textContent = "Unavailable";
+      healthLastUpdated.textContent = "System Health could not be loaded.";
+      healthErrorBox.className = "health-error-box visible";
+      healthErrorBox.textContent = message;
+    }
+
     /*
      * =====================================================
      * GENERAL HELPERS
@@ -20431,6 +20673,15 @@
       }
     );
 
+    systemHealthTab.addEventListener(
+      "click",
+      function() {
+        openWorkspace(
+          "systemHealth"
+        );
+      }
+    );
+
     reloadManagerButton.addEventListener(
       "click",
       function() {
@@ -20462,6 +20713,7 @@
     setupHolidayCalendar();
     setupCompatibilityAudit();
     setupDailyScheduleCalendar();
+    setupSystemHealth();
     initializeDraftRecovery();
     initializeScheduleTemplates();
 
