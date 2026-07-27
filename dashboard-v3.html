@@ -4869,15 +4869,28 @@
         return;
       }
 
-      if (field === "fade") {
-        draft[rowIndex][field] =
-          input.value === ""
-            ? ""
-            : Number(input.value);
-      } else {
-        draft[rowIndex][field] =
-          input.value;
-      }
+     if (field === "fade") {
+  draft[rowIndex][field] =
+    input.value === ""
+      ? ""
+      : Number(input.value);
+
+} else if (field === "time") {
+  const formattedTime =
+    formatManagerTimeInput(
+      input.value
+    );
+
+  input.value =
+    formattedTime;
+
+  draft[rowIndex][field] =
+    formattedTime;
+
+} else {
+  draft[rowIndex][field] =
+    input.value;
+}
 
       validateAndDisplayManagerDraft(
         draft
@@ -5073,13 +5086,15 @@
 
                   <td>
                     <input
-                      class="manager-input manager-time-input ${rowErrors.time ? "invalid" : ""}"
-                      type="time"
-                      step="60"
-                      value="${escapeHtml(item.time)}"
-                      data-row-index="${index}"
-                      data-manager-field="time"
-                    >
+  class="manager-input manager-time-input ${rowErrors.time ? "invalid" : ""}"
+  type="text"
+  inputmode="numeric"
+  maxlength="5"
+  placeholder="HH:MM"
+  value="${escapeHtml(item.time)}"
+  data-row-index="${index}"
+  data-manager-field="time"
+>
                   </td>
 
                   <td>
@@ -5483,6 +5498,22 @@
         }
       );
     }
+    function formatManagerTimeInput(value) {
+  const digits =
+    String(value)
+      .replace(/\D/g, "")
+      .slice(0, 4);
+
+  if (digits.length <= 2) {
+    return digits;
+  }
+
+  return (
+    digits.slice(0, 2) +
+    ":" +
+    digits.slice(2)
+  );
+}
 
     function buildImageUrl(filename) {
       return String(filename)
