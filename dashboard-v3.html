@@ -5117,460 +5117,6 @@
 
 
     /*
-     * =====================================================
-     * CONTROLLED ROLLOUT ASSISTANT
-     * =====================================================
-     */
-
-    async function refreshRolloutAssistant() {
-      refreshRolloutAssistantButton.disabled =
-        true;
-
-      refreshRolloutAssistantButton.textContent =
-        "Refreshing…";
-
-      try {
-        await loadPlayerVersions();
-        renderRolloutAssistant();
-
-      } finally {
-        refreshRolloutAssistantButton.disabled =
-          false;
-
-        refreshRolloutAssistantButton.textContent =
-          "Refresh rollout";
-      }
-    }
-
-
-    function getPlayerBaseUrl() {
-      const currentUrl =
-        new URL(
-          window.location.href
-        );
-
-      const pathname =
-        currentUrl.pathname;
-
-      const directory =
-        pathname.slice(
-          0,
-          pathname.lastIndexOf("/") + 1
-        );
-
-      return (
-        currentUrl.origin +
-        directory +
-        "index.html"
-      );
-    }
-
-
-    function createRolloutPlayerUrl(
-      screenName
-    ) {
-      const url =
-        new URL(
-          getPlayerBaseUrl()
-        );
-
-      url.searchParams.set(
-        "screen",
-        screenName
-      );
-
-      url.searchParams.set(
-        "version",
-        String(Date.now())
-      );
-
-      return url.toString();
-    }
-
-
-    function getRolloutStateForScreen(
-      screenName
-    ) {
-      const scheduleState =
-        screenStates.get(
-          screenName
-        );
-
-      const heartbeat =
-        latestPlayerHeartbeats.find(
-          player =>
-            player.screen ===
-            screenName
-        );
-
-      const hasSchedule =
-        Boolean(
-          scheduleState &&
-          Array.isArray(
-            scheduleState.schedule
-          ) &&
-          scheduleState.schedule.length > 0
-        );
-
-      const hasFallback =
-        Boolean(
-          scheduleState &&
-          scheduleState.schedule.some(
-            item =>
-              !item.endTime
-          )
-        );
-
-      const versionCurrent =
-        Boolean(
-          heartbeat &&
-          heartbeat.playerVersion ===
-            EXPECTED_PLAYER_VERSION
-        );
-
-      const activeImageMissing =
-        Boolean(
-          scheduleState &&
-          scheduleState.imageMissing === true
-        );
-
-      let state =
-        "ready";
-
-      let label =
-        "Ready";
-
-      const notes =
-        [];
-
-      if (!hasSchedule) {
-        state =
-          "blocked";
-
-        label =
-          "Blocked";
-
-        notes.push(
-          "Schedule data is missing."
-        );
-      }
-
-      if (activeImageMissing) {
-        state =
-          "blocked";
-
-        label =
-          "Blocked";
-
-        notes.push(
-          "The active image is missing."
-        );
-      }
-
-      if (
-        state !== "blocked" &&
-        !hasFallback
-      ) {
-        state =
-          "review";
-
-        label =
-          "Review";
-
-        notes.push(
-          "No blank-End-Time fallback row."
-        );
-      }
-
-      if (
-        state !== "blocked" &&
-        !versionCurrent
-      ) {
-        state =
-          "review";
-
-        label =
-          "Review";
-
-        notes.push(
-          heartbeat &&
-          heartbeat.playerVersion
-            ? `Reports ${heartbeat.playerVersion}.`
-            : "Approved player version has not checked in yet."
-        );
-      }
-
-      if (notes.length === 0) {
-        notes.push(
-          "Schedule, image, fallback, and player version checks passed."
-        );
-      }
-
-      return {
-        state:
-          state,
-
-        label:
-          label,
-
-        notes:
-          notes,
-
-        heartbeat:
-          heartbeat,
-
-        scheduleState:
-          scheduleState
-      };
-    }
-
-
-    function renderRolloutAssistant() {
-      if (
-        !rolloutAssistantList ||
-        !rolloutAssistantSummary
-      ) {
-        return;
-      }
-
-      const states =
-        SCREEN_NAMES.map(
-          screenName => ({
-            screenName:
-              screenName,
-
-            ...getRolloutStateForScreen(
-              screenName
-            )
-          })
-        );
-
-      const readyCount =
-        states.filter(
-          item =>
-            item.state === "ready"
-        ).length;
-
-      const reviewCount =
-        states.filter(
-          item =>
-            item.state === "review"
-        ).length;
-
-      const blockedCount =
-        states.filter(
-          item =>
-            item.state === "blocked"
-        ).length;
-
-      rolloutAssistantSummary.textContent =
-        `${readyCount} ready · ` +
-        `${reviewCount} review · ` +
-        `${blockedCount} blocked`;
-
-      rolloutAssistantList.innerHTML =
-        states
-          .map(
-            item => {
-              const url =
-                createRolloutPlayerUrl(
-                  item.screenName
-                );
-
-              const heartbeat =
-                item.heartbeat;
-
-              const lastSeen =
-                heartbeat &&
-                heartbeat.lastSeenAt
-                  ? new Date(
-                      heartbeat.lastSeenAt
-                    ).toLocaleString()
-                  : "Never seen";
-
-              const version =
-                heartbeat &&
-                heartbeat.playerVersion
-                  ? heartbeat.playerVersion
-                  : "Not reported";
-
-              return `
-                <article class="rollout-card ${item.state}">
-                  <div class="rollout-card-header">
-                    <div class="rollout-screen-name">
-                      ${escapeHtml(item.screenName)}
-                    </div>
-
-                    <div class="rollout-state ${item.state}">
-                      ${escapeHtml(item.label)}
-                    </div>
-                  </div>
-
-                  <div class="rollout-url">
-                    ${escapeHtml(url)}
-                  </div>
-
-                  <div class="rollout-details">
-                    <div>
-                      Version: ${escapeHtml(version)}
-                    </div>
-
-                    <div>
-                      Last seen: ${escapeHtml(lastSeen)}
-                    </div>
-
-                    <div>
-                      ${escapeHtml(item.notes.join(" · "))}
-                    </div>
-                  </div>
-
-                  <div class="rollout-actions">
-                    <button
-                      class="button"
-                      type="button"
-                      data-rollout-copy="${escapeHtml(item.screenName)}"
-                    >
-                      Copy player URL
-                    </button>
-
-                    <button
-                      class="button button-primary"
-                      type="button"
-                      data-rollout-open="${escapeHtml(item.screenName)}"
-                    >
-                      Open test player
-                    </button>
-                  </div>
-                </article>
-              `;
-            }
-          )
-          .join("");
-
-      rolloutAssistantList
-        .querySelectorAll(
-          "[data-rollout-copy]"
-        )
-        .forEach(
-          button => {
-            button.addEventListener(
-              "click",
-              async function() {
-                const screenName =
-                  button.getAttribute(
-                    "data-rollout-copy"
-                  );
-
-                await copyRolloutUrl(
-                  screenName
-                );
-              }
-            );
-          }
-        );
-
-      rolloutAssistantList
-        .querySelectorAll(
-          "[data-rollout-open]"
-        )
-        .forEach(
-          button => {
-            button.addEventListener(
-              "click",
-              function() {
-                const screenName =
-                  button.getAttribute(
-                    "data-rollout-open"
-                  );
-
-                window.open(
-                  createRolloutPlayerUrl(
-                    screenName
-                  ),
-                  "_blank",
-                  "noopener"
-                );
-              }
-            );
-          }
-        );
-    }
-
-
-    async function copyRolloutUrl(
-      screenName
-    ) {
-      const url =
-        createRolloutPlayerUrl(
-          screenName
-        );
-
-      try {
-        await navigator.clipboard.writeText(
-          url
-        );
-
-        showRolloutMessage(
-          `${screenName} player URL copied.`,
-          "success"
-        );
-
-      } catch (error) {
-        const textarea =
-          document.createElement(
-            "textarea"
-          );
-
-        textarea.value =
-          url;
-
-        textarea.style.position =
-          "fixed";
-
-        textarea.style.opacity =
-          "0";
-
-        document.body.appendChild(
-          textarea
-        );
-
-        textarea.select();
-
-        document.execCommand(
-          "copy"
-        );
-
-        textarea.remove();
-
-        showRolloutMessage(
-          `${screenName} player URL copied.`,
-          "success"
-        );
-      }
-    }
-
-
-    function showRolloutMessage(
-      message,
-      type
-    ) {
-      rolloutAssistantMessage.className =
-        `rollout-message visible health-admin-message ${type}`;
-
-      rolloutAssistantMessage.textContent =
-        message;
-
-      setTimeout(
-        function() {
-          rolloutAssistantMessage.className =
-            "rollout-message";
-        },
-        3500
-      );
-    }
-
-
-    /*
      * PLAYER VERSION COMPLIANCE
      */
 
@@ -24897,6 +24443,462 @@
       runGoLiveReadinessCheck();
       renderRolloutAssistant();
     }
+
+
+    /*
+     * =====================================================
+     * CONTROLLED ROLLOUT ASSISTANT
+     * =====================================================
+     */
+
+    async function refreshRolloutAssistant() {
+      refreshRolloutAssistantButton.disabled =
+        true;
+
+      refreshRolloutAssistantButton.textContent =
+        "Refreshing…";
+
+      try {
+        await loadPlayerVersions();
+        renderRolloutAssistant();
+
+      } finally {
+        refreshRolloutAssistantButton.disabled =
+          false;
+
+        refreshRolloutAssistantButton.textContent =
+          "Refresh rollout";
+      }
+    }
+
+
+    function getPlayerBaseUrl() {
+      const currentUrl =
+        new URL(
+          window.location.href
+        );
+
+      const pathname =
+        currentUrl.pathname;
+
+      const directory =
+        pathname.slice(
+          0,
+          pathname.lastIndexOf("/") + 1
+        );
+
+      return (
+        currentUrl.origin +
+        directory +
+        "index.html"
+      );
+    }
+
+
+    function createRolloutPlayerUrl(
+      screenName
+    ) {
+      const url =
+        new URL(
+          getPlayerBaseUrl()
+        );
+
+      url.searchParams.set(
+        "screen",
+        screenName
+      );
+
+      url.searchParams.set(
+        "version",
+        String(Date.now())
+      );
+
+      return url.toString();
+    }
+
+
+    function getRolloutStateForScreen(
+      screenName
+    ) {
+      const scheduleState =
+        screenStates.get(
+          screenName
+        );
+
+      const heartbeat =
+        latestPlayerHeartbeats.find(
+          player =>
+            player.screen ===
+            screenName
+        );
+
+      const hasSchedule =
+        Boolean(
+          scheduleState &&
+          Array.isArray(
+            scheduleState.schedule
+          ) &&
+          scheduleState.schedule.length > 0
+        );
+
+      const hasFallback =
+        Boolean(
+          scheduleState &&
+          scheduleState.schedule.some(
+            item =>
+              !item.endTime
+          )
+        );
+
+      const versionCurrent =
+        Boolean(
+          heartbeat &&
+          heartbeat.playerVersion ===
+            EXPECTED_PLAYER_VERSION
+        );
+
+      const activeImageMissing =
+        Boolean(
+          scheduleState &&
+          scheduleState.imageMissing === true
+        );
+
+      let state =
+        "ready";
+
+      let label =
+        "Ready";
+
+      const notes =
+        [];
+
+      if (!hasSchedule) {
+        state =
+          "blocked";
+
+        label =
+          "Blocked";
+
+        notes.push(
+          "Schedule data is missing."
+        );
+      }
+
+      if (activeImageMissing) {
+        state =
+          "blocked";
+
+        label =
+          "Blocked";
+
+        notes.push(
+          "The active image is missing."
+        );
+      }
+
+      if (
+        state !== "blocked" &&
+        !hasFallback
+      ) {
+        state =
+          "review";
+
+        label =
+          "Review";
+
+        notes.push(
+          "No blank-End-Time fallback row."
+        );
+      }
+
+      if (
+        state !== "blocked" &&
+        !versionCurrent
+      ) {
+        state =
+          "review";
+
+        label =
+          "Review";
+
+        notes.push(
+          heartbeat &&
+          heartbeat.playerVersion
+            ? `Reports ${heartbeat.playerVersion}.`
+            : "Approved player version has not checked in yet."
+        );
+      }
+
+      if (notes.length === 0) {
+        notes.push(
+          "Schedule, image, fallback, and player version checks passed."
+        );
+      }
+
+      return {
+        state:
+          state,
+
+        label:
+          label,
+
+        notes:
+          notes,
+
+        heartbeat:
+          heartbeat,
+
+        scheduleState:
+          scheduleState
+      };
+    }
+
+
+    function renderRolloutAssistant() {
+      if (
+        !rolloutAssistantList ||
+        !rolloutAssistantSummary
+      ) {
+        return;
+      }
+
+      const states =
+        SCREEN_NAMES.map(
+          screenName => ({
+            screenName:
+              screenName,
+
+            ...getRolloutStateForScreen(
+              screenName
+            )
+          })
+        );
+
+      const readyCount =
+        states.filter(
+          item =>
+            item.state === "ready"
+        ).length;
+
+      const reviewCount =
+        states.filter(
+          item =>
+            item.state === "review"
+        ).length;
+
+      const blockedCount =
+        states.filter(
+          item =>
+            item.state === "blocked"
+        ).length;
+
+      rolloutAssistantSummary.textContent =
+        `${readyCount} ready · ` +
+        `${reviewCount} review · ` +
+        `${blockedCount} blocked`;
+
+      rolloutAssistantList.innerHTML =
+        states
+          .map(
+            item => {
+              const url =
+                createRolloutPlayerUrl(
+                  item.screenName
+                );
+
+              const heartbeat =
+                item.heartbeat;
+
+              const lastSeen =
+                heartbeat &&
+                heartbeat.lastSeenAt
+                  ? new Date(
+                      heartbeat.lastSeenAt
+                    ).toLocaleString()
+                  : "Never seen";
+
+              const version =
+                heartbeat &&
+                heartbeat.playerVersion
+                  ? heartbeat.playerVersion
+                  : "Not reported";
+
+              return `
+                <article class="rollout-card ${item.state}">
+                  <div class="rollout-card-header">
+                    <div class="rollout-screen-name">
+                      ${escapeHtml(item.screenName)}
+                    </div>
+
+                    <div class="rollout-state ${item.state}">
+                      ${escapeHtml(item.label)}
+                    </div>
+                  </div>
+
+                  <div class="rollout-url">
+                    ${escapeHtml(url)}
+                  </div>
+
+                  <div class="rollout-details">
+                    <div>
+                      Version: ${escapeHtml(version)}
+                    </div>
+
+                    <div>
+                      Last seen: ${escapeHtml(lastSeen)}
+                    </div>
+
+                    <div>
+                      ${escapeHtml(item.notes.join(" · "))}
+                    </div>
+                  </div>
+
+                  <div class="rollout-actions">
+                    <button
+                      class="button"
+                      type="button"
+                      data-rollout-copy="${escapeHtml(item.screenName)}"
+                    >
+                      Copy player URL
+                    </button>
+
+                    <button
+                      class="button button-primary"
+                      type="button"
+                      data-rollout-open="${escapeHtml(item.screenName)}"
+                    >
+                      Open test player
+                    </button>
+                  </div>
+                </article>
+              `;
+            }
+          )
+          .join("");
+
+      rolloutAssistantList
+        .querySelectorAll(
+          "[data-rollout-copy]"
+        )
+        .forEach(
+          button => {
+            button.addEventListener(
+              "click",
+              async function() {
+                const screenName =
+                  button.getAttribute(
+                    "data-rollout-copy"
+                  );
+
+                await copyRolloutUrl(
+                  screenName
+                );
+              }
+            );
+          }
+        );
+
+      rolloutAssistantList
+        .querySelectorAll(
+          "[data-rollout-open]"
+        )
+        .forEach(
+          button => {
+            button.addEventListener(
+              "click",
+              function() {
+                const screenName =
+                  button.getAttribute(
+                    "data-rollout-open"
+                  );
+
+                window.open(
+                  createRolloutPlayerUrl(
+                    screenName
+                  ),
+                  "_blank",
+                  "noopener"
+                );
+              }
+            );
+          }
+        );
+    }
+
+
+    async function copyRolloutUrl(
+      screenName
+    ) {
+      const url =
+        createRolloutPlayerUrl(
+          screenName
+        );
+
+      try {
+        await navigator.clipboard.writeText(
+          url
+        );
+
+        showRolloutMessage(
+          `${screenName} player URL copied.`,
+          "success"
+        );
+
+      } catch (error) {
+        const textarea =
+          document.createElement(
+            "textarea"
+          );
+
+        textarea.value =
+          url;
+
+        textarea.style.position =
+          "fixed";
+
+        textarea.style.opacity =
+          "0";
+
+        document.body.appendChild(
+          textarea
+        );
+
+        textarea.select();
+
+        document.execCommand(
+          "copy"
+        );
+
+        textarea.remove();
+
+        showRolloutMessage(
+          `${screenName} player URL copied.`,
+          "success"
+        );
+      }
+    }
+
+
+    function showRolloutMessage(
+      message,
+      type
+    ) {
+      rolloutAssistantMessage.className =
+        `rollout-message visible health-admin-message ${type}`;
+
+      rolloutAssistantMessage.textContent =
+        message;
+
+      setTimeout(
+        function() {
+          rolloutAssistantMessage.className =
+            "rollout-message";
+        },
+        3500
+      );
+    }
+
+
 
 
     /*
