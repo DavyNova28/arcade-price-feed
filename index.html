@@ -154,6 +154,9 @@
         <div class="debug-label">Current image</div>
         <div id="debugCurrentImage" class="debug-value">—</div>
 
+        <div class="debug-label">Player version</div>
+        <div id="debugPlayerVersion" class="debug-value">—</div>
+
         <div class="debug-label">Last result</div>
         <div id="debugLastResult" class="debug-value">Starting…</div>
       </div>
@@ -176,6 +179,9 @@
      * 22:00. Between 22:00 and 10:00, Apps Script is not
      * contacted at all.
      */
+    const PLAYER_VERSION =
+      "v3.1-heartbeat-1";
+
     const ACTIVE_FEED_POLL_MS = 30000;
 
     /*
@@ -289,6 +295,9 @@
 
     const debugCurrentImage =
       document.getElementById("debugCurrentImage");
+
+    const debugPlayerVersion =
+      document.getElementById("debugPlayerVersion");
 
     const debugLastResult =
       document.getElementById("debugLastResult");
@@ -555,6 +564,9 @@
         `${SCHEDULE_FEED_URL}` +
         `${separator}callback=updateSignageSchedule` +
         `&screen=${encodeURIComponent(SCREEN_NAME)}` +
+        `&currentImage=${encodeURIComponent(currentImageName || "")}` +
+        `&playerVersion=${encodeURIComponent(PLAYER_VERSION)}` +
+        `&debug=${DEBUG_MODE ? "1" : "0"}` +
         `&_=${Date.now()}` +
         `&request=${feedRequestNumber}`;
 
@@ -1343,6 +1355,9 @@
 
       debugCurrentImage.textContent =
         currentImageName || "—";
+
+      debugPlayerVersion.textContent =
+        PLAYER_VERSION;
 
       debugLastResult.textContent =
         lastFeedResult;
