@@ -7472,6 +7472,14 @@
     const GITHUB_BRANCH =
       "main";
 
+    /*
+     * Generated automatically by GitHub Actions.
+     * The dashboard tries this lightweight file first and
+     * falls back to the GitHub API if it is unavailable.
+     */
+    const GITHUB_IMAGE_INDEX_FILE =
+      "image-index.json";
+
     const LOCAL_DRAFT_STORAGE = {
       regularPrefix:
         "miniGolfScheduleDraft:",
@@ -16605,6 +16613,66 @@
 
 
     async function fetchRepositoryImageFiles() {
+      /*
+       * Fast path:
+       * use the generated static index from GitHub Pages.
+       */
+      try {
+        const indexResponse =
+          await fetch(
+            `${GITHUB_IMAGE_INDEX_FILE}?_=${Date.now()}`,
+            {
+              cache:
+                "no-store"
+            }
+          );
+
+        if (indexResponse.ok) {
+          const indexPayload =
+            await indexResponse.json();
+
+          if (
+            indexPayload &&
+            Array.isArray(
+              indexPayload.images
+            )
+          ) {
+            const indexedImages =
+              indexPayload.images
+                .map(item =>
+                  typeof item === "string"
+                    ? item
+                    : item && item.path
+                      ? item.path
+                      : ""
+                )
+                .filter(
+                  filename =>
+                    isImageFilename(
+                      filename
+                    )
+                );
+
+            if (
+              indexedImages.length > 0
+            ) {
+              return indexedImages;
+            }
+          }
+        }
+
+      } catch (error) {
+        console.warn(
+          "The static image index could not be loaded. Falling back to the GitHub API.",
+          error
+        );
+      }
+
+      /*
+       * Safe fallback:
+       * query the GitHub tree API when the generated index
+       * is missing, invalid, or outdated.
+       */
       const url =
         `https://api.github.com/repos/` +
         `${GITHUB_REPOSITORY}/git/trees/` +
@@ -16628,7 +16696,7 @@
           response.status === 429
         ) {
           throw new Error(
-            "GitHub API rate limit reached. Try the scan again later."
+            "GitHub API rate limit reached and image-index.json was unavailable."
           );
         }
 
@@ -16636,7 +16704,7 @@
           response.status === 404
         ) {
           throw new Error(
-            "The configured GitHub repository or branch could not be found."
+            "The configured GitHub repository, branch, or image index could not be found."
           );
         }
 
