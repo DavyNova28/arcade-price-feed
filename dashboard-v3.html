@@ -5395,6 +5395,76 @@
       }
     }
 
+
+    /*
+     * =====================================================
+     * ROLLOUT PROGRESS TRACKING
+     * =====================================================
+     */
+
+    .rollout-progress-controls {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 8px;
+
+      margin-top: 12px;
+    }
+
+    .rollout-stage {
+      display: inline-flex;
+      align-items: center;
+      width: fit-content;
+
+      padding: 5px 8px;
+
+      border-radius: 999px;
+
+      font-size: 9px;
+      font-weight: 900;
+      text-transform: uppercase;
+    }
+
+    .rollout-stage-not-started {
+      color: var(--muted);
+      background: var(--surface-light);
+      border: 1px solid var(--border);
+    }
+
+    .rollout-stage-testing {
+      color: #fff0cf;
+      background: var(--holiday-dark);
+    }
+
+    .rollout-stage-deployed {
+      color: #caffea;
+      background: var(--regular-dark);
+    }
+
+    html[data-theme="light"] .rollout-stage-testing {
+      color: #7a5518;
+      background: #fff1d4;
+    }
+
+    html[data-theme="light"] .rollout-stage-deployed {
+      color: #15543a;
+      background: #d9f7ea;
+    }
+
+    .rollout-progress-summary {
+      margin-top: 10px;
+
+      color: var(--muted);
+      font-size: 10px;
+      line-height: 1.45;
+    }
+
+    @media (min-width: 760px) {
+      .rollout-progress-controls {
+        grid-template-columns:
+          repeat(3, minmax(0, 1fr));
+      }
+    }
+
     body,
     header,
     .system-banner,
@@ -8445,13 +8515,23 @@
               </p>
             </div>
 
-            <button
-              id="refreshRolloutAssistantButton"
-              class="button"
-              type="button"
-            >
-              Refresh rollout
-            </button>
+            <div style="display:grid;gap:8px;width:min(100%,220px);">
+              <button
+                id="refreshRolloutAssistantButton"
+                class="button"
+                type="button"
+              >
+                Refresh rollout
+              </button>
+
+              <button
+                id="resetRolloutProgressButton"
+                class="button"
+                type="button"
+              >
+                Reset rollout progress
+              </button>
+            </div>
           </div>
 
           <div
@@ -8917,6 +8997,9 @@
      */
     const EXPECTED_PLAYER_VERSION =
       "v3.1-heartbeat-1";
+
+    const ROLLOUT_PROGRESS_STORAGE_KEY =
+      "miniGolfRolloutProgressV1";
 
     const DASHBOARD_OFFLINE_STORAGE_KEY =
       "miniGolfDashboardOfflineSnapshotV1";
@@ -9738,6 +9821,11 @@
         "refreshRolloutAssistantButton"
       );
 
+    const resetRolloutProgressButton =
+      document.getElementById(
+        "resetRolloutProgressButton"
+      );
+
     const rolloutAssistantSummary =
       document.getElementById(
         "rolloutAssistantSummary"
@@ -10372,6 +10460,9 @@
 
     let latestHealthScoreResult =
       null;
+
+    let rolloutProgress =
+      readRolloutProgress();
 
     let calendarCursor =
       new Date();
@@ -22257,6 +22348,30 @@
         refreshRolloutAssistant
       );
 
+      resetRolloutProgressButton.addEventListener(
+        "click",
+        function() {
+          if (
+            !window.confirm(
+              "Reset the rollout progress for every screen?"
+            )
+          ) {
+            return;
+          }
+
+          rolloutProgress =
+            {};
+
+          persistRolloutProgress();
+          renderRolloutAssistant();
+
+          showRolloutMessage(
+            "Rollout progress was reset.",
+            "success"
+          );
+        }
+      );
+
       expectedPlayerVersionLabel.textContent =
         EXPECTED_PLAYER_VERSION;
     }
@@ -24451,6 +24566,103 @@
      * =====================================================
      */
 
+    function readRolloutProgress() {
+      try {
+        const raw =
+          localStorage.getItem(
+            ROLLOUT_PROGRESS_STORAGE_KEY
+          );
+
+        if (!raw) {
+          return {};
+        }
+
+        const parsed =
+          JSON.parse(raw);
+
+        return (
+          parsed &&
+          typeof parsed === "object"
+        )
+          ? parsed
+          : {};
+
+      } catch (error) {
+        return {};
+      }
+    }
+
+
+    function persistRolloutProgress() {
+      try {
+        localStorage.setItem(
+          ROLLOUT_PROGRESS_STORAGE_KEY,
+          JSON.stringify(
+            rolloutProgress
+          )
+        );
+      } catch (error) {
+        console.warn(
+          "Could not save rollout progress.",
+          error
+        );
+      }
+    }
+
+
+    function getRolloutStage(
+      screenName
+    ) {
+      const value =
+        rolloutProgress[
+          screenName
+        ];
+
+      return [
+        "testing",
+        "deployed"
+      ].includes(value)
+        ? value
+        : "not-started";
+    }
+
+
+    function setRolloutStage(
+      screenName,
+      stage
+    ) {
+      const state =
+        getRolloutStateForScreen(
+          screenName
+        );
+
+      if (
+        stage === "deployed" &&
+        state.state !== "ready"
+      ) {
+        showRolloutMessage(
+          `${screenName} cannot be marked Deployed until all required checks pass.`,
+          "error"
+        );
+
+        return;
+      }
+
+      rolloutProgress[
+        screenName
+      ] =
+        stage;
+
+      persistRolloutProgress();
+      renderRolloutAssistant();
+
+      showRolloutMessage(
+        `${screenName} is now marked ${stage === "not-started" ? "Not started" : stage}.`,
+        "success"
+      );
+    }
+
+
     async function refreshRolloutAssistant() {
       refreshRolloutAssistantButton.disabled =
         true;
@@ -24692,10 +24904,28 @@
             item.state === "blocked"
         ).length;
 
+      const testingCount =
+        SCREEN_NAMES.filter(
+          screenName =>
+            getRolloutStage(
+              screenName
+            ) === "testing"
+        ).length;
+
+      const deployedCount =
+        SCREEN_NAMES.filter(
+          screenName =>
+            getRolloutStage(
+              screenName
+            ) === "deployed"
+        ).length;
+
       rolloutAssistantSummary.textContent =
         `${readyCount} ready · ` +
         `${reviewCount} review · ` +
-        `${blockedCount} blocked`;
+        `${blockedCount} blocked · ` +
+        `${testingCount} testing · ` +
+        `${deployedCount} deployed`;
 
       rolloutAssistantList.innerHTML =
         states
@@ -24753,6 +24983,15 @@
                     </div>
                   </div>
 
+                  <div class="rollout-progress-summary">
+                    Deployment stage:
+                    <span class="rollout-stage rollout-stage-${getRolloutStage(item.screenName)}">
+                      ${getRolloutStage(item.screenName) === "not-started"
+                        ? "Not started"
+                        : escapeHtml(getRolloutStage(item.screenName))}
+                    </span>
+                  </div>
+
                   <div class="rollout-actions">
                     <button
                       class="button"
@@ -24768,6 +25007,35 @@
                       data-rollout-open="${escapeHtml(item.screenName)}"
                     >
                       Open test player
+                    </button>
+                  </div>
+
+                  <div class="rollout-progress-controls">
+                    <button
+                      class="button"
+                      type="button"
+                      data-rollout-stage="not-started"
+                      data-rollout-screen="${escapeHtml(item.screenName)}"
+                    >
+                      Mark not started
+                    </button>
+
+                    <button
+                      class="button"
+                      type="button"
+                      data-rollout-stage="testing"
+                      data-rollout-screen="${escapeHtml(item.screenName)}"
+                    >
+                      Mark testing
+                    </button>
+
+                    <button
+                      class="button button-primary"
+                      type="button"
+                      data-rollout-stage="deployed"
+                      data-rollout-screen="${escapeHtml(item.screenName)}"
+                    >
+                      Mark deployed
                     </button>
                   </div>
                 </article>
@@ -24818,6 +25086,34 @@
                   ),
                   "_blank",
                   "noopener"
+                );
+              }
+            );
+          }
+        );
+
+      rolloutAssistantList
+        .querySelectorAll(
+          "[data-rollout-stage]"
+        )
+        .forEach(
+          button => {
+            button.addEventListener(
+              "click",
+              function() {
+                const screenName =
+                  button.getAttribute(
+                    "data-rollout-screen"
+                  );
+
+                const stage =
+                  button.getAttribute(
+                    "data-rollout-stage"
+                  );
+
+                setRolloutStage(
+                  screenName,
+                  stage
                 );
               }
             );
