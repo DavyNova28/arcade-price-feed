@@ -3589,6 +3589,131 @@
       cursor: pointer;
     }
 
+
+    /*
+     * =====================================================
+     * V3.1 COMPATIBILITY AUDIT
+     * =====================================================
+     */
+
+    .compatibility-audit {
+      padding: 23px;
+
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+
+      background: var(--surface);
+      box-shadow: var(--shadow);
+    }
+
+    .compatibility-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+
+      margin-bottom: 18px;
+      padding: 14px 16px;
+
+      border: 1px solid var(--border);
+      border-radius: 12px;
+
+      background: var(--surface-light);
+    }
+
+    .compatibility-summary {
+      display: grid;
+      grid-template-columns:
+        repeat(4, minmax(150px, 1fr));
+      gap: 12px;
+
+      margin-bottom: 18px;
+    }
+
+    .compatibility-list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .compatibility-item {
+      padding: 13px 14px;
+
+      border: 1px solid var(--border);
+      border-radius: 10px;
+
+      background: var(--surface);
+
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    .compatibility-item strong {
+      display: block;
+      margin-bottom: 3px;
+    }
+
+    .compatibility-ok {
+      color: #caffea;
+      border-color: rgba(54, 201, 135, 0.45);
+      background: rgba(23, 75, 56, 0.5);
+    }
+
+    .compatibility-warning {
+      color: #fff0cf;
+      border-color: rgba(242, 170, 63, 0.5);
+      background: rgba(101, 69, 24, 0.52);
+    }
+
+    .compatibility-error {
+      color: #ffd6d6;
+      border-color: rgba(255, 104, 104, 0.5);
+      background: rgba(103, 40, 40, 0.52);
+    }
+
+    .compatibility-info {
+      color: #d9eaff;
+      border-color: rgba(95, 168, 255, 0.48);
+      background: rgba(35, 74, 115, 0.5);
+    }
+
+    html[data-theme="light"] .compatibility-ok {
+      color: #15543a;
+      background: #d9f7ea;
+    }
+
+    html[data-theme="light"] .compatibility-warning {
+      color: #7a5518;
+      background: #fff1d4;
+    }
+
+    html[data-theme="light"] .compatibility-error {
+      color: #7e2525;
+      background: #ffe5e5;
+    }
+
+    html[data-theme="light"] .compatibility-info {
+      color: #173a5d;
+      background: #e7f1fb;
+    }
+
+    @media (max-width: 720px) {
+      .compatibility-audit {
+        padding: 15px;
+      }
+
+      .compatibility-summary {
+        grid-template-columns:
+          repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 480px) {
+      .compatibility-summary {
+        grid-template-columns: 1fr;
+      }
+    }
+
     body,
     header,
     .system-banner,
@@ -4189,6 +4314,14 @@
         type="button"
       >
         Holiday Calendar
+      </button>
+
+      <button
+        id="compatibilityAuditTab"
+        class="workspace-tab"
+        type="button"
+      >
+        V3.1 Audit
       </button>
     </nav>
 
@@ -6085,6 +6218,114 @@
         </section>
       </section>
     </section>
+
+    <section
+      id="compatibilityAuditWorkspace"
+      class="workspace"
+    >
+      <section class="compatibility-audit">
+        <div class="manager-header">
+          <div>
+            <div class="eyebrow">
+              Dashboard V3.1
+            </div>
+
+            <h2 class="manager-title">
+              Compatibility Audit
+            </h2>
+
+            <p class="manager-description">
+              Review End Time readiness, older backups, drafts, repository checks,
+              and schedule safety across the complete signage system.
+            </p>
+          </div>
+
+          <div class="manager-status">
+            Read-only
+          </div>
+        </div>
+
+        <div class="compatibility-toolbar">
+          <div
+            id="compatibilityAuditStatus"
+            class="manager-description"
+          >
+            Open this workspace to run the audit.
+          </div>
+
+          <button
+            id="runCompatibilityAuditButton"
+            class="button button-primary"
+            type="button"
+          >
+            Run compatibility audit
+          </button>
+        </div>
+
+        <section class="compatibility-summary">
+          <article class="manager-stat">
+            <div class="manager-stat-label">
+              Checks passed
+            </div>
+
+            <div
+              id="compatibilityPassCount"
+              class="manager-stat-value"
+            >
+              0
+            </div>
+          </article>
+
+          <article class="manager-stat">
+            <div class="manager-stat-label">
+              Warnings
+            </div>
+
+            <div
+              id="compatibilityWarningCount"
+              class="manager-stat-value"
+            >
+              0
+            </div>
+          </article>
+
+          <article class="manager-stat">
+            <div class="manager-stat-label">
+              Errors
+            </div>
+
+            <div
+              id="compatibilityErrorCount"
+              class="manager-stat-value"
+            >
+              0
+            </div>
+          </article>
+
+          <article class="manager-stat">
+            <div class="manager-stat-label">
+              Overall state
+            </div>
+
+            <div
+              id="compatibilityOverallState"
+              class="manager-stat-value"
+            >
+              —
+            </div>
+          </article>
+        </section>
+
+        <div
+          id="compatibilityAuditList"
+          class="compatibility-list"
+        >
+          <div class="compatibility-item compatibility-info">
+            Run the audit to inspect the current dashboard state.
+          </div>
+        </div>
+      </section>
+    </section>
   </main>
 
   <iframe
@@ -6933,6 +7174,51 @@
     const closeCalendarDetailsButton =
       document.getElementById(
         "closeCalendarDetailsButton"
+      );
+
+    const compatibilityAuditTab =
+      document.getElementById(
+        "compatibilityAuditTab"
+      );
+
+    const compatibilityAuditWorkspace =
+      document.getElementById(
+        "compatibilityAuditWorkspace"
+      );
+
+    const runCompatibilityAuditButton =
+      document.getElementById(
+        "runCompatibilityAuditButton"
+      );
+
+    const compatibilityAuditStatus =
+      document.getElementById(
+        "compatibilityAuditStatus"
+      );
+
+    const compatibilityPassCount =
+      document.getElementById(
+        "compatibilityPassCount"
+      );
+
+    const compatibilityWarningCount =
+      document.getElementById(
+        "compatibilityWarningCount"
+      );
+
+    const compatibilityErrorCount =
+      document.getElementById(
+        "compatibilityErrorCount"
+      );
+
+    const compatibilityOverallState =
+      document.getElementById(
+        "compatibilityOverallState"
+      );
+
+    const compatibilityAuditList =
+      document.getElementById(
+        "compatibilityAuditList"
       );
 
     const createHolidayForDateButton =
@@ -9200,6 +9486,9 @@
       const showCalendar =
         workspaceName === "calendar";
 
+      const showCompatibility =
+        workspaceName === "compatibility";
+
       controlCenterTab.classList.toggle(
         "active",
         showControl
@@ -9235,6 +9524,11 @@
         showCalendar
       );
 
+      compatibilityAuditTab.classList.toggle(
+        "active",
+        showCompatibility
+      );
+
       controlCenterWorkspace.classList.toggle(
         "active",
         showControl
@@ -9268,6 +9562,11 @@
       holidayCalendarWorkspace.classList.toggle(
         "active",
         showCalendar
+      );
+
+      compatibilityAuditWorkspace.classList.toggle(
+        "active",
+        showCompatibility
       );
 
       if (showManager) {
@@ -9308,6 +9607,10 @@
         }
 
         renderHolidayCalendar();
+      }
+
+      if (showCompatibility) {
+        runCompatibilityAudit();
       }
     }
 
@@ -16422,6 +16725,583 @@
 
     /*
      * =====================================================
+     * V3.1 COMPATIBILITY AUDIT
+     * =====================================================
+     */
+
+    function setupCompatibilityAudit() {
+      runCompatibilityAuditButton.addEventListener(
+        "click",
+        runCompatibilityAudit
+      );
+    }
+
+
+    function runCompatibilityAudit() {
+      const checks = [];
+
+      addScheduleFeedChecks(
+        checks
+      );
+
+      addEndTimeSafetyChecks(
+        checks
+      );
+
+      addBackupCompatibilityChecks(
+        checks
+      );
+
+      addDraftCompatibilityChecks(
+        checks
+      );
+
+      addRepositoryCompatibilityChecks(
+        checks
+      );
+
+      addHolidayCompatibilityChecks(
+        checks
+      );
+
+      renderCompatibilityAudit(
+        checks
+      );
+    }
+
+
+    function addScheduleFeedChecks(
+      checks
+    ) {
+      const loadedStates =
+        Array.from(
+          screenStates.values()
+        );
+
+      const errorStates =
+        loadedStates.filter(
+          state =>
+            state.error
+        );
+
+      if (
+        loadedStates.length ===
+        SCREEN_NAMES.length &&
+        errorStates.length === 0
+      ) {
+        checks.push({
+          level:
+            "ok",
+
+          title:
+            "All regular schedule feeds loaded",
+
+          details:
+            `${loadedStates.length} of ${SCREEN_NAMES.length} configured screen feeds are available.`
+        });
+
+      } else {
+        checks.push({
+          level:
+            "error",
+
+          title:
+            "One or more schedule feeds are unavailable",
+
+          details:
+            `${errorStates.length} screen feed(s) currently report an error.`
+        });
+      }
+
+      const missingEndTimeProperty =
+        loadedStates.filter(
+          state =>
+            !state.error &&
+            Array.isArray(
+              state.schedule
+            ) &&
+            state.schedule.some(
+              item =>
+                !Object.prototype
+                  .hasOwnProperty
+                  .call(
+                    item,
+                    "endTime"
+                  )
+            )
+        );
+
+      if (
+        missingEndTimeProperty.length === 0
+      ) {
+        checks.push({
+          level:
+            "ok",
+
+          title:
+            "Schedule feed supports End Time",
+
+          details:
+            "Every loaded regular schedule row contains the V3.1 endTime property, including blank values."
+        });
+
+      } else {
+        checks.push({
+          level:
+            "warning",
+
+          title:
+            "Some schedule rows use the older feed format",
+
+          details:
+            `${missingEndTimeProperty.length} screen(s) contain rows without the endTime property. Redeploy the V3.1 Signage.gs backend if this persists.`
+        });
+      }
+    }
+
+
+    function addEndTimeSafetyChecks(
+      checks
+    ) {
+      const allRows = [];
+
+      screenStates.forEach(
+        state => {
+          if (
+            !state.error &&
+            Array.isArray(
+              state.schedule
+            )
+          ) {
+            state.schedule.forEach(
+              item =>
+                allRows.push({
+                  ...item,
+                  screen:
+                    state.screenName
+                })
+            );
+          }
+        }
+      );
+
+      const invalidEndTimes =
+        allRows.filter(
+          item =>
+            item.endTime &&
+            (
+              !/^([01]\d|2[0-3]):[0-5]\d$/
+                .test(item.endTime) ||
+              item.endTime <=
+                item.time
+            )
+        );
+
+      if (
+        invalidEndTimes.length === 0
+      ) {
+        checks.push({
+          level:
+            "ok",
+
+          title:
+            "End Time values are valid",
+
+          details:
+            "No invalid or overnight End Time values were detected."
+        });
+
+      } else {
+        checks.push({
+          level:
+            "error",
+
+          title:
+            "Invalid End Time values detected",
+
+          details:
+            `${invalidEndTimes.length} row(s) contain an invalid End Time.`
+        });
+      }
+
+      const screensWithoutPersistent =
+        SCREEN_NAMES.filter(
+          screenName => {
+            const state =
+              screenStates.get(
+                screenName
+              );
+
+            return (
+              state &&
+              !state.error &&
+              Array.isArray(
+                state.schedule
+              ) &&
+              state.schedule.length > 0 &&
+              state.schedule.every(
+                item =>
+                  Boolean(
+                    item.endTime
+                  )
+              )
+            );
+          }
+        );
+
+      if (
+        screensWithoutPersistent.length === 0
+      ) {
+        checks.push({
+          level:
+            "ok",
+
+          title:
+            "Persistent safety rows available",
+
+          details:
+            "Every loaded regular schedule has at least one row with a blank End Time."
+        });
+
+      } else {
+        checks.push({
+          level:
+            "warning",
+
+          title:
+            "Some screens have no persistent safety row",
+
+          details:
+            screensWithoutPersistent.join(
+              ", "
+            )
+        });
+      }
+    }
+
+
+    function addBackupCompatibilityChecks(
+      checks
+    ) {
+      if (
+        backupHistory.length === 0
+      ) {
+        checks.push({
+          level:
+            "info",
+
+          title:
+            "Backup history has not been loaded",
+
+          details:
+            "Open Backup History or reload it before relying on the compatibility audit for old backup records."
+        });
+
+        return;
+      }
+
+      let olderRegularBackups =
+        0;
+
+      let invalidBackupJson =
+        0;
+
+      backupHistory.forEach(
+        backup => {
+          if (
+            backup.type !== "regular"
+          ) {
+            return;
+          }
+
+          try {
+            const rows =
+              JSON.parse(
+                backup.scheduleJson
+              );
+
+            if (
+              Array.isArray(rows) &&
+              rows.some(
+                row =>
+                  !Object.prototype
+                    .hasOwnProperty
+                    .call(
+                      row,
+                      "endTime"
+                    )
+              )
+            ) {
+              olderRegularBackups += 1;
+            }
+
+          } catch (error) {
+            invalidBackupJson += 1;
+          }
+        }
+      );
+
+      if (
+        invalidBackupJson > 0
+      ) {
+        checks.push({
+          level:
+            "error",
+
+          title:
+            "Invalid backup JSON detected",
+
+          details:
+            `${invalidBackupJson} regular backup record(s) could not be parsed.`
+        });
+
+      } else {
+        checks.push({
+          level:
+            "ok",
+
+          title:
+            "Backup JSON is readable",
+
+          details:
+            "All loaded regular backup records can be parsed."
+        });
+      }
+
+      if (
+        olderRegularBackups > 0
+      ) {
+        checks.push({
+          level:
+            "info",
+
+          title:
+            "Older backups without End Time found",
+
+          details:
+            `${olderRegularBackups} backup(s) predate V3.1. They remain compatible and will be interpreted with a blank End Time.`
+        });
+
+      } else {
+        checks.push({
+          level:
+            "ok",
+
+          title:
+            "Loaded backups use the V3.1 format",
+
+          details:
+            "No older regular backup records were detected."
+        });
+      }
+    }
+
+
+    function addDraftCompatibilityChecks(
+      checks
+    ) {
+      let olderDraftCount =
+        0;
+
+      SCREEN_NAMES.forEach(
+        screenName => {
+          const stored =
+            readStoredScheduleDraft(
+              screenName
+            );
+
+          if (
+            stored &&
+            stored.rows.some(
+              item =>
+                !Object.prototype
+                  .hasOwnProperty
+                  .call(
+                    item,
+                    "endTime"
+                  )
+            )
+          ) {
+            olderDraftCount += 1;
+          }
+        }
+      );
+
+      if (
+        olderDraftCount > 0
+      ) {
+        checks.push({
+          level:
+            "info",
+
+          title:
+            "Older local drafts detected",
+
+          details:
+            `${olderDraftCount} local draft(s) predate End Time support. They will be normalized to a blank End Time when restored.`
+        });
+
+      } else {
+        checks.push({
+          level:
+            "ok",
+
+          title:
+            "Local drafts are V3.1 compatible",
+
+          details:
+            "No older schedule drafts were detected."
+        });
+      }
+    }
+
+
+    function addRepositoryCompatibilityChecks(
+      checks
+    ) {
+      if (
+        !imageHealthScanned ||
+        repositoryImages.length === 0
+      ) {
+        checks.push({
+          level:
+            "warning",
+
+          title:
+            "GitHub repository has not been scanned",
+
+          details:
+            "Filename capitalization and missing-image checks are not currently available."
+        });
+
+        return;
+      }
+
+      if (
+        missingReferencedImages.size === 0
+      ) {
+        checks.push({
+          level:
+            "ok",
+
+          title:
+            "All referenced images exist in GitHub",
+
+          details:
+            `${repositoryImages.length} repository image(s) were scanned.`
+        });
+
+      } else {
+        checks.push({
+          level:
+            "error",
+
+          title:
+            "Missing GitHub image references detected",
+
+          details:
+            `${missingReferencedImages.size} referenced filename(s) were not found.`
+        });
+      }
+    }
+
+
+    function addHolidayCompatibilityChecks(
+      checks
+    ) {
+      const invalidRows =
+        holidayOverrides.filter(
+          item =>
+            item.status ===
+            "invalid"
+        );
+
+      if (
+        invalidRows.length === 0
+      ) {
+        checks.push({
+          level:
+            "ok",
+
+          title:
+            "Holiday Overrides are valid",
+
+          details:
+            `${holidayOverrides.length} override row(s) are currently loaded.`
+        });
+
+      } else {
+        checks.push({
+          level:
+            "error",
+
+          title:
+            "Invalid Holiday Override rows detected",
+
+          details:
+            `${invalidRows.length} row(s) need attention.`
+        });
+      }
+    }
+
+
+    function renderCompatibilityAudit(
+      checks
+    ) {
+      const passCount =
+        checks.filter(
+          check =>
+            check.level === "ok"
+        ).length;
+
+      const warningCount =
+        checks.filter(
+          check =>
+            check.level === "warning" ||
+            check.level === "info"
+        ).length;
+
+      const errorCount =
+        checks.filter(
+          check =>
+            check.level === "error"
+        ).length;
+
+      compatibilityPassCount.textContent =
+        String(passCount);
+
+      compatibilityWarningCount.textContent =
+        String(warningCount);
+
+      compatibilityErrorCount.textContent =
+        String(errorCount);
+
+      compatibilityOverallState.textContent =
+        errorCount > 0
+          ? "Needs attention"
+          : warningCount > 0
+            ? "Ready with notes"
+            : "Ready";
+
+      compatibilityAuditStatus.textContent =
+        `Audit completed at ${new Date().toLocaleTimeString()}.`;
+
+      compatibilityAuditList.innerHTML =
+        checks
+          .map(check => `
+            <div class="compatibility-item compatibility-${escapeHtml(check.level)}">
+              <strong>
+                ${escapeHtml(check.title)}
+              </strong>
+
+              ${escapeHtml(check.details)}
+            </div>
+          `)
+          .join("");
+    }
+
+    /*
+     * =====================================================
      * GENERAL HELPERS
      * =====================================================
      */
@@ -16625,6 +17505,15 @@
       }
     );
 
+    compatibilityAuditTab.addEventListener(
+      "click",
+      function() {
+        openWorkspace(
+          "compatibility"
+        );
+      }
+    );
+
     reloadManagerButton.addEventListener(
       "click",
       function() {
@@ -16654,6 +17543,7 @@
     setupGitHubImagePicker();
     setupAuditLog();
     setupHolidayCalendar();
+    setupCompatibilityAudit();
     initializeDraftRecovery();
 
     refreshDashboard();
