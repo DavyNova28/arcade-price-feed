@@ -5117,6 +5117,460 @@
 
 
     /*
+     * =====================================================
+     * CONTROLLED ROLLOUT ASSISTANT
+     * =====================================================
+     */
+
+    async function refreshRolloutAssistant() {
+      refreshRolloutAssistantButton.disabled =
+        true;
+
+      refreshRolloutAssistantButton.textContent =
+        "Refreshing…";
+
+      try {
+        await loadPlayerVersions();
+        renderRolloutAssistant();
+
+      } finally {
+        refreshRolloutAssistantButton.disabled =
+          false;
+
+        refreshRolloutAssistantButton.textContent =
+          "Refresh rollout";
+      }
+    }
+
+
+    function getPlayerBaseUrl() {
+      const currentUrl =
+        new URL(
+          window.location.href
+        );
+
+      const pathname =
+        currentUrl.pathname;
+
+      const directory =
+        pathname.slice(
+          0,
+          pathname.lastIndexOf("/") + 1
+        );
+
+      return (
+        currentUrl.origin +
+        directory +
+        "index.html"
+      );
+    }
+
+
+    function createRolloutPlayerUrl(
+      screenName
+    ) {
+      const url =
+        new URL(
+          getPlayerBaseUrl()
+        );
+
+      url.searchParams.set(
+        "screen",
+        screenName
+      );
+
+      url.searchParams.set(
+        "version",
+        String(Date.now())
+      );
+
+      return url.toString();
+    }
+
+
+    function getRolloutStateForScreen(
+      screenName
+    ) {
+      const scheduleState =
+        screenStates.get(
+          screenName
+        );
+
+      const heartbeat =
+        latestPlayerHeartbeats.find(
+          player =>
+            player.screen ===
+            screenName
+        );
+
+      const hasSchedule =
+        Boolean(
+          scheduleState &&
+          Array.isArray(
+            scheduleState.schedule
+          ) &&
+          scheduleState.schedule.length > 0
+        );
+
+      const hasFallback =
+        Boolean(
+          scheduleState &&
+          scheduleState.schedule.some(
+            item =>
+              !item.endTime
+          )
+        );
+
+      const versionCurrent =
+        Boolean(
+          heartbeat &&
+          heartbeat.playerVersion ===
+            EXPECTED_PLAYER_VERSION
+        );
+
+      const activeImageMissing =
+        Boolean(
+          scheduleState &&
+          scheduleState.imageMissing === true
+        );
+
+      let state =
+        "ready";
+
+      let label =
+        "Ready";
+
+      const notes =
+        [];
+
+      if (!hasSchedule) {
+        state =
+          "blocked";
+
+        label =
+          "Blocked";
+
+        notes.push(
+          "Schedule data is missing."
+        );
+      }
+
+      if (activeImageMissing) {
+        state =
+          "blocked";
+
+        label =
+          "Blocked";
+
+        notes.push(
+          "The active image is missing."
+        );
+      }
+
+      if (
+        state !== "blocked" &&
+        !hasFallback
+      ) {
+        state =
+          "review";
+
+        label =
+          "Review";
+
+        notes.push(
+          "No blank-End-Time fallback row."
+        );
+      }
+
+      if (
+        state !== "blocked" &&
+        !versionCurrent
+      ) {
+        state =
+          "review";
+
+        label =
+          "Review";
+
+        notes.push(
+          heartbeat &&
+          heartbeat.playerVersion
+            ? `Reports ${heartbeat.playerVersion}.`
+            : "Approved player version has not checked in yet."
+        );
+      }
+
+      if (notes.length === 0) {
+        notes.push(
+          "Schedule, image, fallback, and player version checks passed."
+        );
+      }
+
+      return {
+        state:
+          state,
+
+        label:
+          label,
+
+        notes:
+          notes,
+
+        heartbeat:
+          heartbeat,
+
+        scheduleState:
+          scheduleState
+      };
+    }
+
+
+    function renderRolloutAssistant() {
+      if (
+        !rolloutAssistantList ||
+        !rolloutAssistantSummary
+      ) {
+        return;
+      }
+
+      const states =
+        SCREEN_NAMES.map(
+          screenName => ({
+            screenName:
+              screenName,
+
+            ...getRolloutStateForScreen(
+              screenName
+            )
+          })
+        );
+
+      const readyCount =
+        states.filter(
+          item =>
+            item.state === "ready"
+        ).length;
+
+      const reviewCount =
+        states.filter(
+          item =>
+            item.state === "review"
+        ).length;
+
+      const blockedCount =
+        states.filter(
+          item =>
+            item.state === "blocked"
+        ).length;
+
+      rolloutAssistantSummary.textContent =
+        `${readyCount} ready · ` +
+        `${reviewCount} review · ` +
+        `${blockedCount} blocked`;
+
+      rolloutAssistantList.innerHTML =
+        states
+          .map(
+            item => {
+              const url =
+                createRolloutPlayerUrl(
+                  item.screenName
+                );
+
+              const heartbeat =
+                item.heartbeat;
+
+              const lastSeen =
+                heartbeat &&
+                heartbeat.lastSeenAt
+                  ? new Date(
+                      heartbeat.lastSeenAt
+                    ).toLocaleString()
+                  : "Never seen";
+
+              const version =
+                heartbeat &&
+                heartbeat.playerVersion
+                  ? heartbeat.playerVersion
+                  : "Not reported";
+
+              return `
+                <article class="rollout-card ${item.state}">
+                  <div class="rollout-card-header">
+                    <div class="rollout-screen-name">
+                      ${escapeHtml(item.screenName)}
+                    </div>
+
+                    <div class="rollout-state ${item.state}">
+                      ${escapeHtml(item.label)}
+                    </div>
+                  </div>
+
+                  <div class="rollout-url">
+                    ${escapeHtml(url)}
+                  </div>
+
+                  <div class="rollout-details">
+                    <div>
+                      Version: ${escapeHtml(version)}
+                    </div>
+
+                    <div>
+                      Last seen: ${escapeHtml(lastSeen)}
+                    </div>
+
+                    <div>
+                      ${escapeHtml(item.notes.join(" · "))}
+                    </div>
+                  </div>
+
+                  <div class="rollout-actions">
+                    <button
+                      class="button"
+                      type="button"
+                      data-rollout-copy="${escapeHtml(item.screenName)}"
+                    >
+                      Copy player URL
+                    </button>
+
+                    <button
+                      class="button button-primary"
+                      type="button"
+                      data-rollout-open="${escapeHtml(item.screenName)}"
+                    >
+                      Open test player
+                    </button>
+                  </div>
+                </article>
+              `;
+            }
+          )
+          .join("");
+
+      rolloutAssistantList
+        .querySelectorAll(
+          "[data-rollout-copy]"
+        )
+        .forEach(
+          button => {
+            button.addEventListener(
+              "click",
+              async function() {
+                const screenName =
+                  button.getAttribute(
+                    "data-rollout-copy"
+                  );
+
+                await copyRolloutUrl(
+                  screenName
+                );
+              }
+            );
+          }
+        );
+
+      rolloutAssistantList
+        .querySelectorAll(
+          "[data-rollout-open]"
+        )
+        .forEach(
+          button => {
+            button.addEventListener(
+              "click",
+              function() {
+                const screenName =
+                  button.getAttribute(
+                    "data-rollout-open"
+                  );
+
+                window.open(
+                  createRolloutPlayerUrl(
+                    screenName
+                  ),
+                  "_blank",
+                  "noopener"
+                );
+              }
+            );
+          }
+        );
+    }
+
+
+    async function copyRolloutUrl(
+      screenName
+    ) {
+      const url =
+        createRolloutPlayerUrl(
+          screenName
+        );
+
+      try {
+        await navigator.clipboard.writeText(
+          url
+        );
+
+        showRolloutMessage(
+          `${screenName} player URL copied.`,
+          "success"
+        );
+
+      } catch (error) {
+        const textarea =
+          document.createElement(
+            "textarea"
+          );
+
+        textarea.value =
+          url;
+
+        textarea.style.position =
+          "fixed";
+
+        textarea.style.opacity =
+          "0";
+
+        document.body.appendChild(
+          textarea
+        );
+
+        textarea.select();
+
+        document.execCommand(
+          "copy"
+        );
+
+        textarea.remove();
+
+        showRolloutMessage(
+          `${screenName} player URL copied.`,
+          "success"
+        );
+      }
+    }
+
+
+    function showRolloutMessage(
+      message,
+      type
+    ) {
+      rolloutAssistantMessage.className =
+        `rollout-message visible health-admin-message ${type}`;
+
+      rolloutAssistantMessage.textContent =
+        message;
+
+      setTimeout(
+        function() {
+          rolloutAssistantMessage.className =
+            "rollout-message";
+        },
+        3500
+      );
+    }
+
+
+    /*
      * PLAYER VERSION COMPLIANCE
      */
 
@@ -5225,6 +5679,174 @@
       font-size: 10px;
       line-height: 1.45;
       overflow-wrap: anywhere;
+    }
+
+
+    /*
+     * =====================================================
+     * CONTROLLED ROLLOUT ASSISTANT
+     * =====================================================
+     */
+
+    .rollout-assistant {
+      width: 100%;
+      padding: 16px;
+
+      border: 1px solid var(--border);
+      border-radius: 12px;
+
+      background: var(--surface-light);
+    }
+
+    .rollout-list {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
+
+      margin-top: 14px;
+    }
+
+    .rollout-card {
+      width: 100%;
+      min-width: 0;
+      padding: 13px;
+
+      border: 1px solid var(--border);
+      border-radius: 11px;
+
+      background: var(--surface);
+    }
+
+    .rollout-card.ready {
+      border-color: rgba(54, 201, 135, 0.52);
+    }
+
+    .rollout-card.review {
+      border-color: rgba(242, 170, 63, 0.58);
+    }
+
+    .rollout-card.blocked {
+      border-color: rgba(255, 104, 104, 0.55);
+    }
+
+    .rollout-card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .rollout-screen-name {
+      font-size: 13px;
+      font-weight: 900;
+    }
+
+    .rollout-state {
+      padding: 5px 8px;
+
+      border-radius: 999px;
+
+      font-size: 9px;
+      font-weight: 900;
+      text-transform: uppercase;
+    }
+
+    .rollout-state.ready {
+      color: #caffea;
+      background: var(--regular-dark);
+    }
+
+    .rollout-state.review {
+      color: #fff0cf;
+      background: var(--holiday-dark);
+    }
+
+    .rollout-state.blocked {
+      color: #ffd6d6;
+      background: var(--error-dark);
+    }
+
+    html[data-theme="light"] .rollout-state.ready {
+      color: #15543a;
+      background: #d9f7ea;
+    }
+
+    html[data-theme="light"] .rollout-state.review {
+      color: #7a5518;
+      background: #fff1d4;
+    }
+
+    html[data-theme="light"] .rollout-state.blocked {
+      color: #7e2525;
+      background: #ffe5e5;
+    }
+
+    .rollout-url {
+      margin-top: 10px;
+      padding: 10px;
+
+      border: 1px solid var(--border);
+      border-radius: 9px;
+
+      background: var(--surface-light);
+
+      font-family:
+        ui-monospace,
+        SFMono-Regular,
+        Menlo,
+        Monaco,
+        Consolas,
+        monospace;
+      font-size: 10px;
+      line-height: 1.45;
+
+      overflow-wrap: anywhere;
+      word-break: break-word;
+    }
+
+    .rollout-details {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 6px;
+
+      margin-top: 10px;
+
+      color: var(--muted);
+      font-size: 10px;
+      line-height: 1.4;
+    }
+
+    .rollout-actions {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 8px;
+
+      margin-top: 12px;
+    }
+
+    .rollout-message {
+      display: none;
+
+      margin-top: 12px;
+      padding: 10px 11px;
+
+      border: 1px solid var(--border);
+      border-radius: 9px;
+
+      font-size: 11px;
+      line-height: 1.45;
+    }
+
+    .rollout-message.visible {
+      display: block;
+    }
+
+    @media (min-width: 760px) {
+      .rollout-actions {
+        grid-template-columns:
+          repeat(2, minmax(0, 1fr));
+      }
     }
 
     body,
@@ -8261,6 +8883,50 @@
           ></div>
         </section>
 
+        <section class="rollout-assistant">
+          <div class="manager-header">
+            <div>
+              <div class="eyebrow">
+                Priority 8
+              </div>
+
+              <h3 style="margin:5px 0 0;">
+                Controlled Rollout Assistant
+              </h3>
+
+              <p class="manager-description">
+                Deploy the approved player one screen at a time and verify each check-in before continuing.
+              </p>
+            </div>
+
+            <button
+              id="refreshRolloutAssistantButton"
+              class="button"
+              type="button"
+            >
+              Refresh rollout
+            </button>
+          </div>
+
+          <div
+            id="rolloutAssistantSummary"
+            class="manager-description"
+            style="margin-top:10px;"
+          >
+            Waiting for player and schedule information.
+          </div>
+
+          <div
+            id="rolloutAssistantList"
+            class="rollout-list"
+          ></div>
+
+          <div
+            id="rolloutAssistantMessage"
+            class="rollout-message"
+          ></div>
+        </section>
+
         <section class="player-version-panel">
           <div class="manager-header">
             <div>
@@ -9520,6 +10186,26 @@
     const healthActionsList = document.getElementById("healthActionsList");
     const healthScreensList = document.getElementById("healthScreensList");
     const healthErrorBox = document.getElementById("healthErrorBox");
+
+    const refreshRolloutAssistantButton =
+      document.getElementById(
+        "refreshRolloutAssistantButton"
+      );
+
+    const rolloutAssistantSummary =
+      document.getElementById(
+        "rolloutAssistantSummary"
+      );
+
+    const rolloutAssistantList =
+      document.getElementById(
+        "rolloutAssistantList"
+      );
+
+    const rolloutAssistantMessage =
+      document.getElementById(
+        "rolloutAssistantMessage"
+      );
 
     const refreshPlayerVersionsButton =
       document.getElementById(
@@ -12219,6 +12905,7 @@
         loadPlayerHeartbeats();
         runAutomaticHealthChecks();
         runGoLiveReadinessCheck();
+        renderRolloutAssistant();
         startAutomaticHealthChecks();
         startPlayerHeartbeatAutoRefresh();
       } else {
@@ -22019,6 +22706,11 @@
         loadPlayerVersions
       );
 
+      refreshRolloutAssistantButton.addEventListener(
+        "click",
+        refreshRolloutAssistant
+      );
+
       expectedPlayerVersionLabel.textContent =
         EXPECTED_PLAYER_VERSION;
     }
@@ -24203,6 +24895,7 @@
           .join("");
 
       runGoLiveReadinessCheck();
+      renderRolloutAssistant();
     }
 
 
