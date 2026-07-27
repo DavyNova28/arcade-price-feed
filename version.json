@@ -6,4 +6,7 @@
   "channel": "stable-candidate",
   "expectedPlayerVersion": "v3.1-heartbeat-1",
   "milestone": "Mission Control Step 1A"
+  "build": 61,
+  "channel": "stable-candidate",
+  "expectedPlayerVersion": "v3.1-heartbeat-1"
 }
