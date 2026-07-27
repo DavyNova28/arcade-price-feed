@@ -2240,6 +2240,233 @@
       background: #ffe5e5;
     }
 
+
+    /*
+     * =====================================================
+     * IMAGE LIBRARY — READ ONLY
+     * =====================================================
+     */
+
+    .image-library {
+      padding: 23px;
+
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+
+      background: var(--surface);
+      box-shadow: var(--shadow);
+    }
+
+    .image-library-toolbar {
+      display: flex;
+      align-items: flex-end;
+      flex-wrap: wrap;
+      gap: 12px;
+
+      margin-bottom: 18px;
+      padding: 16px;
+
+      border: 1px solid var(--border);
+      border-radius: 13px;
+
+      background: var(--surface-light);
+    }
+
+    .image-library-field {
+      display: grid;
+      gap: 7px;
+
+      min-width: 220px;
+    }
+
+    .image-library-search {
+      min-width: 290px;
+    }
+
+    .image-library-summary {
+      display: grid;
+      grid-template-columns:
+        repeat(4, minmax(150px, 1fr));
+      gap: 12px;
+
+      margin-bottom: 18px;
+    }
+
+    .image-library-grid {
+      display: grid;
+      grid-template-columns:
+        repeat(auto-fit, minmax(300px, 1fr));
+      gap: 18px;
+    }
+
+    .image-library-card {
+      overflow: hidden;
+
+      border: 1px solid var(--border);
+      border-radius: 13px;
+
+      background: var(--surface-light);
+    }
+
+    .image-library-preview {
+      position: relative;
+
+      aspect-ratio: 16 / 9;
+
+      overflow: hidden;
+
+      background: #000;
+    }
+
+    .image-library-preview img {
+      display: block;
+
+      width: 100%;
+      height: 100%;
+
+      object-fit: contain;
+    }
+
+    .image-library-preview-error {
+      position: absolute;
+      inset: 0;
+
+      display: none;
+      align-items: center;
+      justify-content: center;
+
+      padding: 18px;
+
+      color: #ffd6d6;
+      background: rgba(103, 40, 40, 0.72);
+
+      text-align: center;
+      font-size: 12px;
+    }
+
+    .image-library-preview-error.visible {
+      display: flex;
+    }
+
+    .image-library-card-body {
+      padding: 15px;
+    }
+
+    .image-library-name {
+      font-size: 16px;
+      font-weight: 800;
+
+      overflow-wrap: anywhere;
+    }
+
+    .image-library-meta {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+
+      margin-top: 9px;
+    }
+
+    .image-library-badge {
+      display: inline-flex;
+
+      padding: 5px 8px;
+
+      border-radius: 999px;
+
+      font-size: 10px;
+      font-weight: 800;
+    }
+
+    .image-library-badge-regular {
+      color: #caffea;
+      background: var(--regular-dark);
+    }
+
+    .image-library-badge-holiday {
+      color: #fff0cf;
+      background: var(--holiday-dark);
+    }
+
+    .image-library-badge-count {
+      color: #d9eaff;
+      background: #234a73;
+    }
+
+    .image-library-usage-list {
+      display: grid;
+      gap: 8px;
+
+      margin-top: 14px;
+    }
+
+    .image-library-usage {
+      padding: 10px 11px;
+
+      border: 1px solid var(--border);
+      border-radius: 9px;
+
+      background: var(--surface);
+
+      font-size: 12px;
+      line-height: 1.45;
+    }
+
+    .image-library-usage-title {
+      font-weight: 800;
+    }
+
+    .image-library-usage-detail {
+      margin-top: 3px;
+      color: var(--muted);
+    }
+
+    .image-library-empty {
+      grid-column: 1 / -1;
+
+      padding: 30px;
+
+      border: 1px solid var(--border);
+      border-radius: 12px;
+
+      color: var(--muted);
+      background: var(--surface-light);
+
+      text-align: center;
+    }
+
+    @media (max-width: 720px) {
+      .image-library {
+        padding: 15px;
+      }
+
+      .image-library-toolbar {
+        align-items: stretch;
+        flex-direction: column;
+      }
+
+      .image-library-field,
+      .image-library-search {
+        width: 100%;
+        min-width: 0;
+      }
+
+      .image-library-summary {
+        grid-template-columns:
+          repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 480px) {
+      .image-library-summary {
+        grid-template-columns: 1fr;
+      }
+
+      .image-library-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
     body,
     header,
     .system-banner,
@@ -2816,6 +3043,14 @@
         type="button"
       >
         Backup History
+      </button>
+
+      <button
+        id="imageLibraryTab"
+        class="workspace-tab"
+        type="button"
+      >
+        Image Library
       </button>
     </nav>
 
@@ -3874,6 +4109,158 @@
         </section>
       </section>
     </section>
+
+    <section
+      id="imageLibraryWorkspace"
+      class="workspace"
+    >
+      <section class="image-library">
+        <div class="manager-header">
+          <div>
+            <div class="eyebrow">
+              Dashboard V3
+            </div>
+
+            <h2 class="manager-title">
+              Image Library
+            </h2>
+
+            <p class="manager-description">
+              Browse every image referenced by regular schedules and Holiday Overrides.
+              This workspace is read-only.
+            </p>
+          </div>
+
+          <div class="manager-status">
+            Read-only
+          </div>
+        </div>
+
+        <div class="image-library-toolbar">
+          <label class="image-library-field image-library-search">
+            <span class="manager-label">
+              Search filename
+            </span>
+
+            <input
+              id="imageLibrarySearch"
+              class="manager-input"
+              type="search"
+              placeholder="Search images…"
+            >
+          </label>
+
+          <label class="image-library-field">
+            <span class="manager-label">
+              Source
+            </span>
+
+            <select
+              id="imageLibrarySourceFilter"
+              class="manager-select"
+            >
+              <option value="all">
+                All sources
+              </option>
+
+              <option value="regular">
+                Regular schedules
+              </option>
+
+              <option value="holiday">
+                Holiday Overrides
+              </option>
+            </select>
+          </label>
+
+          <label class="image-library-field">
+            <span class="manager-label">
+              Screen
+            </span>
+
+            <select
+              id="imageLibraryScreenFilter"
+              class="manager-select"
+            >
+              <option value="all">
+                All screens
+              </option>
+            </select>
+          </label>
+
+          <button
+            id="reloadImageLibraryButton"
+            class="button"
+            type="button"
+          >
+            ↻ Rebuild index
+          </button>
+        </div>
+
+        <section class="image-library-summary">
+          <article class="manager-stat">
+            <div class="manager-stat-label">
+              Unique images
+            </div>
+
+            <div
+              id="imageLibraryUniqueCount"
+              class="manager-stat-value"
+            >
+              0
+            </div>
+          </article>
+
+          <article class="manager-stat">
+            <div class="manager-stat-label">
+              Total usages
+            </div>
+
+            <div
+              id="imageLibraryUsageCount"
+              class="manager-stat-value"
+            >
+              0
+            </div>
+          </article>
+
+          <article class="manager-stat">
+            <div class="manager-stat-label">
+              Regular usages
+            </div>
+
+            <div
+              id="imageLibraryRegularCount"
+              class="manager-stat-value"
+            >
+              0
+            </div>
+          </article>
+
+          <article class="manager-stat">
+            <div class="manager-stat-label">
+              Holiday usages
+            </div>
+
+            <div
+              id="imageLibraryHolidayCount"
+              class="manager-stat-value"
+            >
+              0
+            </div>
+          </article>
+        </section>
+
+        <div
+          id="imageLibraryGrid"
+          class="image-library-grid"
+        >
+          <div class="image-library-empty">
+            Open this workspace to build the image index.
+          </div>
+        </div>
+      </section>
+    </section>
   </main>
 
   <iframe
@@ -4002,7 +4389,7 @@
      */
 
     const SCHEDULE_FEED_URL =
-      "https://script.google.com/macros/s/AKfycbwUINP9DCEUywwCU1YMjfnPT3H8ZUq1lsGVk8ShACrTp2EZIqMYrChADlk_uEh2F-DGXw/exec";
+      "PASTE_YOUR_APPS_SCRIPT_EXEC_URL_HERE";
 
     const SCREEN_NAMES = [
       "Arcade",
@@ -4430,6 +4817,61 @@
         "closeRestorePreviewButton"
       );
 
+    const imageLibraryTab =
+      document.getElementById(
+        "imageLibraryTab"
+      );
+
+    const imageLibraryWorkspace =
+      document.getElementById(
+        "imageLibraryWorkspace"
+      );
+
+    const imageLibrarySearch =
+      document.getElementById(
+        "imageLibrarySearch"
+      );
+
+    const imageLibrarySourceFilter =
+      document.getElementById(
+        "imageLibrarySourceFilter"
+      );
+
+    const imageLibraryScreenFilter =
+      document.getElementById(
+        "imageLibraryScreenFilter"
+      );
+
+    const reloadImageLibraryButton =
+      document.getElementById(
+        "reloadImageLibraryButton"
+      );
+
+    const imageLibraryUniqueCount =
+      document.getElementById(
+        "imageLibraryUniqueCount"
+      );
+
+    const imageLibraryUsageCount =
+      document.getElementById(
+        "imageLibraryUsageCount"
+      );
+
+    const imageLibraryRegularCount =
+      document.getElementById(
+        "imageLibraryRegularCount"
+      );
+
+    const imageLibraryHolidayCount =
+      document.getElementById(
+        "imageLibraryHolidayCount"
+      );
+
+    const imageLibraryGrid =
+      document.getElementById(
+        "imageLibraryGrid"
+      );
+
     const restorePreviewTitle =
       document.getElementById(
         "restorePreviewTitle"
@@ -4667,6 +5109,9 @@
 
     let activeRestoreRequestId =
       null;
+
+    let imageLibraryIndex =
+      [];
 
     /*
      * =====================================================
@@ -5233,6 +5678,14 @@
 
       updateScreenCard(state);
       updateDashboardSummary();
+
+      if (
+        imageLibraryWorkspace.classList.contains(
+          "active"
+        )
+      ) {
+        rebuildImageLibrary();
+      }
 
       /*
        * Keep the editor stable while typing. Incoming feed
@@ -6430,6 +6883,9 @@
       const showBackups =
         workspaceName === "backups";
 
+      const showImages =
+        workspaceName === "images";
+
       controlCenterTab.classList.toggle(
         "active",
         showControl
@@ -6448,6 +6904,11 @@
       backupHistoryTab.classList.toggle(
         "active",
         showBackups
+      );
+
+      imageLibraryTab.classList.toggle(
+        "active",
+        showImages
       );
 
       controlCenterWorkspace.classList.toggle(
@@ -6470,6 +6931,11 @@
         showBackups
       );
 
+      imageLibraryWorkspace.classList.toggle(
+        "active",
+        showImages
+      );
+
       if (showManager) {
         updateScheduleManager();
       }
@@ -6488,6 +6954,10 @@
         } else {
           renderBackupHistory();
         }
+      }
+
+      if (showImages) {
+        rebuildImageLibrary();
       }
     }
 
@@ -7894,6 +8364,14 @@
 
             if (!holidayDraft) {
               renderHolidayOverrides();
+            }
+
+            if (
+              imageLibraryWorkspace.classList.contains(
+                "active"
+              )
+            ) {
+              rebuildImageLibrary();
             }
 
           } catch (error) {
@@ -9765,6 +10243,475 @@
 
     /*
      * =====================================================
+     * IMAGE LIBRARY — READ ONLY
+     * =====================================================
+     */
+
+    function setupImageLibrary() {
+      imageLibraryScreenFilter.innerHTML =
+        `
+          <option value="all">
+            All screens
+          </option>
+          <option value="Holiday Overrides">
+            Holiday Overrides
+          </option>
+        ` +
+        SCREEN_NAMES
+          .map(screenName => `
+            <option value="${escapeHtml(screenName)}">
+              ${escapeHtml(screenName)}
+            </option>
+          `)
+          .join("");
+
+      imageLibrarySearch.addEventListener(
+        "input",
+        renderImageLibrary
+      );
+
+      imageLibrarySourceFilter.addEventListener(
+        "change",
+        renderImageLibrary
+      );
+
+      imageLibraryScreenFilter.addEventListener(
+        "change",
+        renderImageLibrary
+      );
+
+      reloadImageLibraryButton.addEventListener(
+        "click",
+        rebuildImageLibrary
+      );
+    }
+
+
+    function rebuildImageLibrary() {
+      const imageMap =
+        new Map();
+
+      screenStates.forEach(state => {
+        if (
+          state.error ||
+          !Array.isArray(state.schedule)
+        ) {
+          return;
+        }
+
+        state.schedule.forEach(item => {
+          addImageLibraryUsage(
+            imageMap,
+            item.image,
+            {
+              source:
+                "regular",
+
+              screen:
+                state.screenName,
+
+              time:
+                item.time,
+
+              fade:
+                Number(item.fade)
+            }
+          );
+        });
+      });
+
+      holidayOverrides.forEach(item => {
+        if (!item.image) {
+          return;
+        }
+
+        addImageLibraryUsage(
+          imageMap,
+          item.image,
+          {
+            source:
+              "holiday",
+
+            screen:
+              item.screen || "Holiday Overrides",
+
+            startDate:
+              item.startDate || "",
+
+            endDate:
+              item.endDate || "",
+
+            time:
+              item.startTime || "",
+
+            fade:
+              Number(item.fade)
+          }
+        );
+      });
+
+      imageLibraryIndex =
+        Array.from(
+          imageMap.values()
+        )
+          .map(entry => ({
+            ...entry,
+
+            usages:
+              entry.usages.sort(
+                compareImageLibraryUsages
+              )
+          }))
+          .sort((a, b) =>
+            a.filename.localeCompare(
+              b.filename
+            )
+          );
+
+      renderImageLibrary();
+    }
+
+
+    function addImageLibraryUsage(
+      imageMap,
+      filename,
+      usage
+    ) {
+      const cleanFilename =
+        String(filename || "")
+          .trim();
+
+      if (!cleanFilename) {
+        return;
+      }
+
+      const key =
+        cleanFilename.toLowerCase();
+
+      if (!imageMap.has(key)) {
+        imageMap.set(
+          key,
+          {
+            filename:
+              cleanFilename,
+
+            usages:
+              []
+          }
+        );
+      }
+
+      imageMap
+        .get(key)
+        .usages
+        .push(usage);
+    }
+
+
+    function compareImageLibraryUsages(
+      a,
+      b
+    ) {
+      const sourceCompare =
+        a.source.localeCompare(
+          b.source
+        );
+
+      if (sourceCompare !== 0) {
+        return sourceCompare;
+      }
+
+      const screenCompare =
+        String(a.screen)
+          .localeCompare(
+            String(b.screen)
+          );
+
+      if (screenCompare !== 0) {
+        return screenCompare;
+      }
+
+      return String(a.time || "")
+        .localeCompare(
+          String(b.time || "")
+        );
+    }
+
+
+    function renderImageLibrary() {
+      const query =
+        imageLibrarySearch.value
+          .trim()
+          .toLowerCase();
+
+      const sourceFilter =
+        imageLibrarySourceFilter.value;
+
+      const screenFilter =
+        imageLibraryScreenFilter.value;
+
+      const filteredImages =
+        imageLibraryIndex
+          .map(image => {
+            const matchingUsages =
+              image.usages.filter(usage => {
+                const sourceMatches =
+                  sourceFilter === "all" ||
+                  usage.source ===
+                    sourceFilter;
+
+                const screenMatches =
+                  screenFilter === "all" ||
+                  usage.screen ===
+                    screenFilter;
+
+                return (
+                  sourceMatches &&
+                  screenMatches
+                );
+              });
+
+            return {
+              ...image,
+              matchingUsages
+            };
+          })
+          .filter(image => {
+            const nameMatches =
+              !query ||
+              image.filename
+                .toLowerCase()
+                .includes(query);
+
+            return (
+              nameMatches &&
+              image.matchingUsages.length > 0
+            );
+          });
+
+      const totalUsages =
+        imageLibraryIndex.reduce(
+          (total, image) =>
+            total +
+            image.usages.length,
+          0
+        );
+
+      const regularUsages =
+        imageLibraryIndex.reduce(
+          (total, image) =>
+            total +
+            image.usages.filter(
+              usage =>
+                usage.source ===
+                "regular"
+            ).length,
+          0
+        );
+
+      const holidayUsages =
+        imageLibraryIndex.reduce(
+          (total, image) =>
+            total +
+            image.usages.filter(
+              usage =>
+                usage.source ===
+                "holiday"
+            ).length,
+          0
+        );
+
+      imageLibraryUniqueCount.textContent =
+        String(
+          imageLibraryIndex.length
+        );
+
+      imageLibraryUsageCount.textContent =
+        String(
+          totalUsages
+        );
+
+      imageLibraryRegularCount.textContent =
+        String(
+          regularUsages
+        );
+
+      imageLibraryHolidayCount.textContent =
+        String(
+          holidayUsages
+        );
+
+      if (
+        imageLibraryIndex.length === 0
+      ) {
+        imageLibraryGrid.innerHTML = `
+          <div class="image-library-empty">
+            No image references are available yet. Wait for schedules to finish loading, then click Rebuild index.
+          </div>
+        `;
+
+        return;
+      }
+
+      if (
+        filteredImages.length === 0
+      ) {
+        imageLibraryGrid.innerHTML = `
+          <div class="image-library-empty">
+            No images match the current search and filters.
+          </div>
+        `;
+
+        return;
+      }
+
+      imageLibraryGrid.innerHTML =
+        filteredImages
+          .map(image =>
+            createImageLibraryCard(
+              image
+            )
+          )
+          .join("");
+    }
+
+
+    function createImageLibraryCard(
+      image
+    ) {
+      const regularCount =
+        image.usages.filter(
+          usage =>
+            usage.source ===
+            "regular"
+        ).length;
+
+      const holidayCount =
+        image.usages.filter(
+          usage =>
+            usage.source ===
+            "holiday"
+        ).length;
+
+      const safeCardId =
+        createSafeId(
+          image.filename
+        );
+
+      return `
+        <article class="image-library-card">
+          <div class="image-library-preview">
+            <img
+              src="${buildImageUrl(image.filename)}"
+              alt="${escapeHtml(image.filename)}"
+              onerror="
+                this.style.display='none';
+                document.getElementById(
+                  'image-error-${safeCardId}'
+                ).classList.add('visible');
+              "
+            >
+
+            <div
+              id="image-error-${safeCardId}"
+              class="image-library-preview-error"
+            >
+              Image unavailable:
+              ${escapeHtml(image.filename)}
+            </div>
+          </div>
+
+          <div class="image-library-card-body">
+            <div class="image-library-name">
+              ${escapeHtml(image.filename)}
+            </div>
+
+            <div class="image-library-meta">
+              <span class="image-library-badge image-library-badge-count">
+                ${image.usages.length}
+                usage${image.usages.length === 1 ? "" : "s"}
+              </span>
+
+              ${
+                regularCount > 0
+                  ? `
+                    <span class="image-library-badge image-library-badge-regular">
+                      ${regularCount} regular
+                    </span>
+                  `
+                  : ""
+              }
+
+              ${
+                holidayCount > 0
+                  ? `
+                    <span class="image-library-badge image-library-badge-holiday">
+                      ${holidayCount} holiday
+                    </span>
+                  `
+                  : ""
+              }
+            </div>
+
+            <div class="image-library-usage-list">
+              ${image.matchingUsages
+                .map(usage =>
+                  createImageLibraryUsage(
+                    usage
+                  )
+                )
+                .join("")}
+            </div>
+          </div>
+        </article>
+      `;
+    }
+
+
+    function createImageLibraryUsage(
+      usage
+    ) {
+      if (
+        usage.source === "holiday"
+      ) {
+        return `
+          <div class="image-library-usage">
+            <div class="image-library-usage-title">
+              ${escapeHtml(usage.screen)}
+            </div>
+
+            <div class="image-library-usage-detail">
+              Holiday ·
+              ${escapeHtml(usage.startDate || "—")}
+              →
+              ${escapeHtml(usage.endDate || "—")}
+              ·
+              ${escapeHtml(usage.time || "—")}
+              ·
+              ${escapeHtml(usage.fade)} ms
+            </div>
+          </div>
+        `;
+      }
+
+      return `
+        <div class="image-library-usage">
+          <div class="image-library-usage-title">
+            ${escapeHtml(usage.screen)}
+          </div>
+
+          <div class="image-library-usage-detail">
+            Regular ·
+            ${escapeHtml(usage.time || "—")}
+            ·
+            ${escapeHtml(usage.fade)} ms
+          </div>
+        </div>
+      `;
+    }
+
+    /*
+     * =====================================================
      * GENERAL HELPERS
      * =====================================================
      */
@@ -9926,6 +10873,13 @@
       }
     );
 
+    imageLibraryTab.addEventListener(
+      "click",
+      function() {
+        openWorkspace("images");
+      }
+    );
+
     reloadManagerButton.addEventListener(
       "click",
       function() {
@@ -9945,6 +10899,7 @@
     setupScheduleManager();
     setupHolidayManager();
     setupBackupHistory();
+    setupImageLibrary();
 
     refreshDashboard();
     updateOperationsPanel();
