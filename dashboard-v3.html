@@ -4768,6 +4768,95 @@
       line-height: 1.4;
     }
 
+
+    /*
+     * =====================================================
+     * ADVANCED SYSTEM HEALTH SCORING
+     * =====================================================
+     */
+
+    .health-score-panel {
+      margin-top: 18px;
+      padding: 16px;
+
+      border: 1px solid var(--border);
+      border-radius: 12px;
+
+      background: var(--surface-light);
+    }
+
+    .health-score-layout {
+      display: grid;
+      grid-template-columns:
+        minmax(150px, 220px)
+        minmax(0, 1fr);
+      gap: 18px;
+      align-items: center;
+
+      margin-top: 14px;
+    }
+
+    .health-score-number {
+      display: flex;
+      align-items: baseline;
+      justify-content: center;
+      gap: 4px;
+
+      min-height: 130px;
+      padding: 18px;
+
+      border: 1px solid var(--border);
+      border-radius: 14px;
+
+      background: var(--surface);
+
+      font-size: 52px;
+      font-weight: 900;
+      line-height: 1;
+    }
+
+    .health-score-number span {
+      color: var(--muted);
+      font-size: 16px;
+      font-weight: 800;
+    }
+
+    .health-reasons {
+      display: grid;
+      gap: 9px;
+    }
+
+    .health-reason {
+      display: flex;
+      align-items: flex-start;
+      gap: 9px;
+
+      padding: 10px 11px;
+
+      border: 1px solid var(--border);
+      border-radius: 9px;
+
+      background: var(--surface);
+
+      font-size: 11px;
+      line-height: 1.45;
+    }
+
+    .health-reason-icon {
+      flex: 0 0 auto;
+    }
+
+    .health-reason-text {
+      min-width: 0;
+      overflow-wrap: anywhere;
+    }
+
+    @media (max-width: 700px) {
+      .health-score-layout {
+        grid-template-columns: 1fr;
+      }
+    }
+
     body,
     header,
     .system-banner,
@@ -7802,6 +7891,46 @@
           ></div>
         </section>
 
+        <section class="health-score-panel">
+          <div class="manager-header">
+            <div>
+              <div class="eyebrow">
+                Priority 6
+              </div>
+
+              <h3 style="margin:5px 0 0;">
+                Health score
+              </h3>
+
+              <p class="manager-description">
+                Transparent scoring based on reliability, response time, and cache performance.
+              </p>
+            </div>
+          </div>
+
+          <div class="health-score-layout">
+            <div
+              id="healthScoreNumber"
+              class="health-score-number"
+            >
+              —
+              <span>/100</span>
+            </div>
+
+            <div
+              id="healthScoreReasons"
+              class="health-reasons"
+            >
+              <div class="health-reason">
+                <div class="health-reason-icon">⏳</div>
+                <div class="health-reason-text">
+                  Waiting for telemetry.
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
         <section class="player-heartbeat-panel">
           <div class="manager-header">
             <div>
@@ -8922,6 +9051,16 @@
     const healthActionsList = document.getElementById("healthActionsList");
     const healthScreensList = document.getElementById("healthScreensList");
     const healthErrorBox = document.getElementById("healthErrorBox");
+
+    const healthScoreNumber =
+      document.getElementById(
+        "healthScoreNumber"
+      );
+
+    const healthScoreReasons =
+      document.getElementById(
+        "healthScoreReasons"
+      );
 
     const refreshPlayerHeartbeatsButton =
       document.getElementById(
@@ -21424,45 +21563,42 @@
           telemetry.requests || 0
         );
 
-      let state =
-        "healthy";
+      const cacheHitRate =
+        Number(
+          telemetry.cacheHitRate || 0
+        );
 
-      let stateText =
-        "Healthy";
+      const maxDuration =
+        Number(
+          telemetry.maxDurationMs || 0
+        );
 
-      if (requestCount === 0) {
-        state =
-          "warning";
+      const scoreResult =
+        calculateSystemHealthScore({
+          requestCount:
+            requestCount,
 
-        stateText =
-          "Waiting for data";
+          successRate:
+            successRate,
 
-      } else if (
-        failures > 0 ||
-        successRate < 98 ||
-        averageDuration > 1500
-      ) {
-        state =
-          "warning";
+          failures:
+            failures,
 
-        stateText =
-          "Needs attention";
-      }
+          averageDuration:
+            averageDuration,
 
-      if (
-        requestCount >= 5 &&
-        (
-          successRate < 90 ||
-          failures >= 5 ||
-          averageDuration > 5000
-        )
-      ) {
-        state =
-          "error";
+          maxDuration:
+            maxDuration,
 
-        stateText =
-          "Unhealthy";
-      }
+          cacheHitRate:
+            cacheHitRate
+        });
+
+      const state =
+        scoreResult.state;
+
+      const stateText =
+        scoreResult.label;
 
       healthOverallState.className = `health-state health-state-${state}`;
       healthOverallState.textContent = stateText;
@@ -23109,6 +23245,316 @@
             `;
           }
         ).join("");
+    }
+
+
+    /*
+     * =====================================================
+     * ADVANCED SYSTEM HEALTH SCORING
+     * =====================================================
+     */
+
+    function calculateSystemHealthScore(
+      metrics
+    ) {
+      if (metrics.requestCount === 0) {
+        return {
+          score:
+            null,
+
+          state:
+            "warning",
+
+          label:
+            "Waiting for data",
+
+          reasons: [
+            {
+              icon:
+                "⏳",
+
+              text:
+                "No live requests have been measured yet."
+            }
+          ]
+        };
+      }
+
+      let score =
+        100;
+
+      const reasons =
+        [];
+
+      /*
+       * Reliability is the most important factor.
+       */
+      if (
+        metrics.successRate >= 99.5
+      ) {
+        reasons.push({
+          icon:
+            "✅",
+
+          text:
+            `Excellent reliability: ${metrics.successRate.toFixed(1)}% success.`
+        });
+
+      } else if (
+        metrics.successRate >= 98
+      ) {
+        score -= 5;
+
+        reasons.push({
+          icon:
+            "🟢",
+
+          text:
+            `Good reliability: ${metrics.successRate.toFixed(1)}% success.`
+        });
+
+      } else if (
+        metrics.successRate >= 95
+      ) {
+        score -= 15;
+
+        reasons.push({
+          icon:
+            "🟠",
+
+          text:
+            `Reliability needs attention: ${metrics.successRate.toFixed(1)}% success.`
+        });
+
+      } else {
+        score -= 35;
+
+        reasons.push({
+          icon:
+            "🔴",
+
+          text:
+            `Low reliability: ${metrics.successRate.toFixed(1)}% success.`
+        });
+      }
+
+      /*
+       * Failure count matters, but it is evaluated in context.
+       */
+      if (metrics.failures === 0) {
+        reasons.push({
+          icon:
+            "✅",
+
+          text:
+            "No failed requests recorded."
+        });
+
+      } else if (
+        metrics.failures <= 2
+      ) {
+        score -= 3;
+
+        reasons.push({
+          icon:
+            "🟡",
+
+          text:
+            `${metrics.failures} isolated failed request${metrics.failures === 1 ? "" : "s"} recorded.`
+        });
+
+      } else if (
+        metrics.failures <= 10
+      ) {
+        score -= 8;
+
+        reasons.push({
+          icon:
+            "🟠",
+
+          text:
+            `${metrics.failures} failed requests recorded.`
+        });
+
+      } else {
+        score -= 18;
+
+        reasons.push({
+          icon:
+            "🔴",
+
+          text:
+            `${metrics.failures} failed requests recorded.`
+        });
+      }
+
+      /*
+       * Average response time is more meaningful than one
+       * isolated slowest request.
+       */
+      if (
+        metrics.averageDuration <= 500
+      ) {
+        reasons.push({
+          icon:
+            "⚡",
+
+          text:
+            `Fast average response: ${metrics.averageDuration} ms.`
+        });
+
+      } else if (
+        metrics.averageDuration <= 1500
+      ) {
+        score -= 3;
+
+        reasons.push({
+          icon:
+            "🟢",
+
+          text:
+            `Acceptable average response: ${metrics.averageDuration} ms.`
+        });
+
+      } else if (
+        metrics.averageDuration <= 3000
+      ) {
+        score -= 10;
+
+        reasons.push({
+          icon:
+            "🟠",
+
+          text:
+            `Slow average response: ${metrics.averageDuration} ms.`
+        });
+
+      } else {
+        score -= 22;
+
+        reasons.push({
+          icon:
+            "🔴",
+
+          text:
+            `Very slow average response: ${metrics.averageDuration} ms.`
+        });
+      }
+
+      /*
+       * A single slow request is a warning only, not enough
+       * by itself to mark the entire system unhealthy.
+       */
+      if (
+        metrics.maxDuration > 5000
+      ) {
+        score -= 3;
+
+        reasons.push({
+          icon:
+            "⏱️",
+
+          text:
+            `One request peaked at ${metrics.maxDuration} ms.`
+        });
+      }
+
+      if (
+        metrics.cacheHitRate >= 60
+      ) {
+        reasons.push({
+          icon:
+            "💾",
+
+          text:
+            `Cache is effective: ${metrics.cacheHitRate.toFixed(1)}% hit rate.`
+        });
+
+      } else if (
+        metrics.cacheHitRate > 0
+      ) {
+        score -= 3;
+
+        reasons.push({
+          icon:
+            "📦",
+
+          text:
+            `Cache hit rate is ${metrics.cacheHitRate.toFixed(1)}%.`
+        });
+      }
+
+      score =
+        Math.max(
+          0,
+          Math.min(
+            100,
+            Math.round(score)
+          )
+        );
+
+      let state =
+        "healthy";
+
+      let label =
+        "Healthy";
+
+      if (score < 90) {
+        state =
+          "warning";
+
+        label =
+          "Degraded";
+      }
+
+      if (score < 70) {
+        state =
+          "error";
+
+        label =
+          "Unhealthy";
+      }
+
+      return {
+        score:
+          score,
+
+        state:
+          state,
+
+        label:
+          label,
+
+        reasons:
+          reasons
+      };
+    }
+
+
+    function renderHealthScore(
+      result
+    ) {
+      healthScoreNumber.innerHTML =
+        result.score === null
+          ? `— <span>/100</span>`
+          : `${result.score} <span>/100</span>`;
+
+      healthScoreReasons.innerHTML =
+        result.reasons
+          .map(
+            reason => `
+              <div class="health-reason">
+                <div class="health-reason-icon">
+                  ${escapeHtml(reason.icon)}
+                </div>
+
+                <div class="health-reason-text">
+                  ${escapeHtml(reason.text)}
+                </div>
+              </div>
+            `
+          )
+          .join("");
     }
 
 
