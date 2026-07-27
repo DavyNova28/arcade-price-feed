@@ -23477,44 +23477,69 @@
       const reasons =
         [];
 
+      const failureRate =
+        metrics.requestCount > 0
+          ? (
+              metrics.failures /
+              metrics.requestCount
+            ) *
+            100
+          : 0;
+
       /*
-       * Reliability is the most important factor.
+       * Reliability is scored by percentage, not raw count.
+       * Eight failures out of more than one thousand requests
+       * should not be treated the same as eight failures out
+       * of twenty requests.
        */
       if (
-        metrics.successRate >= 99.5
+        failureRate <= 0.5
       ) {
         reasons.push({
           icon:
             "✅",
 
           text:
-            `Excellent reliability: ${metrics.successRate.toFixed(1)}% success.`
+            `Excellent reliability: ${metrics.successRate.toFixed(1)}% success (${failureRate.toFixed(2)}% failed).`
         });
 
       } else if (
-        metrics.successRate >= 98
+        failureRate <= 1
       ) {
-        score -= 5;
+        score -= 3;
 
         reasons.push({
           icon:
             "🟢",
 
           text:
-            `Good reliability: ${metrics.successRate.toFixed(1)}% success.`
+            `Strong reliability: ${metrics.successRate.toFixed(1)}% success (${failureRate.toFixed(2)}% failed).`
         });
 
       } else if (
-        metrics.successRate >= 95
+        failureRate <= 2
       ) {
-        score -= 15;
+        score -= 8;
+
+        reasons.push({
+          icon:
+            "🟡",
+
+          text:
+            `Minor reliability concern: ${failureRate.toFixed(2)}% of requests failed.`
+        });
+
+      } else if (
+        failureRate <= 5
+      ) {
+        score -= 18;
 
         reasons.push({
           icon:
             "🟠",
 
           text:
-            `Reliability needs attention: ${metrics.successRate.toFixed(1)}% success.`
+            `Reliability needs attention: ${failureRate.toFixed(2)}% of requests failed.`
         });
 
       } else {
@@ -23525,63 +23550,13 @@
             "🔴",
 
           text:
-            `Low reliability: ${metrics.successRate.toFixed(1)}% success.`
+            `High failure rate: ${failureRate.toFixed(2)}% of requests failed.`
         });
       }
 
       /*
-       * Failure count matters, but it is evaluated in context.
-       */
-      if (metrics.failures === 0) {
-        reasons.push({
-          icon:
-            "✅",
-
-          text:
-            "No failed requests recorded."
-        });
-
-      } else if (
-        metrics.failures <= 2
-      ) {
-        score -= 3;
-
-        reasons.push({
-          icon:
-            "🟡",
-
-          text:
-            `${metrics.failures} isolated failed request${metrics.failures === 1 ? "" : "s"} recorded.`
-        });
-
-      } else if (
-        metrics.failures <= 10
-      ) {
-        score -= 8;
-
-        reasons.push({
-          icon:
-            "🟠",
-
-          text:
-            `${metrics.failures} failed requests recorded.`
-        });
-
-      } else {
-        score -= 18;
-
-        reasons.push({
-          icon:
-            "🔴",
-
-          text:
-            `${metrics.failures} failed requests recorded.`
-        });
-      }
-
-      /*
-       * Average response time is more meaningful than one
-       * isolated slowest request.
+       * Average response time carries more weight than the
+       * single slowest request.
        */
       if (
         metrics.averageDuration <= 500
@@ -23595,22 +23570,35 @@
         });
 
       } else if (
-        metrics.averageDuration <= 1500
+        metrics.averageDuration <= 1200
       ) {
-        score -= 3;
+        score -= 2;
 
         reasons.push({
           icon:
             "🟢",
 
           text:
-            `Acceptable average response: ${metrics.averageDuration} ms.`
+            `Good average response: ${metrics.averageDuration} ms.`
         });
 
       } else if (
-        metrics.averageDuration <= 3000
+        metrics.averageDuration <= 2000
       ) {
-        score -= 10;
+        score -= 6;
+
+        reasons.push({
+          icon:
+            "🟡",
+
+          text:
+            `Acceptable but slightly slow average response: ${metrics.averageDuration} ms.`
+        });
+
+      } else if (
+        metrics.averageDuration <= 3500
+      ) {
+        score -= 14;
 
         reasons.push({
           icon:
@@ -23621,7 +23609,7 @@
         });
 
       } else {
-        score -= 22;
+        score -= 28;
 
         reasons.push({
           icon:
@@ -23633,13 +23621,12 @@
       }
 
       /*
-       * A single slow request is a warning only, not enough
-       * by itself to mark the entire system unhealthy.
+       * A single peak is informational unless it is extreme.
        */
       if (
-        metrics.maxDuration > 5000
+        metrics.maxDuration > 15000
       ) {
-        score -= 3;
+        score -= 4;
 
         reasons.push({
           icon:
@@ -23648,8 +23635,24 @@
           text:
             `One request peaked at ${metrics.maxDuration} ms.`
         });
+
+      } else if (
+        metrics.maxDuration > 5000
+      ) {
+        reasons.push({
+          icon:
+            "⏱️",
+
+          text:
+            `One isolated request peaked at ${metrics.maxDuration} ms.`
+        });
       }
 
+      /*
+       * Low cache usage is only a problem when the system is
+       * also responding slowly. Different screens often read
+       * different schedules, so a low hit rate can be normal.
+       */
       if (
         metrics.cacheHitRate >= 60
       ) {
@@ -23658,20 +23661,40 @@
             "💾",
 
           text:
-            `Cache is effective: ${metrics.cacheHitRate.toFixed(1)}% hit rate.`
+            `Cache is highly effective: ${metrics.cacheHitRate.toFixed(1)}% hit rate.`
         });
 
       } else if (
-        metrics.cacheHitRate > 0
+        metrics.cacheHitRate >= 20
       ) {
-        score -= 3;
-
         reasons.push({
           icon:
             "📦",
 
           text:
             `Cache hit rate is ${metrics.cacheHitRate.toFixed(1)}%.`
+        });
+
+      } else if (
+        metrics.averageDuration > 2000
+      ) {
+        score -= 4;
+
+        reasons.push({
+          icon:
+            "📦",
+
+          text:
+            `Low cache usage (${metrics.cacheHitRate.toFixed(1)}%) is contributing to slower responses.`
+        });
+
+      } else {
+        reasons.push({
+          icon:
+            "ℹ️",
+
+          text:
+            `Low cache hit rate (${metrics.cacheHitRate.toFixed(1)}%), but response time remains acceptable.`
         });
       }
 
@@ -23690,7 +23713,7 @@
       let label =
         "Healthy";
 
-      if (score < 90) {
+      if (score < 88) {
         state =
           "warning";
 
@@ -23698,7 +23721,7 @@
           "Degraded";
       }
 
-      if (score < 70) {
+      if (score < 65) {
         state =
           "error";
 
