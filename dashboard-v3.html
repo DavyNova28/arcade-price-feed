@@ -4266,22 +4266,76 @@
     /* SYSTEM HEALTH */
     .system-health { padding:23px; border:1px solid var(--border); border-radius:var(--radius); background:var(--surface); box-shadow:var(--shadow); }
     .health-toolbar { display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:18px; padding:14px 16px; border:1px solid var(--border); border-radius:12px; background:var(--surface-light); }
-    .health-summary { display:grid; grid-template-columns:repeat(4,minmax(150px,1fr)); gap:12px; margin-bottom:18px; }
-    .health-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; }
+    .health-summary {
+      display: grid;
+      grid-template-columns:
+        repeat(auto-fit, minmax(190px, 1fr));
+      gap: 14px;
+      margin-bottom: 18px;
+    }
+    .health-grid {
+      display: grid;
+      grid-template-columns:
+        repeat(auto-fit, minmax(300px, 1fr));
+      gap: 18px;
+      align-items: start;
+    }
+
+    .health-summary > *,
+    .health-grid > *,
+    .auto-health-item > * {
+      min-width: 0;
+    }
     .health-panel { padding:16px; border:1px solid var(--border); border-radius:12px; background:var(--surface-light); }
     .health-panel-title { margin:0 0 12px; font-size:15px; font-weight:800; }
     .health-list { display:grid; gap:9px; }
-    .health-row { display:flex; justify-content:space-between; align-items:center; gap:12px; padding:9px 10px; border:1px solid var(--border); border-radius:9px; background:var(--surface); }
+    .health-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+      flex-wrap: wrap;
+      padding: 10px 11px;
+      border: 1px solid var(--border);
+      border-radius: 9px;
+      background: var(--surface);
+    }
     .health-row-label { min-width:0; color:var(--muted); font-size:12px; overflow-wrap:anywhere; }
-    .health-row-value { flex:0 0 auto; font-size:12px; font-weight:800; }
+    .health-row-value {
+      flex: 0 1 auto;
+      max-width: 100%;
+      font-size: 12px;
+      font-weight: 800;
+      overflow-wrap: anywhere;
+      text-align: right;
+    }
     .health-state { display:inline-flex; padding:6px 9px; border-radius:999px; font-size:11px; font-weight:800; text-transform:uppercase; }
     .health-state-healthy { color:#caffea; background:var(--regular-dark); }
     .health-state-warning { color:#fff0cf; background:var(--holiday-dark); }
     .health-state-error { color:#ffd6d6; background:var(--error-dark); }
     .health-error-box { display:none; margin-top:16px; padding:13px 14px; border:1px solid rgba(255,104,104,.48); border-radius:10px; color:#ffd6d6; background:rgba(103,40,40,.52); font-size:12px; line-height:1.5; }
     .health-error-box.visible { display:block; }
-    @media (max-width:900px) { .health-summary { grid-template-columns:repeat(2,minmax(0,1fr)); } .health-grid { grid-template-columns:1fr; } }
-    @media (max-width:480px) { .health-summary { grid-template-columns:1fr; } }
+    @media (max-width: 720px) {
+      .system-health {
+        padding: 15px;
+      }
+
+      .health-summary,
+      .health-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 560px) {
+      .health-row {
+        display: grid;
+        grid-template-columns: 1fr;
+      }
+
+      .health-row-value {
+        text-align: left;
+      }
+    }
 
 
     /*
@@ -4443,7 +4497,7 @@
 
     .auto-health-item {
       display: grid;
-      grid-template-columns: 26px 1fr auto;
+      grid-template-columns: 28px minmax(0, 1fr) auto;
       align-items: center;
       gap: 10px;
 
@@ -20922,7 +20976,37 @@
       window[callbackName] = function(payload) {
         try {
           if (!payload || payload.success !== true || !payload.telemetry) {
-            throw new Error(payload && payload.error ? payload.error : "System Health returned no telemetry.");
+            if (
+              payload &&
+              payload.success === false &&
+              /sheet.*Schedule|tab.*Schedule|Schedule.*not found/i.test(
+                String(payload.error || "")
+              )
+            ) {
+              throw new Error(
+                "The deployed Apps Script is still using the older Signage.gs. " +
+                "You do not need a Schedule tab. Replace Signage.gs with the " +
+                "telemetry-enabled version and deploy a new Apps Script version."
+              );
+            }
+
+            if (
+              payload &&
+              payload.success === true &&
+              Array.isArray(payload.schedule) &&
+              !payload.telemetry
+            ) {
+              throw new Error(
+                "The deployed Apps Script does not recognize action=healthManager yet. " +
+                "Replace Signage.gs with the telemetry-enabled version and redeploy."
+              );
+            }
+
+            throw new Error(
+              payload && payload.error
+                ? payload.error
+                : "System Health returned no telemetry."
+            );
           }
           renderSystemHealth(payload.telemetry);
         } catch (error) {
@@ -21572,6 +21656,18 @@
               ? payload.error
               : "Apps Script returned an invalid response."
           );
+
+          if (
+            payload &&
+            payload.success === false &&
+            /sheet.*Schedule|tab.*Schedule|Schedule.*not found/i.test(
+              String(payload.error || "")
+            )
+          ) {
+            throw new Error(
+              "Older Apps Script deployment detected. You do not need a Schedule tab; redeploy the telemetry-enabled Signage.gs."
+            );
+          }
         }
 
         return {
