@@ -2688,7 +2688,7 @@
      */
 
     const SCHEDULE_FEED_URL =
-      "https://script.google.com/macros/s/AKfycbwUINP9DCEUywwCU1YMjfnPT3H8ZUq1lsGVk8ShACrTp2EZIqMYrChADlk_uEh2F-DGXw/exec";
+      "PASTE_YOUR_APPS_SCRIPT_EXEC_URL_HERE";
 
     const SCREEN_NAMES = [
       "Arcade",
@@ -3609,11 +3609,18 @@
       updateScreenCard(state);
       updateDashboardSummary();
 
+      /*
+       * Keep the editor stable while typing. Incoming feed
+       * refreshes update the background state but do not
+       * rebuild the table until editing is finished.
+       */
       if (
         scheduleManagerWorkspace.classList.contains(
           "active"
         ) &&
-        managerScreenSelect.value === screenName
+        managerScreenSelect.value === screenName &&
+        !managerEditingEnabled &&
+        !managerSaveInProgress
       ) {
         updateScheduleManager();
       }
@@ -4186,10 +4193,17 @@
 
       updateDashboardSummary();
 
+      /*
+       * Do not rebuild the editable table while the user is
+       * typing. Re-rendering would replace the focused input
+       * and make editing feel glitchy.
+       */
       if (
         scheduleManagerWorkspace.classList.contains(
           "active"
-        )
+        ) &&
+        !managerEditingEnabled &&
+        !managerSaveInProgress
       ) {
         updateScheduleManager();
       }
