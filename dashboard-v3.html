@@ -148,14 +148,20 @@
       padding: 6px;
 
       overflow: hidden;
+      border: 1px solid rgba(255, 255, 255, 0.12);
       border-radius: 14px;
 
-      background: white;
+      background: #000000;
 
       box-shadow:
         0 10px 25px rgba(0, 0, 0, 0.28);
 
       flex: 0 0 auto;
+    }
+
+    html[data-theme="light"] .brand-logo {
+      background: #000000;
+      border-color: rgba(0, 0, 0, 0.78);
     }
 
     .brand-logo img {
@@ -5864,7 +5870,7 @@
               </h3>
 
               <p class="manager-description">
-                Detects overlapping temporary rows, fallback gaps, and schedules with no persistent safety image.
+                Detects overlapping temporary rows, fallback gaps, and schedules with no permanent fallback row.
               </p>
             </div>
 
@@ -5919,7 +5925,7 @@
 
             <article class="manager-stat">
               <div class="manager-stat-label">
-                Persistent safety row
+                Fallback row
               </div>
 
               <div
@@ -12390,8 +12396,8 @@
       if (persistentRows.length === 0) {
         messages.push(`
           <div class="integrity-item integrity-item-warning">
-            <strong>No persistent safety row</strong>
-            Every row has an End Time. When none is active, the player must use its last-resort no-black-screen fallback. Add at least one row with a blank End Time for predictable fallback behavior.
+            <strong>No fallback row with a blank End Time</strong>
+            Every row has an End Time. Add at least one normal row with a blank End Time so the player always has a predictable image to display after temporary rows expire.
           </div>
         `);
       }
@@ -12445,7 +12451,7 @@
         messages.push(`
           <div class="integrity-item integrity-item-ok">
             <strong>Schedule looks healthy</strong>
-            No temporary overlaps or fallback gaps were detected, and a persistent safety row is available.
+            No temporary overlaps or fallback gaps were detected, and a permanent fallback row is available.
           </div>
         `);
       }
@@ -19161,10 +19167,10 @@
             "ok",
 
           title:
-            "Persistent safety rows available",
+            "Fallback rows available",
 
           details:
-            "Every loaded regular schedule has at least one row with a blank End Time."
+            "Every loaded regular schedule has at least one permanent fallback row with a blank End Time."
         });
 
       } else {
@@ -19173,12 +19179,17 @@
             "warning",
 
           title:
-            "Some screens have no persistent safety row",
+            "Some screens have no fallback row",
 
           details:
-            screensWithoutPersistent.join(
-              ", "
-            )
+            screensWithoutPersistent
+              .map(
+                screenName =>
+                  `${screenName}: every row has an End Time`
+              )
+              .join(
+                " · "
+              )
         });
       }
     }
