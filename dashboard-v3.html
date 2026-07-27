@@ -2470,6 +2470,320 @@
 
     /*
      * =====================================================
+     * GITHUB IMAGE PICKER
+     * =====================================================
+     */
+
+    function setupGitHubImagePicker() {
+      closeImagePickerButton.addEventListener(
+        "click",
+        closeGitHubImagePicker
+      );
+
+      imagePickerDialog.addEventListener(
+        "click",
+        function(event) {
+          if (
+            event.target ===
+            imagePickerDialog
+          ) {
+            closeGitHubImagePicker();
+          }
+        }
+      );
+
+      imagePickerSearch.addEventListener(
+        "input",
+        renderGitHubImagePicker
+      );
+
+      imagePickerGrid.addEventListener(
+        "click",
+        function(event) {
+          const card =
+            event.target.closest(
+              "[data-picker-filename]"
+            );
+
+          if (
+            !card ||
+            !activeImagePickerInput
+          ) {
+            return;
+          }
+
+          const exactFilename =
+            card.dataset.pickerFilename;
+
+          activeImagePickerInput.value =
+            exactFilename;
+
+          activeImagePickerInput.dispatchEvent(
+            new Event(
+              "input",
+              {
+                bubbles: true
+              }
+            )
+          );
+
+          closeGitHubImagePicker();
+        }
+      );
+    }
+
+
+    async function openGitHubImagePicker(
+      input
+    ) {
+      if (!input) {
+        return;
+      }
+
+      activeImagePickerInput =
+        input;
+
+      imagePickerSearch.value =
+        input.value || "";
+
+      imagePickerDialog.classList.add(
+        "visible"
+      );
+
+      imagePickerDialog.setAttribute(
+        "aria-hidden",
+        "false"
+      );
+
+      if (
+        repositoryImages.length === 0
+      ) {
+        imagePickerGrid.innerHTML = `
+          <div class="image-picker-empty">
+            Loading exact filenames from GitHub…
+          </div>
+        `;
+
+        try {
+          repositoryImages =
+            await fetchRepositoryImageFiles();
+
+          imageHealthScanned =
+            true;
+
+          renderGitHubImagePicker();
+          updateVisibleImagePickerStatuses();
+
+        } catch (error) {
+          imagePickerGrid.innerHTML = `
+            <div class="image-picker-empty">
+              ${escapeHtml(
+                error.message ||
+                "Could not load GitHub images."
+              )}
+            </div>
+          `;
+
+          return;
+        }
+      }
+
+      renderGitHubImagePicker();
+
+      setTimeout(
+        function() {
+          imagePickerSearch.focus();
+          imagePickerSearch.select();
+        },
+        50
+      );
+    }
+
+
+    function closeGitHubImagePicker() {
+      activeImagePickerInput =
+        null;
+
+      imagePickerDialog.classList.remove(
+        "visible"
+      );
+
+      imagePickerDialog.setAttribute(
+        "aria-hidden",
+        "true"
+      );
+    }
+
+
+    function renderGitHubImagePicker() {
+      const query =
+        String(
+          imagePickerSearch.value || ""
+        )
+          .trim()
+          .toLowerCase();
+
+      const images =
+        repositoryImages
+          .filter(
+            filename =>
+              isImageFilename(
+                filename
+              )
+          )
+          .filter(
+            filename =>
+              !query ||
+              filename
+                .toLowerCase()
+                .includes(query)
+          )
+          .sort((a, b) =>
+            a.localeCompare(
+              b,
+              undefined,
+              {
+                sensitivity:
+                  "variant"
+              }
+            )
+          );
+
+      if (images.length === 0) {
+        imagePickerGrid.innerHTML = `
+          <div class="image-picker-empty">
+            No repository images match this search.
+          </div>
+        `;
+
+        return;
+      }
+
+      imagePickerGrid.innerHTML =
+        images
+          .map(filename => `
+            <article
+              class="image-picker-card"
+              data-picker-filename="${escapeHtml(filename)}"
+              title="${escapeHtml(filename)}"
+            >
+              <div class="image-picker-thumb">
+                <img
+                  src="${buildImageUrl(filename)}"
+                  alt=""
+                >
+              </div>
+
+              <div class="image-picker-card-name">
+                ${escapeHtml(filename)}
+              </div>
+            </article>
+          `)
+          .join("");
+    }
+
+
+    function findExactRepositoryFilename(
+      typedFilename
+    ) {
+      const normalized =
+        normalizeRepositoryPath(
+          typedFilename
+        );
+
+      return repositoryImages.find(
+        filename =>
+          normalizeRepositoryPath(
+            filename
+          ) === normalized
+      ) || null;
+    }
+
+
+    function updateVisibleImagePickerStatuses() {
+      document
+        .querySelectorAll(
+          "[data-image-picker-input]"
+        )
+        .forEach(input => {
+          const kind =
+            input.dataset.imagePickerInput;
+
+          const rowIndex =
+            input.dataset.rowIndex;
+
+          const status =
+            document.querySelector(
+              `[data-image-picker-status="${kind}"][data-row-index="${rowIndex}"]`
+            );
+
+          if (!status) {
+            return;
+          }
+
+          const value =
+            String(
+              input.value || ""
+            ).trim();
+
+          status.className =
+            "image-picker-status";
+
+          if (!value) {
+            status.textContent =
+              "";
+
+            return;
+          }
+
+          if (
+            repositoryImages.length === 0
+          ) {
+            status.textContent =
+              "Repository not scanned yet.";
+
+            return;
+          }
+
+          const exact =
+            findExactRepositoryFilename(
+              value
+            );
+
+          if (!exact) {
+            status.classList.add(
+              "invalid"
+            );
+
+            status.textContent =
+              "Not found in GitHub repository.";
+
+            return;
+          }
+
+          if (exact !== value) {
+            status.classList.add(
+              "invalid"
+            );
+
+            status.textContent =
+              `Capitalization mismatch. Exact name: ${exact}`;
+
+            return;
+          }
+
+          status.classList.add(
+            "valid"
+          );
+
+          status.textContent =
+            "Exact GitHub filename.";
+        });
+    }
+
+
+    /*
+     * =====================================================
      * IMAGE HEALTH — MISSING AND UNUSED DETECTION
      * =====================================================
      */
@@ -3314,6 +3628,174 @@
       .integrity-summary {
         grid-template-columns: 1fr;
       }
+    }
+
+
+    /*
+     * =====================================================
+     * GITHUB IMAGE PICKER
+     * =====================================================
+     */
+
+    .image-picker-field {
+      display: grid;
+      gap: 7px;
+    }
+
+    .image-picker-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .image-picker-row .manager-input {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .image-picker-button {
+      flex: 0 0 auto;
+      min-height: 38px;
+      padding: 8px 10px;
+    }
+
+    .image-picker-status {
+      min-height: 16px;
+
+      color: var(--muted);
+      font-size: 10px;
+      line-height: 1.35;
+    }
+
+    .image-picker-status.valid {
+      color: #7de6b7;
+    }
+
+    .image-picker-status.invalid {
+      color: #ff9b9b;
+    }
+
+    html[data-theme="light"] .image-picker-status.valid {
+      color: #1b744f;
+    }
+
+    html[data-theme="light"] .image-picker-status.invalid {
+      color: #a33a3a;
+    }
+
+    .image-picker-dialog {
+      position: fixed;
+      inset: 0;
+      z-index: 10000;
+
+      display: none;
+      align-items: center;
+      justify-content: center;
+
+      padding: 20px;
+
+      background: rgba(0, 0, 0, 0.72);
+    }
+
+    .image-picker-dialog.visible {
+      display: flex;
+    }
+
+    .image-picker-panel {
+      width: min(900px, 100%);
+      max-height: min(760px, 92vh);
+
+      display: flex;
+      flex-direction: column;
+
+      overflow: hidden;
+
+      border: 1px solid var(--border);
+      border-radius: 14px;
+
+      background: var(--surface);
+      box-shadow: var(--shadow);
+    }
+
+    .image-picker-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 14px;
+      flex-wrap: wrap;
+
+      padding: 16px;
+
+      border-bottom: 1px solid var(--border);
+    }
+
+    .image-picker-search-wrap {
+      padding: 14px 16px;
+
+      border-bottom: 1px solid var(--border);
+
+      background: var(--surface-light);
+    }
+
+    .image-picker-grid {
+      display: grid;
+      grid-template-columns:
+        repeat(auto-fill, minmax(190px, 1fr));
+      gap: 12px;
+
+      padding: 16px;
+
+      overflow-y: auto;
+    }
+
+    .image-picker-card {
+      overflow: hidden;
+
+      border: 1px solid var(--border);
+      border-radius: 11px;
+
+      background: var(--surface-light);
+
+      cursor: pointer;
+    }
+
+    .image-picker-card:hover {
+      border-color: var(--blue);
+      transform: translateY(-1px);
+    }
+
+    .image-picker-thumb {
+      aspect-ratio: 16 / 9;
+
+      background: #000;
+      overflow: hidden;
+    }
+
+    .image-picker-thumb img {
+      width: 100%;
+      height: 100%;
+
+      object-fit: contain;
+    }
+
+    .image-picker-card-name {
+      padding: 10px;
+
+      font-size: 11px;
+      font-weight: 750;
+      line-height: 1.35;
+
+      overflow-wrap: anywhere;
+    }
+
+    .image-picker-empty {
+      grid-column: 1 / -1;
+
+      padding: 28px;
+
+      color: var(--muted);
+
+      text-align: center;
     }
 
     body,
@@ -5897,6 +6379,52 @@
     >
   </form>
 
+  <section
+    id="imagePickerDialog"
+    class="image-picker-dialog"
+    aria-hidden="true"
+  >
+    <div class="image-picker-panel">
+      <div class="image-picker-header">
+        <div>
+          <div class="eyebrow">
+            GitHub repository
+          </div>
+
+          <h3 style="margin:5px 0 0;">
+            Select an image
+          </h3>
+
+          <p class="manager-description">
+            The exact GitHub filename and capitalization will be inserted.
+          </p>
+        </div>
+
+        <button
+          id="closeImagePickerButton"
+          class="button"
+          type="button"
+        >
+          Close
+        </button>
+      </div>
+
+      <div class="image-picker-search-wrap">
+        <input
+          id="imagePickerSearch"
+          class="manager-input"
+          type="search"
+          placeholder="Search repository images…"
+        >
+      </div>
+
+      <div
+        id="imagePickerGrid"
+        class="image-picker-grid"
+      ></div>
+    </div>
+  </section>
+
   <script>
     /*
      * =====================================================
@@ -6441,6 +6969,26 @@
         "imageHealthList"
       );
 
+    const imagePickerDialog =
+      document.getElementById(
+        "imagePickerDialog"
+      );
+
+    const closeImagePickerButton =
+      document.getElementById(
+        "closeImagePickerButton"
+      );
+
+    const imagePickerSearch =
+      document.getElementById(
+        "imagePickerSearch"
+      );
+
+    const imagePickerGrid =
+      document.getElementById(
+        "imagePickerGrid"
+      );
+
     const auditLogTab =
       document.getElementById(
         "auditLogTab"
@@ -6928,6 +7476,9 @@
 
     let imageHealthScanned =
       false;
+
+    let activeImagePickerInput =
+      null;
 
     let auditEntries =
       [];
@@ -9249,10 +9800,34 @@
       );
 
       updateManagerEditingControls();
+      updateVisibleImagePickerStatuses();
     }
 
 
     function handleManagerTableClick(event) {
+      const pickerButton =
+        event.target.closest(
+          "[data-open-image-picker='regular']"
+        );
+
+      if (pickerButton) {
+        const rowIndex =
+          Number(
+            pickerButton.dataset.rowIndex
+          );
+
+        const input =
+          managerScheduleBody.querySelector(
+            `[data-image-picker-input="regular"][data-row-index="${rowIndex}"]`
+          );
+
+        openGitHubImagePicker(
+          input
+        );
+
+        return;
+      }
+
       const deleteButton =
         event.target.closest(
           "[data-delete-manager-row]"
@@ -10317,14 +10892,34 @@
                   </td>
 
                   <td>
-                    <input
-                      class="manager-input manager-image-input ${rowErrors.image ? "invalid" : ""}"
-                      type="text"
-                      value="${escapeHtml(item.image)}"
-                      placeholder="image-name.jpg"
-                      data-row-index="${index}"
-                      data-manager-field="image"
-                    >
+                    <div class="image-picker-field">
+                      <div class="image-picker-row">
+                        <input
+                          class="manager-input manager-image-input ${rowErrors.image ? "invalid" : ""}"
+                          type="text"
+                          value="${escapeHtml(item.image)}"
+                          placeholder="image-name.jpg"
+                          data-row-index="${index}"
+                          data-manager-field="image"
+                          data-image-picker-input="regular"
+                        >
+
+                        <button
+                          class="button image-picker-button"
+                          type="button"
+                          data-open-image-picker="regular"
+                          data-row-index="${index}"
+                        >
+                          Browse
+                        </button>
+                      </div>
+
+                      <div
+                        class="image-picker-status"
+                        data-image-picker-status="regular"
+                        data-row-index="${index}"
+                      ></div>
+                    </div>
                   </td>
 
                   <td>
@@ -10449,6 +11044,7 @@
           })
           .join("");
 
+      updateVisibleImagePickerStatuses();
       runScheduleIntegrityChecks();
     }
 
@@ -11002,10 +11598,34 @@
       );
 
       updateHolidayEditingControls();
+      updateVisibleImagePickerStatuses();
     }
 
 
     function handleHolidayTableClick(event) {
+      const pickerButton =
+        event.target.closest(
+          "[data-open-image-picker='holiday']"
+        );
+
+      if (pickerButton) {
+        const rowIndex =
+          Number(
+            pickerButton.dataset.rowIndex
+          );
+
+        const input =
+          holidayTableBody.querySelector(
+            `[data-image-picker-input="holiday"][data-row-index="${rowIndex}"]`
+          );
+
+        openGitHubImagePicker(
+          input
+        );
+
+        return;
+      }
+
       const deleteButton =
         event.target.closest(
           "[data-delete-holiday-row]"
@@ -11250,6 +11870,7 @@
           validation
         );
 
+        updateVisibleImagePickerStatuses();
         return;
       }
 
@@ -11376,14 +11997,34 @@
           </td>
 
           <td>
-            <input
-              class="manager-input holiday-image-input ${rowErrors.image ? "invalid" : ""}"
-              type="text"
-              value="${escapeHtml(item.image)}"
-              placeholder="image-name.jpg"
-              data-row-index="${index}"
-              data-holiday-field="image"
-            >
+            <div class="image-picker-field">
+              <div class="image-picker-row">
+                <input
+                  class="manager-input holiday-image-input ${rowErrors.image ? "invalid" : ""}"
+                  type="text"
+                  value="${escapeHtml(item.image)}"
+                  placeholder="image-name.jpg"
+                  data-row-index="${index}"
+                  data-holiday-field="image"
+                  data-image-picker-input="holiday"
+                >
+
+                <button
+                  class="button image-picker-button"
+                  type="button"
+                  data-open-image-picker="holiday"
+                  data-row-index="${index}"
+                >
+                  Browse
+                </button>
+              </div>
+
+              <div
+                class="image-picker-status"
+                data-image-picker-status="holiday"
+                data-row-index="${index}"
+              ></div>
+            </div>
           </td>
 
           <td>
@@ -13450,8 +14091,13 @@
         );
 
       const isMissing =
-        missingReferencedImages.has(
-          normalizedFilename
+        Array.from(
+          missingReferencedImages
+        ).some(
+          filename =>
+            normalizeRepositoryPath(
+              filename
+            ) === normalizedFilename
         );
 
       return `
@@ -13606,48 +14252,69 @@
         repositoryImages =
           await fetchRepositoryImageFiles();
 
-        const repositorySet =
-          new Set(
-            repositoryImages.map(
-              normalizeRepositoryPath
-            )
-          );
+        const repositoryExactByNormalized =
+          new Map();
 
-        const referencedSet =
-          new Set(
-            imageLibraryIndex.map(
-              image =>
-                normalizeRepositoryPath(
-                  image.filename
-                )
-            )
-          );
+        repositoryImages.forEach(
+          exactFilename => {
+            repositoryExactByNormalized.set(
+              normalizeRepositoryPath(
+                exactFilename
+              ),
+              exactFilename
+            );
+          }
+        );
+
+        const referencedExactByNormalized =
+          new Map();
+
+        imageLibraryIndex.forEach(
+          image => {
+            referencedExactByNormalized.set(
+              normalizeRepositoryPath(
+                image.filename
+              ),
+              image.filename
+            );
+          }
+        );
 
         missingReferencedImages =
           new Set(
             Array.from(
-              referencedSet
-            ).filter(
-              filename =>
-                !repositorySet.has(
-                  filename
-                )
+              referencedExactByNormalized.entries()
             )
+              .filter(
+                ([normalized]) =>
+                  !repositoryExactByNormalized.has(
+                    normalized
+                  )
+              )
+              .map(
+                ([, exactFilename]) =>
+                  exactFilename
+              )
           );
 
         unusedRepositoryImages =
           new Set(
             Array.from(
-              repositorySet
-            ).filter(
-              filename =>
-                !referencedSet.has(
-                  filename
-                ) &&
-                !isDashboardAsset(
-                  filename
-                )
+              repositoryExactByNormalized.entries()
             )
+              .filter(
+                ([normalized, exactFilename]) =>
+                  !referencedExactByNormalized.has(
+                    normalized
+                  ) &&
+                  !isDashboardAsset(
+                    exactFilename
+                  )
+              )
+              .map(
+                ([, exactFilename]) =>
+                  exactFilename
+              )
           );
 
         imageHealthScanned =
@@ -13673,6 +14340,7 @@
 
         renderImageHealthList();
         renderImageLibrary();
+        updateVisibleImagePickerStatuses();
 
         clearImageHealthButton.disabled =
           false;
