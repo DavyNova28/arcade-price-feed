@@ -13,12 +13,12 @@
   <link
     rel="icon"
     type="image/png"
-    href="JurassiqueLogo.png"
+    href="favicon.png"
   >
 
   <link
     rel="apple-touch-icon"
-    href="JurassiqueLogo.png"
+    href="favicon.png"
   >
 
   <style>
@@ -1370,6 +1370,155 @@
       text-align: center !important;
     }
 
+
+    /*
+     * =====================================================
+     * DASHBOARD V3 — LOCAL SCHEDULE EDITING
+     * =====================================================
+     */
+
+    .manager-status.editing {
+      color: #eaf3ff;
+      background: #245f9e;
+    }
+
+    .manager-status.changed {
+      color: #fff0cf;
+      background: var(--holiday-dark);
+    }
+
+    .manager-editing-toolbar {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+
+      margin-bottom: 16px;
+    }
+
+    .manager-edit-note {
+      margin-right: auto;
+
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .manager-validation {
+      display: none;
+
+      margin-bottom: 16px;
+      padding: 12px 14px;
+
+      border: 1px solid rgba(255, 104, 104, 0.55);
+      border-radius: 10px;
+
+      color: #ffd6d6;
+      background: rgba(103, 40, 40, 0.46);
+
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    html[data-theme="light"] .manager-validation {
+      color: #7e2525;
+      background: #ffe5e5;
+    }
+
+    .manager-validation.visible {
+      display: block;
+    }
+
+    .manager-input {
+      width: 100%;
+      min-height: 38px;
+      padding: 8px 10px;
+
+      border: 1px solid var(--border);
+      border-radius: 8px;
+
+      color: var(--text);
+      background: var(--surface);
+
+      font: inherit;
+    }
+
+    .manager-input:focus {
+      outline: 2px solid rgba(95, 168, 255, 0.32);
+      border-color: var(--blue);
+    }
+
+    .manager-input.invalid {
+      border-color: var(--error);
+      background: rgba(255, 104, 104, 0.09);
+    }
+
+    .manager-time-input {
+      min-width: 105px;
+    }
+
+    .manager-image-input {
+      min-width: 260px;
+    }
+
+    .manager-fade-input {
+      min-width: 105px;
+    }
+
+    .manager-row-actions {
+      display: flex;
+      gap: 7px;
+      flex-wrap: wrap;
+    }
+
+    .manager-icon-button {
+      min-height: 36px;
+      padding: 7px 10px;
+
+      border: 1px solid var(--border);
+      border-radius: 8px;
+
+      color: var(--text);
+      background: var(--surface-light);
+
+      cursor: pointer;
+    }
+
+    .manager-icon-button:hover {
+      background: var(--surface-hover);
+    }
+
+    .manager-icon-button.danger {
+      color: #ffd6d6;
+      border-color: rgba(255, 104, 104, 0.48);
+      background: rgba(103, 40, 40, 0.45);
+    }
+
+    html[data-theme="light"] .manager-icon-button.danger {
+      color: #8e2d2d;
+      background: #ffe5e5;
+    }
+
+    .manager-dirty-indicator {
+      display: none;
+
+      margin-left: 8px;
+      padding: 4px 7px;
+
+      border-radius: 999px;
+
+      color: #fff0cf;
+      background: var(--holiday-dark);
+
+      font-size: 10px;
+      font-weight: 800;
+      text-transform: uppercase;
+      vertical-align: middle;
+    }
+
+    .manager-dirty-indicator.visible {
+      display: inline-flex;
+    }
+
     body,
     header,
     .system-banner,
@@ -1697,6 +1846,19 @@
 
       .manager-toolbar .button {
         width: 100%;
+      }
+
+      .manager-editing-toolbar {
+        align-items: stretch;
+        flex-direction: column;
+      }
+
+      .manager-editing-toolbar .button {
+        width: 100%;
+      }
+
+      .manager-edit-note {
+        margin-right: 0;
       }
     }
 
@@ -2243,7 +2405,10 @@
             </p>
           </div>
 
-          <div class="manager-status">
+          <div
+            id="managerModeStatus"
+            class="manager-status"
+          >
             Read-only
           </div>
         </div>
@@ -2333,6 +2498,49 @@
           </article>
         </section>
 
+        <div class="manager-editing-toolbar">
+          <div class="manager-edit-note">
+            Changes in this step stay only in your browser and are not sent to Google Sheets.
+            <span
+              id="managerDirtyIndicator"
+              class="manager-dirty-indicator"
+            >
+              Unsaved changes
+            </span>
+          </div>
+
+          <button
+            id="managerEditButton"
+            class="button button-primary"
+            type="button"
+          >
+            ✎ Enable editing
+          </button>
+
+          <button
+            id="managerAddRowButton"
+            class="button"
+            type="button"
+            disabled
+          >
+            ＋ Add row
+          </button>
+
+          <button
+            id="managerDiscardButton"
+            class="button"
+            type="button"
+            disabled
+          >
+            Undo local changes
+          </button>
+        </div>
+
+        <div
+          id="managerValidation"
+          class="manager-validation"
+        ></div>
+
         <div class="schedule-table-wrapper">
           <table class="schedule-table">
             <thead>
@@ -2343,13 +2551,14 @@
                 <th>Fade</th>
                 <th>Status</th>
                 <th>Preview</th>
+                <th>Actions</th>
               </tr>
             </thead>
 
             <tbody id="managerScheduleBody">
               <tr>
                 <td
-                  colspan="6"
+                  colspan="7"
                   class="manager-empty"
                 >
                   Select a screen to load its schedule.
@@ -2370,7 +2579,7 @@
      */
 
     const SCHEDULE_FEED_URL =
-      "https://script.google.com/macros/s/AKfycbwUINP9DCEUywwCU1YMjfnPT3H8ZUq1lsGVk8ShACrTp2EZIqMYrChADlk_uEh2F-DGXw/exec";
+      "PASTE_YOUR_APPS_SCRIPT_EXEC_URL_HERE";
 
     const SCREEN_NAMES = [
       "Arcade",
@@ -2400,7 +2609,7 @@
       holidayColor: "#f2aa3f",
       errorColor: "#ff6868",
 
-      logoFile: "JurassiqueBanner.png"
+      logoFile: "dashboard-logo.png"
     };
 
     /*
@@ -2643,10 +2852,46 @@
         "managerScheduleBody"
       );
 
+    const managerModeStatus =
+      document.getElementById(
+        "managerModeStatus"
+      );
+
+    const managerEditButton =
+      document.getElementById(
+        "managerEditButton"
+      );
+
+    const managerAddRowButton =
+      document.getElementById(
+        "managerAddRowButton"
+      );
+
+    const managerDiscardButton =
+      document.getElementById(
+        "managerDiscardButton"
+      );
+
+    const managerDirtyIndicator =
+      document.getElementById(
+        "managerDirtyIndicator"
+      );
+
+    const managerValidation =
+      document.getElementById(
+        "managerValidation"
+      );
+
     const screenStates =
       new Map();
 
     let requestGeneration = 0;
+
+    const managerDrafts =
+      new Map();
+
+    let managerEditingEnabled =
+      false;
 
     /*
      * =====================================================
@@ -4424,7 +4669,48 @@
 
       managerScreenSelect.addEventListener(
         "change",
-        updateScheduleManager
+        function() {
+          managerEditingEnabled = false;
+          updateManagerEditingControls();
+          updateScheduleManager();
+        }
+      );
+
+      managerEditButton.addEventListener(
+        "click",
+        function() {
+          managerEditingEnabled =
+            !managerEditingEnabled;
+
+          if (managerEditingEnabled) {
+            ensureManagerDraft(
+              managerScreenSelect.value
+            );
+          }
+
+          updateManagerEditingControls();
+          updateScheduleManager();
+        }
+      );
+
+      managerAddRowButton.addEventListener(
+        "click",
+        addManagerDraftRow
+      );
+
+      managerDiscardButton.addEventListener(
+        "click",
+        discardManagerDraft
+      );
+
+      managerScheduleBody.addEventListener(
+        "input",
+        handleManagerTableInput
+      );
+
+      managerScheduleBody.addEventListener(
+        "click",
+        handleManagerTableClick
       );
 
       managerOpenScreen.href =
@@ -4432,6 +4718,214 @@
         encodeURIComponent(
           managerScreenSelect.value
         );
+
+      updateManagerEditingControls();
+    }
+
+
+    function updateManagerEditingControls() {
+      const screenName =
+        managerScreenSelect.value;
+
+      const hasDraft =
+        managerDrafts.has(screenName);
+
+      managerEditButton.textContent =
+        managerEditingEnabled
+          ? "✓ Finish editing"
+          : "✎ Enable editing";
+
+      managerAddRowButton.disabled =
+        !managerEditingEnabled;
+
+      managerDiscardButton.disabled =
+        !hasDraft;
+
+      managerModeStatus.className =
+        managerEditingEnabled
+          ? "manager-status editing"
+          : hasDraft
+            ? "manager-status changed"
+            : "manager-status";
+
+      managerModeStatus.textContent =
+        managerEditingEnabled
+          ? "Local editing"
+          : hasDraft
+            ? "Local changes"
+            : "Read-only";
+
+      managerDirtyIndicator.classList.toggle(
+        "visible",
+        hasDraft
+      );
+    }
+
+
+    function ensureManagerDraft(screenName) {
+      if (managerDrafts.has(screenName)) {
+        return managerDrafts.get(screenName);
+      }
+
+      const state =
+        screenStates.get(screenName);
+
+      if (
+        !state ||
+        state.error ||
+        !Array.isArray(state.schedule)
+      ) {
+        return null;
+      }
+
+      const draft =
+        state.schedule.map(item => ({
+          time: item.time,
+          image: item.image,
+          fade: item.fade
+        }));
+
+      managerDrafts.set(
+        screenName,
+        draft
+      );
+
+      return draft;
+    }
+
+
+    function addManagerDraftRow() {
+      const screenName =
+        managerScreenSelect.value;
+
+      const draft =
+        ensureManagerDraft(screenName);
+
+      if (!draft) {
+        return;
+      }
+
+      draft.push({
+        time: "12:00",
+        image: "",
+        fade: 1500
+      });
+
+      draft.sort((a, b) =>
+        a.time.localeCompare(b.time)
+      );
+
+      updateManagerEditingControls();
+      updateScheduleManager();
+    }
+
+
+    function discardManagerDraft() {
+      const screenName =
+        managerScreenSelect.value;
+
+      managerDrafts.delete(screenName);
+
+      managerEditingEnabled = false;
+
+      updateManagerEditingControls();
+      updateScheduleManager();
+    }
+
+
+    function handleManagerTableInput(event) {
+      const input =
+        event.target.closest(
+          "[data-manager-field]"
+        );
+
+      if (
+        !input ||
+        !managerEditingEnabled
+      ) {
+        return;
+      }
+
+      const screenName =
+        managerScreenSelect.value;
+
+      const draft =
+        ensureManagerDraft(screenName);
+
+      if (!draft) {
+        return;
+      }
+
+      const rowIndex =
+        Number(input.dataset.rowIndex);
+
+      const field =
+        input.dataset.managerField;
+
+      if (
+        !Number.isInteger(rowIndex) ||
+        !draft[rowIndex]
+      ) {
+        return;
+      }
+
+      if (field === "fade") {
+        draft[rowIndex][field] =
+          input.value === ""
+            ? ""
+            : Number(input.value);
+      } else {
+        draft[rowIndex][field] =
+          input.value;
+      }
+
+      validateAndDisplayManagerDraft(
+        draft
+      );
+
+      updateManagerEditingControls();
+    }
+
+
+    function handleManagerTableClick(event) {
+      const deleteButton =
+        event.target.closest(
+          "[data-delete-manager-row]"
+        );
+
+      if (
+        !deleteButton ||
+        !managerEditingEnabled
+      ) {
+        return;
+      }
+
+      const screenName =
+        managerScreenSelect.value;
+
+      const draft =
+        ensureManagerDraft(screenName);
+
+      if (!draft) {
+        return;
+      }
+
+      const rowIndex =
+        Number(
+          deleteButton.dataset.deleteManagerRow
+        );
+
+      if (
+        !Number.isInteger(rowIndex) ||
+        !draft[rowIndex]
+      ) {
+        return;
+      }
+
+      draft.splice(rowIndex, 1);
+
+      updateManagerEditingControls();
+      updateScheduleManager();
     }
 
     /*
@@ -4451,6 +4945,8 @@
         `${SIGNAGE_PAGE}?screen=` +
         encodeURIComponent(screenName);
 
+      updateManagerEditingControls();
+
       if (!state) {
         managerSource.textContent =
           "Loading";
@@ -4467,7 +4963,7 @@
         managerScheduleBody.innerHTML = `
           <tr>
             <td
-              colspan="6"
+              colspan="7"
               class="manager-empty"
             >
               The selected schedule is still loading.
@@ -4475,6 +4971,7 @@
           </tr>
         `;
 
+        hideManagerValidation();
         return;
       }
 
@@ -4494,7 +4991,7 @@
         managerScheduleBody.innerHTML = `
           <tr>
             <td
-              colspan="6"
+              colspan="7"
               class="manager-empty"
             >
               ${escapeHtml(state.error)}
@@ -4502,6 +4999,7 @@
           </tr>
         `;
 
+        hideManagerValidation();
         return;
       }
 
@@ -4523,13 +5021,17 @@
           now
         );
 
+      const displayedSchedule =
+        managerDrafts.get(screenName) ||
+        state.schedule;
+
       managerSource.textContent =
         state.source === "holiday"
           ? "Holiday Override"
           : "Regular Schedule";
 
       managerEntryCount.textContent =
-        String(state.schedule.length);
+        String(displayedSchedule.length);
 
       managerCurrentImage.textContent =
         activeItem.image;
@@ -4539,8 +5041,17 @@
           ? `${nextItem.time} tomorrow`
           : nextItem.time;
 
+      const validation =
+        validateManagerDraft(
+          displayedSchedule
+        );
+
+      displayManagerValidation(
+        validation
+      );
+
       managerScheduleBody.innerHTML =
-        state.schedule
+        displayedSchedule
           .map((item, index) => {
             const status =
               getManagerRowStatus(
@@ -4548,6 +5059,104 @@
                 activeItem,
                 currentTime
               );
+
+            const rowErrors =
+              validation.rowErrors[index] ||
+              {};
+
+            if (managerEditingEnabled) {
+              return `
+                <tr>
+                  <td>
+                    ${index + 1}
+                  </td>
+
+                  <td>
+                    <input
+                      class="manager-input manager-time-input ${rowErrors.time ? "invalid" : ""}"
+                      type="time"
+                      step="60"
+                      value="${escapeHtml(item.time)}"
+                      data-row-index="${index}"
+                      data-manager-field="time"
+                    >
+                  </td>
+
+                  <td>
+                    <input
+                      class="manager-input manager-image-input ${rowErrors.image ? "invalid" : ""}"
+                      type="text"
+                      value="${escapeHtml(item.image)}"
+                      placeholder="image-name.jpg"
+                      data-row-index="${index}"
+                      data-manager-field="image"
+                    >
+                  </td>
+
+                  <td>
+                    <input
+                      class="manager-input manager-fade-input ${rowErrors.fade ? "invalid" : ""}"
+                      type="number"
+                      min="0"
+                      max="10000"
+                      step="100"
+                      value="${escapeHtml(item.fade)}"
+                      data-row-index="${index}"
+                      data-manager-field="fade"
+                    >
+                  </td>
+
+                  <td>
+                    <span
+                      class="manager-row-status ${status.className}"
+                    >
+                      ${status.label}
+                    </span>
+                  </td>
+
+                  <td>
+                    ${
+                      item.image
+                        ? `
+                          <img
+                            class="manager-preview"
+                            src="${buildImageUrl(item.image)}"
+                            alt=""
+                            onerror="
+                              this.style.display='none';
+                              this.nextElementSibling.style.display='block';
+                            "
+                          >
+
+                          <div
+                            class="manager-preview-error"
+                            style="display:none"
+                          >
+                            Image unavailable
+                          </div>
+                        `
+                        : `
+                          <div class="manager-preview-error">
+                            Enter an image filename
+                          </div>
+                        `
+                    }
+                  </td>
+
+                  <td>
+                    <div class="manager-row-actions">
+                      <button
+                        class="manager-icon-button danger"
+                        type="button"
+                        data-delete-manager-row="${index}"
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              `;
+            }
 
             return `
               <tr>
@@ -4593,10 +5202,183 @@
                     Image unavailable
                   </div>
                 </td>
+
+                <td>
+                  —
+                </td>
               </tr>
             `;
           })
           .join("");
+    }
+
+
+    function validateAndDisplayManagerDraft(
+      draft
+    ) {
+      const validation =
+        validateManagerDraft(draft);
+
+      displayManagerValidation(
+        validation
+      );
+
+      managerScheduleBody
+        .querySelectorAll(
+          "[data-manager-field]"
+        )
+        .forEach(input => {
+          const rowIndex =
+            Number(input.dataset.rowIndex);
+
+          const field =
+            input.dataset.managerField;
+
+          const rowErrors =
+            validation.rowErrors[rowIndex] ||
+            {};
+
+          input.classList.toggle(
+            "invalid",
+            Boolean(rowErrors[field])
+          );
+        });
+    }
+
+
+    function validateManagerDraft(schedule) {
+      const errors = [];
+      const rowErrors = {};
+      const timeCounts = new Map();
+
+      schedule.forEach((item, index) => {
+        const rowNumber =
+          index + 1;
+
+        const time =
+          String(item.time || "").trim();
+
+        const image =
+          String(item.image || "").trim();
+
+        const fade =
+          Number(item.fade);
+
+        if (!/^\d{2}:\d{2}$/.test(time)) {
+          errors.push(
+            `Row ${rowNumber}: enter a valid start time.`
+          );
+
+          rowErrors[index] = {
+            ...(rowErrors[index] || {}),
+            time: true
+          };
+        } else {
+          timeCounts.set(
+            time,
+            (timeCounts.get(time) || 0) + 1
+          );
+        }
+
+        if (!image) {
+          errors.push(
+            `Row ${rowNumber}: image filename is required.`
+          );
+
+          rowErrors[index] = {
+            ...(rowErrors[index] || {}),
+            image: true
+          };
+        }
+
+        if (
+          !Number.isFinite(fade) ||
+          fade < 0 ||
+          fade > 10000
+        ) {
+          errors.push(
+            `Row ${rowNumber}: fade must be between 0 and 10000 ms.`
+          );
+
+          rowErrors[index] = {
+            ...(rowErrors[index] || {}),
+            fade: true
+          };
+        }
+      });
+
+      timeCounts.forEach(
+        (count, time) => {
+          if (count <= 1) {
+            return;
+          }
+
+          errors.push(
+            `Duplicate start time: ${time}.`
+          );
+
+          schedule.forEach(
+            (item, index) => {
+              if (item.time === time) {
+                rowErrors[index] = {
+                  ...(rowErrors[index] || {}),
+                  time: true
+                };
+              }
+            }
+          );
+        }
+      );
+
+      if (schedule.length === 0) {
+        errors.push(
+          "The schedule must contain at least one row."
+        );
+      }
+
+      return {
+        valid: errors.length === 0,
+        errors,
+        rowErrors
+      };
+    }
+
+
+    function displayManagerValidation(
+      validation
+    ) {
+      if (validation.valid) {
+        managerValidation.classList.remove(
+          "visible"
+        );
+
+        managerValidation.textContent =
+          "";
+
+        return;
+      }
+
+      managerValidation.innerHTML =
+        `<strong>Please fix the following:</strong><br>` +
+        validation.errors
+          .map(error =>
+            `• ${escapeHtml(error)}`
+          )
+          .join("<br>");
+
+      managerValidation.classList.add(
+        "visible"
+      );
+    }
+
+
+    function hideManagerValidation() {
+      managerValidation.classList.remove(
+        "visible"
+      );
+
+      managerValidation.textContent =
+        "";
     }
 
     function getManagerRowStatus(
