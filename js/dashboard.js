@@ -5,7 +5,7 @@
      */
 
     const SCHEDULE_FEED_URL =
-      "https://script.google.com/macros/s/AKfycbwUINP9DCEUywwCU1YMjfnPT3H8ZUq1lsGVk8ShACrTp2EZIqMYrChADlk_uEh2F-DGXw/exec";
+      "PASTE_YOUR_APPS_SCRIPT_EXEC_URL_HERE";
 
     const SCREEN_NAMES = [
       "Arcade",
@@ -278,6 +278,76 @@
         "themeButtonText"
       );
 
+    const exportDiagnosticsButton =
+      document.getElementById(
+        "exportDiagnosticsButton"
+      );
+
+    const aboutApplicationButton =
+      document.getElementById(
+        "aboutApplicationButton"
+      );
+
+    const releaseNotesButton =
+      document.getElementById(
+        "releaseNotesButton"
+      );
+
+    const aboutApplicationOverlay =
+      document.getElementById(
+        "aboutApplicationOverlay"
+      );
+
+    const releaseNotesOverlay =
+      document.getElementById(
+        "releaseNotesOverlay"
+      );
+
+    const closeAboutApplicationButton =
+      document.getElementById(
+        "closeAboutApplicationButton"
+      );
+
+    const closeReleaseNotesButton =
+      document.getElementById(
+        "closeReleaseNotesButton"
+      );
+
+    const aboutEnvironmentBadge =
+      document.getElementById(
+        "aboutEnvironmentBadge"
+      );
+
+    const missionEnvironmentLabel =
+      document.getElementById(
+        "missionEnvironmentLabel"
+      );
+
+    const aboutHealthScore =
+      document.getElementById(
+        "aboutHealthScore"
+      );
+
+    const aboutPlayerVersion =
+      document.getElementById(
+        "aboutPlayerVersion"
+      );
+
+    const commandPaletteButton =
+      document.getElementById("commandPaletteButton");
+
+    const commandPaletteOverlay =
+      document.getElementById("commandPaletteOverlay");
+
+    const closeCommandPaletteButton =
+      document.getElementById("closeCommandPaletteButton");
+
+    const commandPaletteSearch =
+      document.getElementById("commandPaletteSearch");
+
+    const commandPaletteResults =
+      document.getElementById("commandPaletteResults");
+
     const homeTab =
       document.getElementById(
         "homeTab"
@@ -286,6 +356,176 @@
     const homeWorkspace =
       document.getElementById(
         "homeWorkspace"
+      );
+
+    const missionHeroHealth =
+      document.getElementById(
+        "missionHeroHealth"
+      );
+
+    const missionHeroHealthScore =
+      document.getElementById(
+        "missionHeroHealthScore"
+      );
+
+    const missionHeroHealthState =
+      document.getElementById(
+        "missionHeroHealthState"
+      );
+
+    const missionConfidenceBanner =
+      document.getElementById(
+        "missionConfidenceBanner"
+      );
+
+    const missionConfidenceIcon =
+      document.getElementById(
+        "missionConfidenceIcon"
+      );
+
+    const missionConfidenceTitle =
+      document.getElementById(
+        "missionConfidenceTitle"
+      );
+
+    const missionConfidenceSummary =
+      document.getElementById(
+        "missionConfidenceSummary"
+      );
+
+    const missionConfidenceDetails =
+      document.getElementById(
+        "missionConfidenceDetails"
+      );
+
+    const missionStatusUpdated =
+      document.getElementById(
+        "missionStatusUpdated"
+      );
+
+    const missionAppsScriptCard =
+      document.getElementById(
+        "missionAppsScriptCard"
+      );
+
+    const missionAppsScriptValue =
+      document.getElementById(
+        "missionAppsScriptValue"
+      );
+
+    const missionAppsScriptDetail =
+      document.getElementById(
+        "missionAppsScriptDetail"
+      );
+
+    const missionGitHubCard =
+      document.getElementById(
+        "missionGitHubCard"
+      );
+
+    const missionGitHubValue =
+      document.getElementById(
+        "missionGitHubValue"
+      );
+
+    const missionGitHubDetail =
+      document.getElementById(
+        "missionGitHubDetail"
+      );
+
+    const missionPlayersCard =
+      document.getElementById(
+        "missionPlayersCard"
+      );
+
+    const missionPlayersValue =
+      document.getElementById(
+        "missionPlayersValue"
+      );
+
+    const missionPlayersDetail =
+      document.getElementById(
+        "missionPlayersDetail"
+      );
+
+    const missionCacheCard =
+      document.getElementById(
+        "missionCacheCard"
+      );
+
+    const missionCacheValue =
+      document.getElementById(
+        "missionCacheValue"
+      );
+
+    const missionCacheDetail =
+      document.getElementById(
+        "missionCacheDetail"
+      );
+
+    const missionBackupCard =
+      document.getElementById(
+        "missionBackupCard"
+      );
+
+    const missionBackupValue =
+      document.getElementById(
+        "missionBackupValue"
+      );
+
+    const missionBackupDetail =
+      document.getElementById(
+        "missionBackupDetail"
+      );
+
+    const missionSchedulesCard =
+      document.getElementById(
+        "missionSchedulesCard"
+      );
+
+    const missionSchedulesValue =
+      document.getElementById(
+        "missionSchedulesValue"
+      );
+
+    const missionSchedulesDetail =
+      document.getElementById(
+        "missionSchedulesDetail"
+      );
+
+    const missionGreeting =
+      document.getElementById(
+        "missionGreeting"
+      );
+
+    const missionScheduleActionStatus =
+      document.getElementById(
+        "missionScheduleActionStatus"
+      );
+
+    const missionImagesActionStatus =
+      document.getElementById(
+        "missionImagesActionStatus"
+      );
+
+    const missionHealthActionStatus =
+      document.getElementById(
+        "missionHealthActionStatus"
+      );
+
+    const missionRolloutActionStatus =
+      document.getElementById(
+        "missionRolloutActionStatus"
+      );
+
+    const refreshMissionActivityButton =
+      document.getElementById(
+        "refreshMissionActivityButton"
+      );
+
+    const missionRecentActivityList =
+      document.getElementById(
+        "missionRecentActivityList"
       );
 
     const controlCenterTab =
@@ -3416,11 +3656,17 @@
      */
 
     function openWorkspace(workspaceName) {
+      closeWorkspaceNavigationMenus();
+
       const showHome =
         workspaceName === "home";
 
       const showControl =
         workspaceName === "control";
+
+      if (showHome) {
+        renderMissionControlStatuses();
+      }
 
       const showManager =
         workspaceName === "manager";
@@ -15338,7 +15584,7 @@
       } else if (
         failureRate <= 1
       ) {
-        score -= 3;
+        score -= 2;
 
         reasons.push({
           icon:
@@ -15402,7 +15648,7 @@
         });
 
       } else if (
-        metrics.averageDuration <= 1200
+        metrics.averageDuration <= 1500
       ) {
         score -= 2;
 
@@ -15415,7 +15661,7 @@
         });
 
       } else if (
-        metrics.averageDuration <= 2000
+        metrics.averageDuration <= 2200
       ) {
         score -= 6;
 
@@ -15453,10 +15699,14 @@
       }
 
       /*
-       * A single peak is informational unless it is extreme.
+       * One-off Apps Script cold starts are displayed but do not
+       * lower the score when the average remains healthy.
+       * A peak is penalized only when it accompanies sustained
+       * slow response times.
        */
       if (
-        metrics.maxDuration > 15000
+        metrics.maxDuration > 15000 &&
+        metrics.averageDuration > 2200
       ) {
         score -= 4;
 
@@ -15465,7 +15715,18 @@
             "⏱️",
 
           text:
-            `One request peaked at ${metrics.maxDuration} ms.`
+            `A ${metrics.maxDuration} ms peak accompanied sustained slow responses.`
+        });
+
+      } else if (
+        metrics.maxDuration > 15000
+      ) {
+        reasons.push({
+          icon:
+            "ℹ️",
+
+          text:
+            `One isolated cold-start peak reached ${metrics.maxDuration} ms and was excluded from scoring.`
         });
 
       } else if (
@@ -15577,9 +15838,1928 @@
     }
 
 
+    function getApplicationEnvironment() {
+      const locationText =
+        `${window.location.hostname}${window.location.pathname}`
+          .toLowerCase();
+
+      if (
+        locationText.includes(
+          "mini-golf-signage-dev"
+        )
+      ) {
+        return {
+          key:
+            "development",
+
+          label:
+            "Development Environment",
+
+          badge:
+            "🧪 Development",
+
+          stable:
+            false
+        };
+      }
+
+      if (
+        locationText.includes(
+          "mini-golf-signage"
+        )
+      ) {
+        return {
+          key:
+            "production",
+
+          label:
+            "Production Environment",
+
+          badge:
+            "🟢 Production",
+
+          stable:
+            true
+        };
+      }
+
+      return {
+        key:
+          "local",
+
+        label:
+          "Local Preview",
+
+        badge:
+          "💻 Local Preview",
+
+        stable:
+          false
+      };
+    }
+
+
+    function renderApplicationEnvironment() {
+      const environment =
+        getApplicationEnvironment();
+
+      if (missionEnvironmentLabel) {
+        missionEnvironmentLabel.textContent =
+          environment.label;
+      }
+
+      if (aboutEnvironmentBadge) {
+        aboutEnvironmentBadge.textContent =
+          environment.badge;
+
+        aboutEnvironmentBadge.classList.toggle(
+          "about-environment-production",
+          environment.key === "production"
+        );
+      }
+    }
+
+
+    function sanitizeDiagnosticsValue(
+      value,
+      depth = 0
+    ) {
+      if (depth > 6) {
+        return "[Maximum depth reached]";
+      }
+
+      if (
+        value === null ||
+        value === undefined
+      ) {
+        return value ?? null;
+      }
+
+      if (value instanceof Date) {
+        return Number.isFinite(
+          value.getTime()
+        )
+          ? value.toISOString()
+          : null;
+      }
+
+      if (
+        typeof value === "string" ||
+        typeof value === "number" ||
+        typeof value === "boolean"
+      ) {
+        return value;
+      }
+
+      if (Array.isArray(value)) {
+        return value.map(
+          item =>
+            sanitizeDiagnosticsValue(
+              item,
+              depth + 1
+            )
+        );
+      }
+
+      if (value instanceof Map) {
+        return Object.fromEntries(
+          Array.from(
+            value.entries()
+          ).map(
+            ([key, item]) => [
+              String(key),
+              sanitizeDiagnosticsValue(
+                item,
+                depth + 1
+              )
+            ]
+          )
+        );
+      }
+
+      if (typeof value === "object") {
+        const cleanObject =
+          {};
+
+        Object.keys(value).forEach(
+          key => {
+            const lowerKey =
+              key.toLowerCase();
+
+            if (
+              lowerKey.includes("token") ||
+              lowerKey.includes("secret") ||
+              lowerKey.includes("password") ||
+              lowerKey.includes("authorization")
+            ) {
+              cleanObject[key] =
+                "[Redacted]";
+
+              return;
+            }
+
+            try {
+              cleanObject[key] =
+                sanitizeDiagnosticsValue(
+                  value[key],
+                  depth + 1
+                );
+            } catch (error) {
+              cleanObject[key] =
+                `[Unavailable: ${error.message}]`;
+            }
+          }
+        );
+
+        return cleanObject;
+      }
+
+      return String(value);
+    }
+
+
+    function buildDiagnosticsSnapshot() {
+      const now =
+        new Date();
+
+      const loadedScreens =
+        SCREEN_NAMES.filter(
+          screenName =>
+            screenStates.has(
+              screenName
+            )
+        );
+
+      const onlinePlayers =
+        latestPlayerHeartbeats.filter(
+          player =>
+            player.status === "online"
+        );
+
+      const rolloutSummary =
+        SCREEN_NAMES.map(
+          screenName => {
+            const rolloutState =
+              typeof getRolloutStateForScreen === "function"
+                ? getRolloutStateForScreen(
+                    screenName
+                  )
+                : null;
+
+            return {
+              screen:
+                screenName,
+
+              savedStage:
+                typeof getRolloutStage === "function"
+                  ? getRolloutStage(
+                      screenName
+                    )
+                  : null,
+
+              readiness:
+                rolloutState
+                  ? rolloutState.state
+                  : null,
+
+              details:
+                rolloutState
+                  ? sanitizeDiagnosticsValue(
+                      rolloutState
+                    )
+                  : null
+            };
+          }
+        );
+
+      return {
+        export:
+          {
+            createdAt:
+              now.toISOString(),
+
+            localTime:
+              now.toLocaleString(),
+
+            source:
+              window.location.href,
+
+            userAgent:
+              navigator.userAgent,
+
+            online:
+              navigator.onLine
+          },
+
+        application:
+          {
+            name:
+              "Mini Golf Signage Manager",
+
+            version:
+              "1.0.0",
+
+            label:
+              "Version 1.0 Stable",
+
+            build:
+              75,
+
+            environment:
+              getApplicationEnvironment().key,
+
+            expectedPlayerVersion:
+              EXPECTED_PLAYER_VERSION
+          },
+
+        health:
+          {
+            score:
+              latestHealthScoreResult
+                ? latestHealthScoreResult.score
+                : null,
+
+            label:
+              latestHealthScoreResult
+                ? latestHealthScoreResult.label
+                : null,
+
+            explanation:
+              sanitizeDiagnosticsValue(
+                latestHealthScoreResult
+              ),
+
+            telemetry:
+              sanitizeDiagnosticsValue(
+                latestHealthTelemetry
+              )
+          },
+
+        players:
+          {
+            configured:
+              SCREEN_NAMES.length,
+
+            online:
+              onlinePlayers.length,
+
+            quietHours:
+              typeof isPlayerQuietHours === "function"
+                ? isPlayerQuietHours()
+                : null,
+
+            heartbeats:
+              sanitizeDiagnosticsValue(
+                latestPlayerHeartbeats
+              )
+          },
+
+        schedules:
+          {
+            configuredScreens:
+              SCREEN_NAMES,
+
+            loadedCount:
+              loadedScreens.length,
+
+            loadedScreens:
+              loadedScreens,
+
+            states:
+              sanitizeDiagnosticsValue(
+                screenStates
+              )
+          },
+
+        recovery:
+          {
+            snapshot:
+              sanitizeDiagnosticsValue(
+                dashboardOfflineSnapshot
+              ),
+
+            storageAvailable:
+              typeof localStorage !== "undefined"
+          },
+
+        rollout:
+          {
+            progress:
+              sanitizeDiagnosticsValue(
+                rolloutProgress
+              ),
+
+            screens:
+              rolloutSummary
+          },
+
+        imageLibrary:
+          {
+            indexedCount:
+              Array.isArray(
+                imageLibraryIndex
+              )
+                ? imageLibraryIndex.length
+                : 0
+          }
+      };
+    }
+
+
+    function downloadDiagnosticsSnapshot() {
+      try {
+        const snapshot =
+          buildDiagnosticsSnapshot();
+
+        const jsonText =
+          JSON.stringify(
+            snapshot,
+            null,
+            2
+          );
+
+        const blob =
+          new Blob(
+            [jsonText],
+            {
+              type:
+                "application/json"
+            }
+          );
+
+        const objectUrl =
+          URL.createObjectURL(
+            blob
+          );
+
+        const dateStamp =
+          new Date()
+            .toISOString()
+            .replace(
+              /[:.]/g,
+              "-"
+            );
+
+        const link =
+          document.createElement(
+            "a"
+          );
+
+        link.href =
+          objectUrl;
+
+        link.download =
+          `mini-golf-signage-diagnostics-build-75-${dateStamp}.json`;
+
+        document.body.appendChild(
+          link
+        );
+
+        link.click();
+        link.remove();
+
+        setTimeout(
+          function() {
+            URL.revokeObjectURL(
+              objectUrl
+            );
+          },
+          1000
+        );
+
+        showToast(
+          "Diagnostics exported successfully.",
+          "success"
+        );
+
+      } catch (error) {
+        console.error(
+          "Diagnostics export failed.",
+          error
+        );
+
+        showToast(
+          `Diagnostics export failed: ${error.message}`,
+          "error"
+        );
+      }
+    }
+
+
+    function setupDiagnosticsExport() {
+      if (!exportDiagnosticsButton) {
+        return;
+      }
+
+      exportDiagnosticsButton.addEventListener(
+        "click",
+        function() {
+          closeWorkspaceNavigationMenus();
+          downloadDiagnosticsSnapshot();
+        }
+      );
+    }
+
+
+    function openApplicationDialog(
+      overlay
+    ) {
+      if (!overlay) {
+        return;
+      }
+
+      closeWorkspaceNavigationMenus();
+      closeCommandPalette();
+
+      overlay.hidden =
+        false;
+
+      document.body.style.overflow =
+        "hidden";
+
+      const closeButton =
+        overlay.querySelector(
+          ".application-dialog-close"
+        );
+
+      if (closeButton) {
+        setTimeout(
+          function() {
+            closeButton.focus();
+          },
+          0
+        );
+      }
+    }
+
+
+    function closeApplicationDialog(
+      overlay,
+      returnFocusElement
+    ) {
+      if (!overlay) {
+        return;
+      }
+
+      overlay.hidden =
+        true;
+
+      document.body.style.overflow =
+        "";
+
+      if (returnFocusElement) {
+        returnFocusElement.focus();
+      }
+    }
+
+
+    function updateAboutApplicationDetails() {
+      if (aboutPlayerVersion) {
+        aboutPlayerVersion.textContent =
+          EXPECTED_PLAYER_VERSION;
+      }
+
+      if (aboutHealthScore) {
+        aboutHealthScore.textContent =
+          latestHealthScoreResult &&
+          Number.isFinite(
+            latestHealthScoreResult.score
+          )
+            ? `${latestHealthScoreResult.score}/100 · ${latestHealthScoreResult.label}`
+            : "Waiting for telemetry";
+      }
+    }
+
+
+    function setupApplicationInformationDialogs() {
+      if (
+        aboutApplicationButton &&
+        aboutApplicationOverlay
+      ) {
+        aboutApplicationButton.addEventListener(
+          "click",
+          function() {
+            updateAboutApplicationDetails();
+
+            openApplicationDialog(
+              aboutApplicationOverlay
+            );
+          }
+        );
+      }
+
+      if (
+        releaseNotesButton &&
+        releaseNotesOverlay
+      ) {
+        releaseNotesButton.addEventListener(
+          "click",
+          function() {
+            openApplicationDialog(
+              releaseNotesOverlay
+            );
+          }
+        );
+      }
+
+      if (closeAboutApplicationButton) {
+        closeAboutApplicationButton.addEventListener(
+          "click",
+          function() {
+            closeApplicationDialog(
+              aboutApplicationOverlay,
+              aboutApplicationButton
+            );
+          }
+        );
+      }
+
+      if (closeReleaseNotesButton) {
+        closeReleaseNotesButton.addEventListener(
+          "click",
+          function() {
+            closeApplicationDialog(
+              releaseNotesOverlay,
+              releaseNotesButton
+            );
+          }
+        );
+      }
+
+      [
+        {
+          overlay:
+            aboutApplicationOverlay,
+
+          returnFocus:
+            aboutApplicationButton
+        },
+
+        {
+          overlay:
+            releaseNotesOverlay,
+
+          returnFocus:
+            releaseNotesButton
+        }
+      ].forEach(
+        item => {
+          if (!item.overlay) {
+            return;
+          }
+
+          item.overlay.addEventListener(
+            "click",
+            function(event) {
+              if (
+                event.target ===
+                item.overlay
+              ) {
+                closeApplicationDialog(
+                  item.overlay,
+                  item.returnFocus
+                );
+              }
+            }
+          );
+        }
+      );
+
+      document.addEventListener(
+        "keydown",
+        function(event) {
+          if (event.key !== "Escape") {
+            return;
+          }
+
+          if (
+            aboutApplicationOverlay &&
+            !aboutApplicationOverlay.hidden
+          ) {
+            event.preventDefault();
+
+            closeApplicationDialog(
+              aboutApplicationOverlay,
+              aboutApplicationButton
+            );
+
+            return;
+          }
+
+          if (
+            releaseNotesOverlay &&
+            !releaseNotesOverlay.hidden
+          ) {
+            event.preventDefault();
+
+            closeApplicationDialog(
+              releaseNotesOverlay,
+              releaseNotesButton
+            );
+          }
+        }
+      );
+    }
+
+
+    const COMMAND_PALETTE_ITEMS = [
+      ["🏠","Home","Open Mission Control.","General","home"],
+      ["📅","Schedule Manager","Edit and publish screen schedules.","Operations","manager"],
+      ["📆","Daily Schedule","Review today’s calendar.","Operations","dailyCalendar"],
+      ["🎄","Holiday Calendar","Review holiday dates and rules.","Operations","calendar"],
+      ["🗓️","Holiday Overrides","Manage special holiday overrides.","Operations","holiday"],
+      ["🖼️","Image Library","Browse GitHub signage assets.","Content","images"],
+      ["❤️","System Health","Open diagnostics and telemetry.","Monitoring","systemHealth"],
+      ["📜","Audit Log","Review system changes.","Monitoring","auditLog"],
+      ["🧪","V3.1 Audit","Run compatibility checks.","Monitoring","audit"],
+      ["🛠️","Control Center","Open administration tools.","Administration","control"],
+      ["💾","Backup History","Review and restore backups.","Administration","backup"]
+    ].map(item => ({
+      icon:item[0], title:item[1], description:item[2],
+      group:item[3], workspace:item[4]
+    }));
+
+    let commandPaletteFilteredItems = [];
+    let commandPaletteActiveIndex = 0;
+
+    function openCommandPalette() {
+      if (!commandPaletteOverlay || !commandPaletteSearch) return;
+      closeWorkspaceNavigationMenus();
+      commandPaletteOverlay.hidden = false;
+      document.body.style.overflow = "hidden";
+      commandPaletteSearch.value = "";
+      commandPaletteActiveIndex = 0;
+      renderCommandPaletteResults();
+      setTimeout(() => commandPaletteSearch.focus(), 0);
+    }
+
+    function closeCommandPalette() {
+      if (!commandPaletteOverlay) return;
+      commandPaletteOverlay.hidden = true;
+      document.body.style.overflow = "";
+      if (commandPaletteButton) commandPaletteButton.focus();
+    }
+
+    function renderCommandPaletteResults() {
+      if (!commandPaletteResults || !commandPaletteSearch) return;
+      const query = commandPaletteSearch.value.trim().toLowerCase();
+      commandPaletteFilteredItems = COMMAND_PALETTE_ITEMS.filter(item =>
+        [item.title,item.description,item.group].join(" ").toLowerCase().includes(query)
+      );
+      if (commandPaletteActiveIndex >= commandPaletteFilteredItems.length) commandPaletteActiveIndex = 0;
+
+      if (!commandPaletteFilteredItems.length) {
+        commandPaletteResults.innerHTML = '<div class="command-palette-empty">No matching workspace found.</div>';
+        return;
+      }
+
+      commandPaletteResults.innerHTML = commandPaletteFilteredItems.map((item,index) => `
+        <button class="command-palette-result ${index===commandPaletteActiveIndex?"active":""}"
+          type="button" role="option" aria-selected="${index===commandPaletteActiveIndex}"
+          data-command-index="${index}">
+          <span class="command-palette-result-icon">${escapeHtml(item.icon)}</span>
+          <span>
+            <span class="command-palette-result-title">${escapeHtml(item.title)}</span>
+            <span class="command-palette-result-description">${escapeHtml(item.description)}</span>
+          </span>
+          <span class="command-palette-result-group">${escapeHtml(item.group)}</span>
+        </button>`).join("");
+
+      commandPaletteResults
+        .querySelectorAll(
+          "[data-command-index]"
+        )
+        .forEach(
+          button => {
+            button.addEventListener(
+              "mouseenter",
+              function() {
+                commandPaletteActiveIndex =
+                  Number(
+                    button.dataset.commandIndex
+                  );
+
+                commandPaletteResults
+                  .querySelectorAll(
+                    ".command-palette-result"
+                  )
+                  .forEach(
+                    (result, index) => {
+                      const isActive =
+                        index ===
+                        commandPaletteActiveIndex;
+
+                      result.classList.toggle(
+                        "active",
+                        isActive
+                      );
+
+                      result.setAttribute(
+                        "aria-selected",
+                        isActive
+                          ? "true"
+                          : "false"
+                      );
+                    }
+                  );
+              }
+            );
+          }
+        );
+
+      const active = commandPaletteResults.querySelector(".active");
+      if (active) active.scrollIntoView({block:"nearest"});
+    }
+
+    function activateCommandPaletteItem(index) {
+      const item = commandPaletteFilteredItems[index];
+      if (!item) return;
+      closeCommandPalette();
+      openWorkspace(item.workspace);
+    }
+
+    function setupCommandPalette() {
+      if (!commandPaletteButton || !commandPaletteOverlay || !commandPaletteSearch) return;
+      commandPaletteButton.addEventListener("click", openCommandPalette);
+      closeCommandPaletteButton.addEventListener("click", closeCommandPalette);
+      commandPaletteOverlay.addEventListener("click", event => {
+        if (event.target === commandPaletteOverlay) closeCommandPalette();
+      });
+
+      commandPaletteResults.addEventListener(
+        "click",
+        function(event) {
+          const resultButton =
+            event.target.closest(
+              "[data-command-index]"
+            );
+
+          if (
+            !resultButton ||
+            !commandPaletteResults.contains(
+              resultButton
+            )
+          ) {
+            return;
+          }
+
+          event.preventDefault();
+          event.stopPropagation();
+
+          activateCommandPaletteItem(
+            Number(
+              resultButton.dataset.commandIndex
+            )
+          );
+        }
+      );
+
+      commandPaletteSearch.addEventListener("input", () => {
+        commandPaletteActiveIndex = 0;
+        renderCommandPaletteResults();
+      });
+      commandPaletteSearch.addEventListener("keydown", event => {
+        if (event.key === "ArrowDown" && commandPaletteFilteredItems.length) {
+          event.preventDefault();
+          commandPaletteActiveIndex = (commandPaletteActiveIndex + 1) % commandPaletteFilteredItems.length;
+          renderCommandPaletteResults();
+        } else if (event.key === "ArrowUp" && commandPaletteFilteredItems.length) {
+          event.preventDefault();
+          commandPaletteActiveIndex = (commandPaletteActiveIndex - 1 + commandPaletteFilteredItems.length) % commandPaletteFilteredItems.length;
+          renderCommandPaletteResults();
+        } else if (event.key === "Enter") {
+          event.preventDefault();
+          activateCommandPaletteItem(commandPaletteActiveIndex);
+        }
+      });
+      document.addEventListener("keydown", event => {
+        if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "k") {
+          event.preventDefault();
+          commandPaletteOverlay.hidden ? openCommandPalette() : closeCommandPalette();
+        } else if (event.key === "Escape" && !commandPaletteOverlay.hidden) {
+          event.preventDefault();
+          closeCommandPalette();
+        }
+      });
+    }
+
+
+    function closeWorkspaceNavigationMenus(
+      exceptMenuId
+    ) {
+      document
+        .querySelectorAll(
+          "[data-workspace-menu-trigger]"
+        )
+        .forEach(
+          trigger => {
+            const menuId =
+              trigger.getAttribute(
+                "data-workspace-menu-trigger"
+              );
+
+            if (
+              exceptMenuId &&
+              menuId === exceptMenuId
+            ) {
+              return;
+            }
+
+            const menu =
+              document.getElementById(
+                menuId
+              );
+
+            trigger.setAttribute(
+              "aria-expanded",
+              "false"
+            );
+
+            if (menu) {
+              menu.hidden =
+                true;
+            }
+          }
+        );
+    }
+
+
+    function setupWorkspaceNavigationMenus() {
+      document
+        .querySelectorAll(
+          "[data-workspace-menu-trigger]"
+        )
+        .forEach(
+          trigger => {
+            trigger.addEventListener(
+              "click",
+              function(event) {
+                event.stopPropagation();
+
+                const menuId =
+                  trigger.getAttribute(
+                    "data-workspace-menu-trigger"
+                  );
+
+                const menu =
+                  document.getElementById(
+                    menuId
+                  );
+
+                if (!menu) {
+                  return;
+                }
+
+                const shouldOpen =
+                  menu.hidden;
+
+                closeWorkspaceNavigationMenus(
+                  shouldOpen
+                    ? menuId
+                    : null
+                );
+
+                menu.hidden =
+                  !shouldOpen;
+
+                trigger.setAttribute(
+                  "aria-expanded",
+                  shouldOpen
+                    ? "true"
+                    : "false"
+                );
+              }
+            );
+          }
+        );
+
+      document.addEventListener(
+        "click",
+        function(event) {
+          if (
+            !event.target.closest(
+              ".workspace-nav-group"
+            )
+          ) {
+            closeWorkspaceNavigationMenus();
+          }
+        }
+      );
+
+      document.addEventListener(
+        "keydown",
+        function(event) {
+          if (event.key === "Escape") {
+            closeWorkspaceNavigationMenus();
+          }
+        }
+      );
+
+      document
+        .querySelectorAll(
+          ".workspace-nav-item"
+        )
+        .forEach(
+          item => {
+            item.addEventListener(
+              "click",
+              function() {
+                closeWorkspaceNavigationMenus();
+              }
+            );
+          }
+        );
+    }
+
+
+    function setupMissionRecentActivity() {
+      if (!refreshMissionActivityButton) {
+        return;
+      }
+
+      refreshMissionActivityButton.addEventListener(
+        "click",
+        function() {
+          renderMissionRecentActivity();
+        }
+      );
+    }
+
+
+    function setupMissionConfidenceBanner() {
+      if (!missionConfidenceBanner) {
+        return;
+      }
+
+      missionConfidenceBanner.addEventListener(
+        "click",
+        function() {
+          openWorkspace(
+            "systemHealth"
+          );
+        }
+      );
+    }
+
+
+    function setupMissionQuickActions() {
+      document
+        .querySelectorAll(
+          "[data-mission-workspace]"
+        )
+        .forEach(
+          card => {
+            card.addEventListener(
+              "click",
+              function() {
+                const workspaceName =
+                  card.getAttribute(
+                    "data-mission-workspace"
+                  );
+
+                openWorkspace(
+                  workspaceName
+                );
+
+                const healthAnchor =
+                  card.getAttribute(
+                    "data-mission-health-anchor"
+                  );
+
+                if (healthAnchor === "rollout") {
+                  setTimeout(
+                    function() {
+                      const rolloutPanel =
+                        document.querySelector(
+                          ".rollout-assistant"
+                        );
+
+                      if (rolloutPanel) {
+                        rolloutPanel.scrollIntoView({
+                          behavior:
+                            "smooth",
+
+                          block:
+                            "start"
+                        });
+                      }
+                    },
+                    100
+                  );
+                }
+              }
+            );
+          }
+        );
+    }
+
+
+    function renderMissionGreeting() {
+      if (!missionGreeting) {
+        return;
+      }
+
+      const hour =
+        new Date().getHours();
+
+      const greeting =
+        hour < 12
+          ? "Good morning"
+          : hour < 18
+            ? "Good afternoon"
+            : "Good evening";
+
+      const onlinePlayers =
+        latestPlayerHeartbeats.filter(
+          player =>
+            player.status === "online"
+        ).length;
+
+      const playerMessage =
+        typeof isPlayerQuietHours === "function" &&
+        isPlayerQuietHours()
+          ? "Quiet hours are active."
+          : `${onlinePlayers}/${SCREEN_NAMES.length} players are online.`;
+
+      missionGreeting.textContent =
+        `${greeting}. ${playerMessage}`;
+    }
+
+
+    function renderMissionQuickActionStatuses() {
+      if (missionScheduleActionStatus) {
+        const loadedScreenCount =
+          SCREEN_NAMES.filter(
+            screenName =>
+              screenStates.has(
+                screenName
+              )
+          ).length;
+
+        missionScheduleActionStatus.textContent =
+          `${loadedScreenCount}/${SCREEN_NAMES.length} schedules loaded`;
+      }
+
+      if (missionHealthActionStatus) {
+        missionHealthActionStatus.textContent =
+          latestHealthScoreResult &&
+          Number.isFinite(
+            latestHealthScoreResult.score
+          )
+            ? `${latestHealthScoreResult.score}/100 · ${latestHealthScoreResult.label}`
+            : "Waiting for health score";
+      }
+
+      if (missionRolloutActionStatus) {
+        const readyCount =
+          SCREEN_NAMES.filter(
+            screenName =>
+              getRolloutStateForScreen(
+                screenName
+              ).state === "ready"
+          ).length;
+
+        missionRolloutActionStatus.textContent =
+          `${readyCount}/${SCREEN_NAMES.length} screens ready`;
+      }
+
+      if (missionImagesActionStatus) {
+        const imageCount =
+          Array.isArray(
+            imageLibraryIndex
+          )
+            ? imageLibraryIndex.length
+            : 0;
+
+        missionImagesActionStatus.textContent =
+          imageCount > 0
+            ? `${imageCount} image${imageCount === 1 ? "" : "s"} indexed`
+            : "Browse image library";
+      }
+
+      renderMissionGreeting();
+    }
+
+
+    function formatMissionActivityTime(
+      dateValue
+    ) {
+      const date =
+        dateValue instanceof Date
+          ? dateValue
+          : new Date(
+              dateValue
+            );
+
+      if (
+        !Number.isFinite(
+          date.getTime()
+        )
+      ) {
+        return "Recently";
+      }
+
+      const difference =
+        Date.now() -
+        date.getTime();
+
+      if (difference < 60000) {
+        return "Just now";
+      }
+
+      if (difference < 3600000) {
+        return `${Math.max(
+          1,
+          Math.round(
+            difference / 60000
+          )
+        )} min ago`;
+      }
+
+      if (difference < 86400000) {
+        return `${Math.max(
+          1,
+          Math.round(
+            difference / 3600000
+          )
+        )} hr ago`;
+      }
+
+      return date.toLocaleDateString();
+    }
+
+
+    function buildMissionRecentActivity() {
+      const activity =
+        [];
+
+      if (
+        latestHealthScoreResult &&
+        Number.isFinite(
+          latestHealthScoreResult.score
+        )
+      ) {
+        activity.push({
+          icon:
+            "❤️",
+
+          title:
+            `Health score updated to ${latestHealthScoreResult.score}/100`,
+
+          detail:
+            latestHealthScoreResult.label ||
+            "System Health refreshed.",
+
+          timestamp:
+            new Date()
+        });
+      }
+
+      latestPlayerHeartbeats
+        .filter(
+          player =>
+            player &&
+            player.screen
+        )
+        .forEach(
+          player => {
+            const timestamp =
+              player.lastSeenAt
+                ? new Date(
+                    player.lastSeenAt
+                  )
+                : null;
+
+            activity.push({
+              icon:
+                player.status === "online"
+                  ? "📺"
+                  : "⚠️",
+
+              title:
+                `${player.screen} player ${player.status === "online" ? "checked in" : "is offline"}`,
+
+              detail:
+                player.playerVersion
+                  ? `Player version ${player.playerVersion}`
+                  : "Player version not reported.",
+
+              timestamp:
+                timestamp
+            });
+          }
+        );
+
+      screenStates.forEach(
+        state => {
+          if (!state) {
+            return;
+          }
+
+          activity.push({
+            icon:
+              state.offlineSnapshot === true
+                ? "💾"
+                : "📅",
+
+            title:
+              `${state.screenName} schedule loaded`,
+
+            detail:
+              state.offlineSnapshot === true
+                ? "Loaded from cached dashboard data."
+                : `${Array.isArray(state.schedule) ? state.schedule.length : 0} schedule row(s) available.`,
+
+            timestamp:
+              state.loadedAt
+                ? new Date(
+                    state.loadedAt
+                  )
+                : null
+          });
+        }
+      );
+
+      if (
+        Array.isArray(
+          imageLibraryIndex
+        ) &&
+        imageLibraryIndex.length > 0
+      ) {
+        activity.push({
+          icon:
+            "🖼️",
+
+          title:
+            "Image Library available",
+
+          detail:
+            `${imageLibraryIndex.length} image${imageLibraryIndex.length === 1 ? "" : "s"} indexed.`,
+
+          timestamp:
+            new Date()
+        });
+      }
+
+      if (
+        dashboardOfflineSnapshot &&
+        dashboardOfflineSnapshot.savedAt
+      ) {
+        activity.push({
+          icon:
+            "🛡️",
+
+          title:
+            "Recovery snapshot available",
+
+          detail:
+            "Offline dashboard recovery data is ready.",
+
+          timestamp:
+            new Date(
+              dashboardOfflineSnapshot.savedAt
+            )
+        });
+      }
+
+      return activity
+        .sort(
+          (first, second) => {
+            const firstTime =
+              first.timestamp instanceof Date &&
+              Number.isFinite(
+                first.timestamp.getTime()
+              )
+                ? first.timestamp.getTime()
+                : 0;
+
+            const secondTime =
+              second.timestamp instanceof Date &&
+              Number.isFinite(
+                second.timestamp.getTime()
+              )
+                ? second.timestamp.getTime()
+                : 0;
+
+            return secondTime - firstTime;
+          }
+        )
+        .slice(
+          0,
+          8
+        );
+    }
+
+
+    function renderMissionRecentActivity() {
+      if (!missionRecentActivityList) {
+        return;
+      }
+
+      const activity =
+        buildMissionRecentActivity();
+
+      if (activity.length === 0) {
+        missionRecentActivityList.innerHTML =
+          `
+            <div class="mission-recent-empty">
+              No recent dashboard activity is available yet.
+            </div>
+          `;
+
+        return;
+      }
+
+      missionRecentActivityList.innerHTML =
+        activity
+          .map(
+            item => `
+              <article class="mission-recent-item">
+                <div
+                  class="mission-recent-icon"
+                  aria-hidden="true"
+                >
+                  ${escapeHtml(item.icon)}
+                </div>
+
+                <div class="mission-recent-copy">
+                  <div class="mission-recent-title">
+                    ${escapeHtml(item.title)}
+                  </div>
+
+                  <div class="mission-recent-detail">
+                    ${escapeHtml(item.detail)}
+                  </div>
+                </div>
+
+                <div class="mission-recent-time">
+                  ${escapeHtml(
+                    formatMissionActivityTime(
+                      item.timestamp
+                    )
+                  )}
+                </div>
+              </article>
+            `
+          )
+          .join("");
+    }
+
+
+    function renderMissionConfidenceBanner() {
+      if (
+        !missionConfidenceBanner ||
+        !missionConfidenceIcon ||
+        !missionConfidenceTitle ||
+        !missionConfidenceSummary ||
+        !missionConfidenceDetails
+      ) {
+        return;
+      }
+
+      const loadedStates =
+        SCREEN_NAMES
+          .map(
+            screenName =>
+              screenStates.get(
+                screenName
+              )
+          )
+          .filter(Boolean);
+
+      const missingSchedules =
+        SCREEN_NAMES.filter(
+          screenName =>
+            !screenStates.has(
+              screenName
+            )
+        );
+
+      const missingImages =
+        loadedStates
+          .filter(
+            state =>
+              state.imageMissing === true
+          )
+          .map(
+            state =>
+              state.screenName
+          );
+
+      const offlineDataScreens =
+        loadedStates
+          .filter(
+            state =>
+              state.offlineSnapshot === true
+          )
+          .map(
+            state =>
+              state.screenName
+          );
+
+      const quietHours =
+        typeof isPlayerQuietHours === "function"
+          ? isPlayerQuietHours()
+          : false;
+
+      const onlinePlayers =
+        latestPlayerHeartbeats.filter(
+          player =>
+            player.status === "online"
+        ).length;
+
+      const offlinePlayerCount =
+        quietHours
+          ? 0
+          : Math.max(
+              0,
+              SCREEN_NAMES.length -
+                onlinePlayers
+            );
+
+      const healthScore =
+        latestHealthScoreResult &&
+        Number.isFinite(
+          latestHealthScoreResult.score
+        )
+          ? latestHealthScoreResult.score
+          : null;
+
+      const appsScriptReady =
+        Boolean(
+          latestHealthTelemetry
+        );
+
+      const snapshotSavedAt =
+        dashboardOfflineSnapshot &&
+        dashboardOfflineSnapshot.savedAt
+          ? new Date(
+              dashboardOfflineSnapshot.savedAt
+            )
+          : null;
+
+      const snapshotValid =
+        Boolean(
+          snapshotSavedAt &&
+          Number.isFinite(
+            snapshotSavedAt.getTime()
+          ) &&
+          Date.now() -
+            snapshotSavedAt.getTime() <=
+            DASHBOARD_OFFLINE_MAX_AGE_MS
+        );
+
+      const blockingIssues =
+        [];
+
+      const observations =
+        [];
+
+      if (missingSchedules.length > 0) {
+        blockingIssues.push(
+          `${missingSchedules.length} schedule(s) unavailable`
+        );
+      }
+
+      if (missingImages.length > 0) {
+        blockingIssues.push(
+          `${missingImages.length} active image(s) missing`
+        );
+      }
+
+      if (
+        healthScore !== null &&
+        healthScore < 65
+      ) {
+        blockingIssues.push(
+          `health score is ${healthScore}/100`
+        );
+      }
+
+      if (!appsScriptReady) {
+        observations.push(
+          "Apps Script telemetry is still loading"
+        );
+      }
+
+      if (
+        healthScore !== null &&
+        healthScore >= 65 &&
+        healthScore < 88
+      ) {
+        observations.push(
+          `health score is ${healthScore}/100`
+        );
+      }
+
+      if (offlinePlayerCount > 0) {
+        observations.push(
+          `${offlinePlayerCount} player(s) offline`
+        );
+      }
+
+      if (offlineDataScreens.length > 0) {
+        observations.push(
+          `${offlineDataScreens.length} schedule(s) using cached data`
+        );
+      }
+
+      if (!snapshotValid) {
+        observations.push(
+          "recovery snapshot needs attention"
+        );
+      }
+
+      let state =
+        "ready";
+
+      let icon =
+        "✅";
+
+      let title =
+        "Ready for Today";
+
+      let summary =
+        "Core signage checks are passing.";
+
+      if (observations.length > 0) {
+        state =
+          "review";
+
+        icon =
+          "🟠";
+
+        title =
+          "Review Recommended";
+
+        summary =
+          "The system is operational, with a few observations.";
+      }
+
+      if (blockingIssues.length > 0) {
+        state =
+          "attention";
+
+        icon =
+          "🔴";
+
+        title =
+          "Attention Required";
+
+        summary =
+          "One or more core checks need action.";
+      }
+
+      const detailParts =
+        blockingIssues.length > 0
+          ? blockingIssues
+          : observations.length > 0
+            ? observations
+            : [
+                `${SCREEN_NAMES.length}/${SCREEN_NAMES.length} schedules loaded`,
+                quietHours
+                  ? "quiet hours active"
+                  : `${onlinePlayers}/${SCREEN_NAMES.length} players online`,
+                healthScore === null
+                  ? "health score loading"
+                  : `health ${healthScore}/100`,
+                snapshotValid
+                  ? "recovery ready"
+                  : "recovery pending"
+              ];
+
+      missionConfidenceBanner.className =
+        `mission-confidence-banner mission-confidence-${state}`;
+
+      missionConfidenceIcon.textContent =
+        icon;
+
+      missionConfidenceTitle.textContent =
+        title;
+
+      missionConfidenceSummary.textContent =
+        summary;
+
+      missionConfidenceDetails.textContent =
+        detailParts.join(" · ");
+    }
+
+
+    function setMissionStatusCard(
+      card,
+      valueElement,
+      detailElement,
+      status,
+      value,
+      detail
+    ) {
+      if (
+        !card ||
+        !valueElement ||
+        !detailElement
+      ) {
+        return;
+      }
+
+      card.className =
+        `mission-status-card mission-status-${status}`;
+
+      valueElement.textContent =
+        value;
+
+      detailElement.textContent =
+        detail;
+    }
+
+
+    function renderMissionControlStatuses() {
+      if (!missionStatusUpdated) {
+        return;
+      }
+
+      missionStatusUpdated.textContent =
+        `Updated ${new Date().toLocaleTimeString()}`;
+
+      /*
+       * GitHub Pages is considered available when this page,
+       * its external CSS, and its external JavaScript loaded.
+       */
+      setMissionStatusCard(
+        missionGitHubCard,
+        missionGitHubValue,
+        missionGitHubDetail,
+        "ok",
+        "Connected",
+        "The development site and modular assets loaded successfully."
+      );
+
+      const loadedScreenCount =
+        SCREEN_NAMES.filter(
+          screenName =>
+            screenStates.has(
+              screenName
+            )
+        ).length;
+
+      setMissionStatusCard(
+        missionSchedulesCard,
+        missionSchedulesValue,
+        missionSchedulesDetail,
+        loadedScreenCount ===
+          SCREEN_NAMES.length
+          ? "ok"
+          : loadedScreenCount > 0
+            ? "warning"
+            : "error",
+        `${loadedScreenCount}/${SCREEN_NAMES.length}`,
+        loadedScreenCount ===
+          SCREEN_NAMES.length
+          ? "All configured screen schedules are loaded."
+          : "Some configured screen schedules are still unavailable."
+      );
+
+      const quietHours =
+        typeof isPlayerQuietHours === "function"
+          ? isPlayerQuietHours()
+          : false;
+
+      const onlinePlayers =
+        latestPlayerHeartbeats.filter(
+          player =>
+            player.status === "online"
+        ).length;
+
+      setMissionStatusCard(
+        missionPlayersCard,
+        missionPlayersValue,
+        missionPlayersDetail,
+        quietHours ||
+        onlinePlayers === SCREEN_NAMES.length
+          ? "ok"
+          : onlinePlayers > 0
+            ? "warning"
+            : "error",
+        quietHours
+          ? "Sleeping"
+          : `${onlinePlayers}/${SCREEN_NAMES.length}`,
+        quietHours
+          ? "Quiet hours are active; inactive players are expected."
+          : onlinePlayers === SCREEN_NAMES.length
+            ? "All players are checking in normally."
+            : `${SCREEN_NAMES.length - onlinePlayers} player(s) are not currently online.`
+      );
+
+      const snapshotSavedAt =
+        dashboardOfflineSnapshot &&
+        dashboardOfflineSnapshot.savedAt
+          ? new Date(
+              dashboardOfflineSnapshot.savedAt
+            )
+          : null;
+
+      const snapshotValid =
+        snapshotSavedAt &&
+        Number.isFinite(
+          snapshotSavedAt.getTime()
+        ) &&
+        Date.now() -
+          snapshotSavedAt.getTime() <=
+          DASHBOARD_OFFLINE_MAX_AGE_MS;
+
+      setMissionStatusCard(
+        missionBackupCard,
+        missionBackupValue,
+        missionBackupDetail,
+        snapshotValid
+          ? "ok"
+          : "warning",
+        snapshotValid
+          ? "Ready"
+          : "Review",
+        snapshotValid
+          ? `Offline recovery snapshot available (${formatOfflineSnapshotAge(snapshotSavedAt)}).`
+          : "No recent offline recovery snapshot is available."
+      );
+
+      if (latestHealthTelemetry) {
+        const cacheHitRate =
+          Number(
+            latestHealthTelemetry.cacheHitRate || 0
+          );
+
+        const averageDuration =
+          Number(
+            latestHealthTelemetry.averageDurationMs || 0
+          );
+
+        setMissionStatusCard(
+          missionCacheCard,
+          missionCacheValue,
+          missionCacheDetail,
+          averageDuration <= 2000
+            ? "ok"
+            : averageDuration <= 3500
+              ? "warning"
+              : "error",
+          `${cacheHitRate.toFixed(1)}%`,
+          averageDuration <= 2000
+            ? `Average response remains acceptable at ${averageDuration} ms.`
+            : `Average response is ${averageDuration} ms and should be reviewed.`
+        );
+
+        setMissionStatusCard(
+          missionAppsScriptCard,
+          missionAppsScriptValue,
+          missionAppsScriptDetail,
+          latestHealthTelemetry.lastError
+            ? "warning"
+            : "ok",
+          latestHealthTelemetry.lastError
+            ? "Connected"
+            : "Connected",
+          latestHealthTelemetry.lastError
+            ? `Connected, with a recorded error: ${latestHealthTelemetry.lastError}`
+            : "Telemetry is loading successfully from Apps Script."
+        );
+
+      } else {
+        setMissionStatusCard(
+          missionCacheCard,
+          missionCacheValue,
+          missionCacheDetail,
+          "waiting",
+          "Waiting",
+          "Telemetry has not loaded yet."
+        );
+
+        setMissionStatusCard(
+          missionAppsScriptCard,
+          missionAppsScriptValue,
+          missionAppsScriptDetail,
+          "waiting",
+          "Checking",
+          "Waiting for Apps Script telemetry."
+        );
+      }
+
+      renderMissionQuickActionStatuses();
+      renderMissionConfidenceBanner();
+      renderMissionRecentActivity();
+    }
+
+
+    function renderMissionHeroHealth(
+      result
+    ) {
+      if (
+        !missionHeroHealth ||
+        !missionHeroHealthScore ||
+        !missionHeroHealthState
+      ) {
+        return;
+      }
+
+      const safeResult =
+        result || {
+          score:
+            null,
+
+          label:
+            "Waiting for telemetry"
+        };
+
+      missionHeroHealth.className =
+        "mission-hero-health";
+
+      if (safeResult.score === null) {
+        missionHeroHealth.classList.add(
+          "mission-health-waiting"
+        );
+
+        missionHeroHealthScore.textContent =
+          "—";
+
+        missionHeroHealthState.textContent =
+          "Waiting for telemetry";
+
+        return;
+      }
+
+      missionHeroHealthScore.textContent =
+        String(
+          safeResult.score
+        );
+
+      missionHeroHealthState.textContent =
+        safeResult.label || "Healthy";
+
+      if (safeResult.score >= 88) {
+        missionHeroHealth.classList.add(
+          "mission-health-healthy"
+        );
+
+      } else if (safeResult.score >= 65) {
+        missionHeroHealth.classList.add(
+          "mission-health-degraded"
+        );
+
+      } else {
+        missionHeroHealth.classList.add(
+          "mission-health-unhealthy"
+        );
+      }
+    }
+
+
     function renderHealthScore(
       result
     ) {
+      renderMissionHeroHealth(
+        result
+      );
+
+      updateAboutApplicationDetails();
+      renderMissionControlStatuses();
       if (
         !healthScoreNumber ||
         !healthScoreReasons
@@ -15627,6 +17807,7 @@
 
       runGoLiveReadinessCheck();
       renderRolloutAssistant();
+      renderMissionControlStatuses();
     }
 
 
@@ -17204,6 +19385,14 @@
     setupSystemHealth();
     initializeDraftRecovery();
     initializeScheduleTemplates();
+    renderApplicationEnvironment();
+    setupDiagnosticsExport();
+    setupApplicationInformationDialogs();
+    setupCommandPalette();
+    setupWorkspaceNavigationMenus();
+    setupMissionRecentActivity();
+    setupMissionConfidenceBanner();
+    setupMissionQuickActions();
 
     openWorkspace("home");
     refreshDashboard();
