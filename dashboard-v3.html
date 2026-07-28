@@ -21,12 +21,12 @@
     href="favicon.png"
   >
 
-    <link rel="stylesheet" href="css/dashboard.css">
+    <link rel="stylesheet" href="css/dashboard.css?build=75">
 
   <meta name="application-name" content="Mini Golf Signage Manager">
   <meta name="dashboard-version" content="1.0.0">
   <meta name="dashboard-channel" content="stable-candidate">
-  <meta name="dashboard-build" content="62">
+  <meta name="dashboard-build" content="75">
 </head>
 
 <body>
@@ -92,123 +92,585 @@
   </header>
 
   <main>
-    <nav class="workspace-tabs">
+    <div class="workspace-navigation-row">
+      <nav
+        class="workspace-tabs workspace-navigation"
+        aria-label="Dashboard navigation"
+      >
       <button
         id="homeTab"
-        class="workspace-tab active"
+        class="workspace-tab active workspace-home-tab"
         type="button"
       >
         🏠 Home
       </button>
 
-      <button
-        id="controlCenterTab"
-        class="workspace-tab"
-        type="button"
-      >
-        Control Center
-      </button>
+      <div class="workspace-nav-group">
+        <button
+          class="workspace-nav-trigger"
+          type="button"
+          aria-expanded="false"
+          aria-controls="operationsNavigationMenu"
+          data-workspace-menu-trigger="operationsNavigationMenu"
+        >
+          📅 Operations
+          <span aria-hidden="true">▾</span>
+        </button>
+
+        <div
+          id="operationsNavigationMenu"
+          class="workspace-nav-menu"
+          hidden
+        >
+          <button id="scheduleManagerTab" class="workspace-nav-item" type="button">
+            Schedule Manager
+          </button>
+
+          <button id="dailyScheduleCalendarTab" class="workspace-nav-item" type="button">
+            Daily Schedule
+          </button>
+
+          <button id="holidayCalendarTab" class="workspace-nav-item" type="button">
+            Holiday Calendar
+          </button>
+
+          <button id="holidayManagerTab" class="workspace-nav-item" type="button">
+            Holiday Overrides
+          </button>
+        </div>
+      </div>
+
+      <div class="workspace-nav-group">
+        <button
+          class="workspace-nav-trigger"
+          type="button"
+          aria-expanded="false"
+          aria-controls="contentNavigationMenu"
+          data-workspace-menu-trigger="contentNavigationMenu"
+        >
+          🖼️ Content
+          <span aria-hidden="true">▾</span>
+        </button>
+
+        <div
+          id="contentNavigationMenu"
+          class="workspace-nav-menu"
+          hidden
+        >
+          <button id="imageLibraryTab" class="workspace-nav-item" type="button">
+            Image Library
+          </button>
+        </div>
+      </div>
+
+      <div class="workspace-nav-group">
+        <button
+          class="workspace-nav-trigger"
+          type="button"
+          aria-expanded="false"
+          aria-controls="monitoringNavigationMenu"
+          data-workspace-menu-trigger="monitoringNavigationMenu"
+        >
+          ❤️ Monitoring
+          <span aria-hidden="true">▾</span>
+        </button>
+
+        <div
+          id="monitoringNavigationMenu"
+          class="workspace-nav-menu"
+          hidden
+        >
+          <button id="systemHealthTab" class="workspace-nav-item" type="button">
+            System Health
+          </button>
+
+          <button id="auditLogTab" class="workspace-nav-item" type="button">
+            Audit Log
+          </button>
+
+          <button id="compatibilityAuditTab" class="workspace-nav-item" type="button">
+            V3.1 Audit
+          </button>
+        </div>
+      </div>
+
+      <div class="workspace-nav-group">
+        <button
+          class="workspace-nav-trigger"
+          type="button"
+          aria-expanded="false"
+          aria-controls="administrationNavigationMenu"
+          data-workspace-menu-trigger="administrationNavigationMenu"
+        >
+          🛠️ Administration
+          <span aria-hidden="true">▾</span>
+        </button>
+
+        <div
+          id="administrationNavigationMenu"
+          class="workspace-nav-menu workspace-nav-menu-right"
+          hidden
+        >
+          <button id="controlCenterTab" class="workspace-nav-item" type="button">
+            Control Center
+          </button>
+
+          <button id="backupHistoryTab" class="workspace-nav-item" type="button">
+            Backup History
+          </button>
+
+          <button
+            id="exportDiagnosticsButton"
+            class="workspace-nav-item"
+            type="button"
+          >
+            Export Diagnostics
+          </button>
+
+          <button
+            id="releaseNotesButton"
+            class="workspace-nav-item"
+            type="button"
+          >
+            Release Notes
+          </button>
+
+          <button
+            id="aboutApplicationButton"
+            class="workspace-nav-item"
+            type="button"
+          >
+            About
+          </button>
+        </div>
+      </div>
+      </nav>
 
       <button
-        id="scheduleManagerTab"
-        class="workspace-tab"
+        id="commandPaletteButton"
+        class="command-palette-button"
         type="button"
+        aria-haspopup="dialog"
+        aria-controls="commandPaletteDialog"
       >
-        Schedule Manager
+        <span aria-hidden="true">⌨️</span>
+        <span>Go to…</span>
+        <kbd>Ctrl K</kbd>
       </button>
-      <button
-        id="dailyScheduleCalendarTab"
-        class="workspace-tab"
-        type="button"
-      >
-        Daily Schedule
-      </button>
-    
-
-
-      <button
-        id="holidayManagerTab"
-        class="workspace-tab"
-        type="button"
-      >
-        Holiday Overrides
-      </button>
-
-      <button
-        id="backupHistoryTab"
-        class="workspace-tab"
-        type="button"
-      >
-        Backup History
-      </button>
-
-      <button
-        id="imageLibraryTab"
-        class="workspace-tab"
-        type="button"
-      >
-        Image Library
-      </button>
-
-      <button
-        id="auditLogTab"
-        class="workspace-tab"
-        type="button"
-      >
-        Audit Log
-      </button>
-
-      <button
-        id="holidayCalendarTab"
-        class="workspace-tab"
-        type="button"
-      >
-        Holiday Calendar
-      </button>
-
-      <button
-        id="compatibilityAuditTab"
-        class="workspace-tab"
-        type="button"
-      >
-        V3.1 Audit
-      </button>
-
-      <button
-        id="systemHealthTab"
-        class="workspace-tab"
-        type="button"
-      >
-        System Health
-      </button>
-
-</nav>
+    </div>
 
     <section
       id="homeWorkspace"
       class="workspace active home-workspace"
       aria-labelledby="homeWorkspaceTitle"
     >
-      <section class="home-placeholder-card">
-        <div class="eyebrow">
-          Version 1.0
+      <section class="mission-hero">
+        <div class="mission-hero-copy">
+          <div class="mission-version-badge">
+            Version 1.0 Stable
+          </div>
+
+          <h2
+            id="homeWorkspaceTitle"
+            class="mission-hero-title"
+          >
+            Mini Golf Signage Manager
+          </h2>
+
+          <p class="mission-hero-description">
+            Your central workspace for schedules, content, player monitoring,
+            diagnostics, and controlled deployments.
+          </p>
+
+          <div class="mission-build-line">
+            <span>Build 75</span>
+            <span aria-hidden="true">•</span>
+            <span id="missionEnvironmentLabel">Detecting Environment</span>
+          </div>
         </div>
 
-        <h2
-          id="homeWorkspaceTitle"
-          class="home-placeholder-title"
+        <div
+          id="missionHeroHealth"
+          class="mission-hero-health mission-health-waiting"
         >
-          Mission Control
-        </h2>
+          <div class="mission-health-label">
+            System Health
+          </div>
 
-        <p class="home-placeholder-description">
-          Welcome to Mini Golf Signage Manager.
-          The complete Mission Control overview will be added in the next steps.
-        </p>
+          <div class="mission-health-score">
+            <span id="missionHeroHealthScore">—</span>
+            <small>/100</small>
+          </div>
 
-        <div class="home-placeholder-status">
-          <span aria-hidden="true">✅</span>
-          Home navigation is ready.
+          <div
+            id="missionHeroHealthState"
+            class="mission-health-state"
+          >
+            Waiting for telemetry
+          </div>
+        </div>
+      </section>
+
+      <!--
+        =====================================================
+        MISSION CONTROL — STEP 1E: CONFIDENCE BANNER
+        =====================================================
+      -->
+      <button
+        id="missionConfidenceBanner"
+        class="mission-confidence-banner mission-confidence-waiting"
+        type="button"
+        aria-label="Open System Health"
+      >
+        <span
+          id="missionConfidenceIcon"
+          class="mission-confidence-icon"
+          aria-hidden="true"
+        >
+          ⏳
+        </span>
+
+        <span class="mission-confidence-content">
+          <span
+            id="missionConfidenceTitle"
+            class="mission-confidence-title"
+          >
+            Completing daily checks
+          </span>
+
+          <span
+            id="missionConfidenceSummary"
+            class="mission-confidence-summary"
+          >
+            Waiting for schedules, telemetry, and player status.
+          </span>
+
+          <span
+            id="missionConfidenceDetails"
+            class="mission-confidence-details"
+          >
+            This summary will update automatically.
+          </span>
+        </span>
+
+        <span class="mission-confidence-action">
+          View details →
+        </span>
+      </button>
+
+      <section class="mission-status-section">
+        <div class="mission-section-heading">
+          <div>
+            <div class="eyebrow">
+              Live overview
+            </div>
+
+            <h3 class="mission-section-title">
+              Platform status
+            </h3>
+          </div>
+
+          <div
+            id="missionStatusUpdated"
+            class="mission-status-updated"
+          >
+            Waiting for dashboard data
+          </div>
+        </div>
+
+        <div class="mission-status-grid">
+          <article
+            id="missionAppsScriptCard"
+            class="mission-status-card mission-status-waiting"
+          >
+            <div class="mission-status-icon">⚙️</div>
+            <div class="mission-status-label">Apps Script</div>
+            <div
+              id="missionAppsScriptValue"
+              class="mission-status-value"
+            >
+              Checking
+            </div>
+            <div
+              id="missionAppsScriptDetail"
+              class="mission-status-detail"
+            >
+              Waiting for connection test
+            </div>
+          </article>
+
+          <article
+            id="missionGitHubCard"
+            class="mission-status-card mission-status-waiting"
+          >
+            <div class="mission-status-icon">🌐</div>
+            <div class="mission-status-label">GitHub Pages</div>
+            <div
+              id="missionGitHubValue"
+              class="mission-status-value"
+            >
+              Checking
+            </div>
+            <div
+              id="missionGitHubDetail"
+              class="mission-status-detail"
+            >
+              Waiting for page verification
+            </div>
+          </article>
+
+          <article
+            id="missionPlayersCard"
+            class="mission-status-card mission-status-waiting"
+          >
+            <div class="mission-status-icon">📺</div>
+            <div class="mission-status-label">Players</div>
+            <div
+              id="missionPlayersValue"
+              class="mission-status-value"
+            >
+              —
+            </div>
+            <div
+              id="missionPlayersDetail"
+              class="mission-status-detail"
+            >
+              Waiting for heartbeat data
+            </div>
+          </article>
+
+          <article
+            id="missionCacheCard"
+            class="mission-status-card mission-status-waiting"
+          >
+            <div class="mission-status-icon">💾</div>
+            <div class="mission-status-label">Cache</div>
+            <div
+              id="missionCacheValue"
+              class="mission-status-value"
+            >
+              —
+            </div>
+            <div
+              id="missionCacheDetail"
+              class="mission-status-detail"
+            >
+              Waiting for telemetry
+            </div>
+          </article>
+
+          <article
+            id="missionBackupCard"
+            class="mission-status-card mission-status-waiting"
+          >
+            <div class="mission-status-icon">🛡️</div>
+            <div class="mission-status-label">Recovery</div>
+            <div
+              id="missionBackupValue"
+              class="mission-status-value"
+            >
+              Checking
+            </div>
+            <div
+              id="missionBackupDetail"
+              class="mission-status-detail"
+            >
+              Waiting for snapshot status
+            </div>
+          </article>
+
+          <article
+            id="missionSchedulesCard"
+            class="mission-status-card mission-status-waiting"
+          >
+            <div class="mission-status-icon">📅</div>
+            <div class="mission-status-label">Schedules</div>
+            <div
+              id="missionSchedulesValue"
+              class="mission-status-value"
+            >
+              —
+            </div>
+            <div
+              id="missionSchedulesDetail"
+              class="mission-status-detail"
+            >
+              Waiting for schedule data
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <!--
+        =====================================================
+        MISSION CONTROL — STEP 1D: QUICK ACTIONS
+        =====================================================
+      -->
+      <section class="mission-quick-actions-section">
+        <div class="mission-section-heading">
+          <div>
+            <div class="eyebrow">
+              Shortcuts
+            </div>
+
+            <h3 class="mission-section-title">
+              Quick Actions
+            </h3>
+          </div>
+
+          <div
+            id="missionGreeting"
+            class="mission-greeting"
+          >
+            Welcome back.
+          </div>
+        </div>
+
+        <div class="mission-quick-actions-grid">
+          <button
+            class="mission-action-card"
+            type="button"
+            data-mission-workspace="manager"
+          >
+            <span class="mission-action-icon">📅</span>
+            <span class="mission-action-title">Schedule Manager</span>
+            <span class="mission-action-description">
+              Edit and publish screen schedules.
+            </span>
+            <span
+              id="missionScheduleActionStatus"
+              class="mission-action-status"
+            >
+              Checking schedules
+            </span>
+            <span class="mission-action-open">Open →</span>
+          </button>
+
+          <button
+            class="mission-action-card"
+            type="button"
+            data-mission-workspace="dailyCalendar"
+          >
+            <span class="mission-action-icon">📆</span>
+            <span class="mission-action-title">Daily Schedule</span>
+            <span class="mission-action-description">
+              Review today’s calendar and active events.
+            </span>
+            <span class="mission-action-status">
+              View timeline
+            </span>
+            <span class="mission-action-open">Open →</span>
+          </button>
+
+          <button
+            class="mission-action-card"
+            type="button"
+            data-mission-workspace="images"
+          >
+            <span class="mission-action-icon">🖼️</span>
+            <span class="mission-action-title">Image Library</span>
+            <span class="mission-action-description">
+              Browse and validate GitHub signage assets.
+            </span>
+            <span
+              id="missionImagesActionStatus"
+              class="mission-action-status"
+            >
+              Browse assets
+            </span>
+            <span class="mission-action-open">Open →</span>
+          </button>
+
+          <button
+            class="mission-action-card"
+            type="button"
+            data-mission-workspace="systemHealth"
+          >
+            <span class="mission-action-icon">❤️</span>
+            <span class="mission-action-title">System Health</span>
+            <span class="mission-action-description">
+              Open telemetry, diagnostics, and player monitoring.
+            </span>
+            <span
+              id="missionHealthActionStatus"
+              class="mission-action-status"
+            >
+              Waiting for score
+            </span>
+            <span class="mission-action-open">Open →</span>
+          </button>
+
+          <button
+            class="mission-action-card"
+            type="button"
+            data-mission-workspace="systemHealth"
+            data-mission-health-anchor="rollout"
+          >
+            <span class="mission-action-icon">🚀</span>
+            <span class="mission-action-title">Rollout Assistant</span>
+            <span class="mission-action-description">
+              Test and deploy players one screen at a time.
+            </span>
+            <span
+              id="missionRolloutActionStatus"
+              class="mission-action-status"
+            >
+              Review deployment
+            </span>
+            <span class="mission-action-open">Open →</span>
+          </button>
+
+          <button
+            class="mission-action-card"
+            type="button"
+            data-mission-workspace="calendar"
+          >
+            <span class="mission-action-icon">🎄</span>
+            <span class="mission-action-title">Holiday Calendar</span>
+            <span class="mission-action-description">
+              Review holiday dates and special schedule rules.
+            </span>
+            <span class="mission-action-status">
+              Manage holidays
+            </span>
+            <span class="mission-action-open">Open →</span>
+          </button>
+        </div>
+      </section>
+
+      <!--
+        =====================================================
+        MISSION CONTROL — STEP 1F: RECENT ACTIVITY
+        =====================================================
+      -->
+      <section class="mission-recent-section">
+        <div class="mission-section-heading">
+          <div>
+            <div class="eyebrow">
+              Timeline
+            </div>
+
+            <h3 class="mission-section-title">
+              Recent Activity
+            </h3>
+          </div>
+
+          <button
+            id="refreshMissionActivityButton"
+            class="button"
+            type="button"
+          >
+            Refresh activity
+          </button>
+        </div>
+
+        <div
+          id="missionRecentActivityList"
+          class="mission-recent-list"
+        >
+          <div class="mission-recent-empty">
+            Waiting for dashboard activity.
+          </div>
         </div>
       </section>
     </section>
@@ -3069,7 +3531,281 @@
     ></div>
   </div>
 
-    <script src="js/dashboard.js" defer></script>
+  <!-- VERSION 1.0 — COMMAND PALETTE -->
+  <div id="commandPaletteOverlay" class="command-palette-overlay" hidden>
+    <section
+      id="commandPaletteDialog"
+      class="command-palette-dialog"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="commandPaletteTitle"
+    >
+      <div class="command-palette-header">
+        <div>
+          <div class="eyebrow">Quick navigation</div>
+          <h2 id="commandPaletteTitle" class="command-palette-title">Go to…</h2>
+        </div>
+
+        <button
+          id="closeCommandPaletteButton"
+          class="command-palette-close"
+          type="button"
+          aria-label="Close command palette"
+        >×</button>
+      </div>
+
+      <label class="command-palette-search-wrap" for="commandPaletteSearch">
+        <span aria-hidden="true">🔎</span>
+        <input
+          id="commandPaletteSearch"
+          class="command-palette-search"
+          type="search"
+          placeholder="Search workspaces…"
+          autocomplete="off"
+        >
+      </label>
+
+      <div
+        id="commandPaletteResults"
+        class="command-palette-results"
+        role="listbox"
+        aria-label="Workspace results"
+      ></div>
+
+      <div class="command-palette-footer">
+        <span><kbd>↑</kbd><kbd>↓</kbd> Navigate</span>
+        <span><kbd>Enter</kbd> Open</span>
+        <span><kbd>Esc</kbd> Close</span>
+      </div>
+    </section>
+  </div>
+
+  <!--
+    =========================================================
+    VERSION 1.0 — ABOUT & RELEASE NOTES
+    BUILD 72
+    =========================================================
+  -->
+
+  <div
+    id="aboutApplicationOverlay"
+    class="application-dialog-overlay"
+    hidden
+  >
+    <section
+      class="application-dialog"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="aboutApplicationTitle"
+    >
+      <div class="application-dialog-header">
+        <div>
+          <div class="eyebrow">About</div>
+          <h2 id="aboutApplicationTitle" class="application-dialog-title">
+            Mini Golf Signage Manager
+          </h2>
+        </div>
+
+        <button
+          id="closeAboutApplicationButton"
+          class="application-dialog-close"
+          type="button"
+          aria-label="Close About dialog"
+        >
+          ×
+        </button>
+      </div>
+
+      <div class="about-identity-card">
+        <div class="about-product-mark" aria-hidden="true">🎯</div>
+
+        <div>
+          <div class="about-product-name">
+            Mini Golf Signage Manager
+          </div>
+
+          <div class="about-product-version">
+            Version 1.0 Stable · Build 74
+          </div>
+
+          <div
+            id="aboutEnvironmentBadge"
+            class="about-environment-badge"
+          >
+            Detecting environment
+          </div>
+        </div>
+      </div>
+
+      <div class="about-information-grid">
+        <div class="about-information-card">
+          <div class="about-information-label">Purpose</div>
+          <div class="about-information-value">
+            Central management for schedules, signage content, monitoring,
+            recovery, and controlled player deployment.
+          </div>
+        </div>
+
+        <div class="about-information-card">
+          <div class="about-information-label">Technology</div>
+          <div class="about-information-value">
+            GitHub Pages · Google Apps Script · Google Sheets · OptiSigns
+          </div>
+        </div>
+
+        <div class="about-information-card">
+          <div class="about-information-label">Player version</div>
+          <div id="aboutPlayerVersion" class="about-information-value">
+            v3.1-heartbeat-1
+          </div>
+        </div>
+
+        <div class="about-information-card">
+          <div class="about-information-label">Current Health</div>
+          <div id="aboutHealthScore" class="about-information-value">
+            Waiting for telemetry
+          </div>
+        </div>
+      </div>
+
+      <div class="about-credits">
+        Created for the mini-golf signage operation and developed with ChatGPT.
+      </div>
+    </section>
+  </div>
+
+  <div
+    id="releaseNotesOverlay"
+    class="application-dialog-overlay"
+    hidden
+  >
+    <section
+      class="application-dialog application-dialog-wide"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="releaseNotesTitle"
+    >
+      <div class="application-dialog-header">
+        <div>
+          <div class="eyebrow">Version history</div>
+          <h2 id="releaseNotesTitle" class="application-dialog-title">
+            Release Notes
+          </h2>
+        </div>
+
+        <button
+          id="closeReleaseNotesButton"
+          class="application-dialog-close"
+          type="button"
+          aria-label="Close Release Notes"
+        >
+          ×
+        </button>
+      </div>
+
+      <div class="release-notes-current">
+        <div>
+          <div class="release-notes-version">
+            Version 1.0 Stable
+          </div>
+
+          <div class="release-notes-build">
+            Build 75 · Stable Release
+          </div>
+        </div>
+
+        <div class="release-notes-status">
+          Stable release
+        </div>
+      </div>
+
+      <div class="release-notes-list">
+        <article class="release-note-entry">
+          <div class="release-note-build">Build 75</div>
+          <h3>Version 1.0 Stable</h3>
+          <p>
+            Finalized production identity, automatic environment detection,
+            stable release metadata, and the permanent v1.0.0 rollback point.
+          </p>
+        </article>
+
+        <article class="release-note-entry">
+          <div class="release-note-build">Build 74</div>
+          <h3>Release Candidate Diagnostics</h3>
+          <p>
+            Added a complete downloadable diagnostics snapshot for support,
+            troubleshooting, release verification, and future rollback review.
+          </p>
+        </article>
+
+        <article class="release-note-entry">
+          <div class="release-note-build">Build 73</div>
+          <h3>Health Score Stability</h3>
+          <p>
+            Recalibrated normal Apps Script response variance and excluded
+            isolated cold-start peaks from deductions when average performance
+            remains healthy.
+          </p>
+        </article>
+
+        <article class="release-note-entry">
+          <div class="release-note-build">Build 72</div>
+          <h3>About and Release Notes</h3>
+          <p>
+            Added product identity, version details, technology information,
+            and a built-in release history.
+          </p>
+        </article>
+
+        <article class="release-note-entry">
+          <div class="release-note-build">Build 71</div>
+          <h3>Command Palette Mouse Fix</h3>
+          <p>
+            Restored reliable mouse selection while preserving full keyboard
+            navigation.
+          </p>
+        </article>
+
+        <article class="release-note-entry">
+          <div class="release-note-build">Build 70</div>
+          <h3>Command Palette</h3>
+          <p>
+            Added Ctrl/Command + K global navigation with searchable
+            workspaces.
+          </p>
+        </article>
+
+        <article class="release-note-entry">
+          <div class="release-note-build">Build 69</div>
+          <h3>Grouped Navigation</h3>
+          <p>
+            Reorganized navigation into Operations, Content, Monitoring, and
+            Administration.
+          </p>
+        </article>
+
+        <article class="release-note-entry">
+          <div class="release-note-build">Builds 62–68</div>
+          <h3>Mission Control</h3>
+          <p>
+            Added Home, branded health overview, status cards, Quick Actions,
+            confidence banner, and recent activity.
+          </p>
+        </article>
+
+        <article class="release-note-entry">
+          <div class="release-note-build">Builds 55–61</div>
+          <h3>System Health and Rollout</h3>
+          <p>
+            Added telemetry, Health Score, heartbeat, player version
+            compliance, go-live checks, and controlled rollout tracking.
+          </p>
+        </article>
+      </div>
+    </section>
+  </div>
+
+    <script src="js/dashboard.js?build=75" defer></script>
 
 </body>
 </html>
