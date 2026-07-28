@@ -278,6 +278,27 @@
         "themeButtonText"
       );
 
+    const homeLayoutPreferencesButton = document.getElementById("homeLayoutPreferencesButton");
+    const homeLayoutPreferencesOverlay = document.getElementById("homeLayoutPreferencesOverlay");
+    const closeHomeLayoutPreferencesButton = document.getElementById("closeHomeLayoutPreferencesButton");
+    const saveHomeLayoutPreferencesButton = document.getElementById("saveHomeLayoutPreferencesButton");
+    const resetHomeLayoutPreferencesButton = document.getElementById("resetHomeLayoutPreferencesButton");
+    const homePreferenceConfidence = document.getElementById("homePreferenceConfidence");
+    const homePreferenceStatus = document.getElementById("homePreferenceStatus");
+    const homePreferenceQuickActions = document.getElementById("homePreferenceQuickActions");
+    const homePreferenceRecentActivity = document.getElementById("homePreferenceRecentActivity");
+    const homePreferenceDensity = document.getElementById("homePreferenceDensity");
+
+    const dashboardScrollProgressBar =
+      document.getElementById(
+        "dashboardScrollProgressBar"
+      );
+
+    const backToTopButton =
+      document.getElementById(
+        "backToTopButton"
+      );
+
     const exportDiagnosticsButton =
       document.getElementById(
         "exportDiagnosticsButton"
@@ -332,6 +353,109 @@
       document.getElementById(
         "aboutPlayerVersion"
       );
+
+    const notificationCenterButton = document.getElementById("notificationCenterButton");
+    const notificationCenterBadge = document.getElementById("notificationCenterBadge");
+    const notificationCenterOverlay = document.getElementById("notificationCenterOverlay");
+    const closeNotificationCenterButton = document.getElementById("closeNotificationCenterButton");
+    const refreshNotificationCenterButton = document.getElementById("refreshNotificationCenterButton");
+    const notificationCenterSummary = document.getElementById("notificationCenterSummary");
+    const notificationCenterList = document.getElementById("notificationCenterList");
+
+    const markNotificationsReadButton =
+      document.getElementById(
+        "markNotificationsReadButton"
+      );
+
+    const notificationCenterLastReviewed =
+      document.getElementById(
+        "notificationCenterLastReviewed"
+      );
+
+    const notificationPreferencesButton =
+      document.getElementById(
+        "notificationPreferencesButton"
+      );
+
+    const notificationPreferencesPanel =
+      document.getElementById(
+        "notificationPreferencesPanel"
+      );
+
+    const closeNotificationPreferencesButton =
+      document.getElementById(
+        "closeNotificationPreferencesButton"
+      );
+
+    const saveNotificationPreferencesButton =
+      document.getElementById(
+        "saveNotificationPreferencesButton"
+      );
+
+    const resetNotificationPreferencesButton =
+      document.getElementById(
+        "resetNotificationPreferencesButton"
+      );
+
+    const notificationHealthThreshold =
+      document.getElementById(
+        "notificationHealthThreshold"
+      );
+
+    const notificationPreferenceHealth =
+      document.getElementById(
+        "notificationPreferenceHealth"
+      );
+
+    const notificationPreferencePlayers =
+      document.getElementById(
+        "notificationPreferencePlayers"
+      );
+
+    const notificationPreferenceSchedules =
+      document.getElementById(
+        "notificationPreferenceSchedules"
+      );
+
+    const notificationPreferenceImages =
+      document.getElementById(
+        "notificationPreferenceImages"
+      );
+
+    const notificationPreferenceRecovery =
+      document.getElementById(
+        "notificationPreferenceRecovery"
+      );
+
+    const notificationPreferenceAppsScript =
+      document.getElementById(
+        "notificationPreferenceAppsScript"
+      );
+
+    const notificationSnoozeMenu =
+      document.getElementById(
+        "notificationSnoozeMenu"
+      );
+
+    const cancelNotificationSnoozeButton =
+      document.getElementById(
+        "cancelNotificationSnoozeButton"
+      );
+
+    const notificationActiveTab = document.getElementById("notificationActiveTab");
+    const notificationHistoryTab = document.getElementById("notificationHistoryTab");
+    const notificationHistoryPanel = document.getElementById("notificationHistoryPanel");
+    const notificationHistoryList = document.getElementById("notificationHistoryList");
+    const notificationHistorySummary = document.getElementById("notificationHistorySummary");
+    const clearNotificationHistoryButton = document.getElementById("clearNotificationHistoryButton");
+
+    const exportNotificationHistoryButton = document.getElementById("exportNotificationHistoryButton");
+    const notificationHistorySearch = document.getElementById("notificationHistorySearch");
+    const notificationHistoryFilters = document.getElementById("notificationHistoryFilters");
+    const notificationHistory24HourCount = document.getElementById("notificationHistory24HourCount");
+    const notificationHistoryAppearedCount = document.getElementById("notificationHistoryAppearedCount");
+    const notificationHistoryResolvedCount = document.getElementById("notificationHistoryResolvedCount");
+    const notificationHistorySnoozedCount = document.getElementById("notificationHistorySnoozedCount");
 
     const commandPaletteButton =
       document.getElementById("commandPaletteButton");
@@ -15838,6 +15962,224 @@
     }
 
 
+    const HOME_LAYOUT_PREFERENCES_KEY = "miniGolfSignageHomeLayoutPreferencesV1";
+    const DEFAULT_HOME_LAYOUT_PREFERENCES = {
+      confidence:true, status:true, quickActions:true,
+      recentActivity:true, density:"comfortable"
+    };
+    let homeLayoutPreferences={...DEFAULT_HOME_LAYOUT_PREFERENCES};
+
+    function loadHomeLayoutPreferences(){
+      try{
+        const raw=localStorage.getItem(HOME_LAYOUT_PREFERENCES_KEY);
+        if(raw) homeLayoutPreferences={
+          ...DEFAULT_HOME_LAYOUT_PREFERENCES,
+          ...JSON.parse(raw)
+        };
+      }catch(error){console.warn("Home layout preferences could not be loaded.",error);}
+    }
+
+    function saveHomeLayoutPreferencesToStorage(){
+      try{
+        localStorage.setItem(HOME_LAYOUT_PREFERENCES_KEY,
+          JSON.stringify(homeLayoutPreferences));
+      }catch(error){console.warn("Home layout preferences could not be saved.",error);}
+    }
+
+    function applyHomeLayoutPreferences(){
+      document.querySelectorAll("[data-home-section]").forEach(section=>{
+        const visible=homeLayoutPreferences[section.dataset.homeSection]!==false;
+        section.classList.toggle("home-section-hidden",!visible);
+      });
+      if(homeWorkspace) homeWorkspace.classList.toggle(
+        "home-density-compact",homeLayoutPreferences.density==="compact");
+      updateDashboardScrollNavigation();
+    }
+
+    function populateHomeLayoutPreferencesForm(){
+      if(homePreferenceConfidence) homePreferenceConfidence.checked=homeLayoutPreferences.confidence;
+      if(homePreferenceStatus) homePreferenceStatus.checked=homeLayoutPreferences.status;
+      if(homePreferenceQuickActions) homePreferenceQuickActions.checked=homeLayoutPreferences.quickActions;
+      if(homePreferenceRecentActivity) homePreferenceRecentActivity.checked=homeLayoutPreferences.recentActivity;
+      if(homePreferenceDensity) homePreferenceDensity.value=homeLayoutPreferences.density;
+    }
+
+    function openHomeLayoutPreferences(){
+      if(!homeLayoutPreferencesOverlay) return;
+      closeWorkspaceNavigationMenus();
+      closeCommandPalette();
+      closeNotificationCenter();
+      populateHomeLayoutPreferencesForm();
+      homeLayoutPreferencesOverlay.hidden=false;
+      document.body.style.overflow="hidden";
+      setTimeout(()=>homePreferenceConfidence && homePreferenceConfidence.focus(),0);
+    }
+
+    function closeHomeLayoutPreferences(){
+      if(!homeLayoutPreferencesOverlay) return;
+      homeLayoutPreferencesOverlay.hidden=true;
+      document.body.style.overflow="";
+      if(homeLayoutPreferencesButton) homeLayoutPreferencesButton.focus();
+    }
+
+    function saveHomeLayoutPreferences(){
+      homeLayoutPreferences={
+        confidence:homePreferenceConfidence ? homePreferenceConfidence.checked : true,
+        status:homePreferenceStatus ? homePreferenceStatus.checked : true,
+        quickActions:homePreferenceQuickActions ? homePreferenceQuickActions.checked : true,
+        recentActivity:homePreferenceRecentActivity ? homePreferenceRecentActivity.checked : true,
+        density:homePreferenceDensity && homePreferenceDensity.value==="compact"
+          ? "compact":"comfortable"
+      };
+      saveHomeLayoutPreferencesToStorage();
+      applyHomeLayoutPreferences();
+      closeHomeLayoutPreferences();
+      if(typeof showToast==="function") showToast("Home layout saved.","success");
+    }
+
+    function resetHomeLayoutPreferences(){
+      homeLayoutPreferences={...DEFAULT_HOME_LAYOUT_PREFERENCES};
+      saveHomeLayoutPreferencesToStorage();
+      populateHomeLayoutPreferencesForm();
+      applyHomeLayoutPreferences();
+      if(typeof showToast==="function") showToast("Home layout restored.","success");
+    }
+
+    function setupHomeLayoutPreferences(){
+      loadHomeLayoutPreferences();
+      applyHomeLayoutPreferences();
+      if(!homeLayoutPreferencesButton || !homeLayoutPreferencesOverlay) return;
+      homeLayoutPreferencesButton.addEventListener("click",openHomeLayoutPreferences);
+      if(closeHomeLayoutPreferencesButton) closeHomeLayoutPreferencesButton.addEventListener("click",closeHomeLayoutPreferences);
+      if(saveHomeLayoutPreferencesButton) saveHomeLayoutPreferencesButton.addEventListener("click",saveHomeLayoutPreferences);
+      if(resetHomeLayoutPreferencesButton) resetHomeLayoutPreferencesButton.addEventListener("click",resetHomeLayoutPreferences);
+      homeLayoutPreferencesOverlay.addEventListener("click",event=>{
+        if(event.target===homeLayoutPreferencesOverlay) closeHomeLayoutPreferences();
+      });
+      document.addEventListener("keydown",event=>{
+        if(event.key==="Escape" && !homeLayoutPreferencesOverlay.hidden){
+          event.preventDefault(); closeHomeLayoutPreferences();
+        }
+      });
+    }
+
+
+    function updateDashboardScrollNavigation() {
+      const documentElement =
+        document.documentElement;
+
+      const scrollTop =
+        window.scrollY ||
+        documentElement.scrollTop ||
+        0;
+
+      const scrollableDistance =
+        Math.max(
+          0,
+          documentElement.scrollHeight -
+            window.innerHeight
+        );
+
+      const progress =
+        scrollableDistance > 0
+          ? Math.min(
+              1,
+              scrollTop /
+                scrollableDistance
+            )
+          : 0;
+
+      if (dashboardScrollProgressBar) {
+        dashboardScrollProgressBar.style.width =
+          `${progress * 100}%`;
+      }
+
+      if (backToTopButton) {
+        const shouldShow =
+          scrollTop >= 420;
+
+        backToTopButton.hidden =
+          !shouldShow;
+
+        const nearBottom =
+          scrollableDistance > 0 &&
+          scrollableDistance -
+            scrollTop <=
+            180;
+
+        backToTopButton.classList.toggle(
+          "back-to-top-at-bottom",
+          nearBottom
+        );
+      }
+    }
+
+
+    function scrollDashboardToTop() {
+      const prefersReducedMotion =
+        window.matchMedia(
+          "(prefers-reduced-motion: reduce)"
+        ).matches;
+
+      window.scrollTo({
+        top:
+          0,
+
+        behavior:
+          prefersReducedMotion
+            ? "auto"
+            : "smooth"
+      });
+    }
+
+
+    function setupDashboardScrollNavigation() {
+      if (backToTopButton) {
+        backToTopButton.addEventListener(
+          "click",
+          scrollDashboardToTop
+        );
+      }
+
+      let scrollFrameRequested =
+        false;
+
+      function requestScrollUpdate() {
+        if (scrollFrameRequested) {
+          return;
+        }
+
+        scrollFrameRequested =
+          true;
+
+        window.requestAnimationFrame(
+          function() {
+            scrollFrameRequested =
+              false;
+
+            updateDashboardScrollNavigation();
+          }
+        );
+      }
+
+      window.addEventListener(
+        "scroll",
+        requestScrollUpdate,
+        {
+          passive:
+            true
+        }
+      );
+
+      window.addEventListener(
+        "resize",
+        requestScrollUpdate
+      );
+
+      updateDashboardScrollNavigation();
+    }
+
+
     function getApplicationEnvironment() {
       const locationText =
         `${window.location.hostname}${window.location.pathname}`
@@ -16100,10 +16442,10 @@
               "1.0.0",
 
             label:
-              "Version 1.0 Stable",
+              "Version 1.1 Development",
 
             build:
-              75,
+              83,
 
             environment:
               getApplicationEnvironment().key,
@@ -16249,7 +16591,7 @@
           objectUrl;
 
         link.download =
-          `mini-golf-signage-diagnostics-build-75-${dateStamp}.json`;
+          `mini-golf-signage-diagnostics-build-83-${dateStamp}.json`;
 
         document.body.appendChild(
           link
@@ -16499,6 +16841,1296 @@
           }
         }
       );
+    }
+
+
+    const NOTIFICATION_HISTORY_KEY =
+      "miniGolfSignageNotificationHistoryV1";
+
+    const NOTIFICATION_HISTORY_LIMIT = 100;
+    let notificationHistory = [];
+    let currentNotificationFingerprints = new Set();
+    let notificationCenterView = "active";
+
+    let notificationHistoryFilter = "all";
+    let notificationHistoryQuery = "";
+
+    const NOTIFICATION_SNOOZE_KEY =
+      "miniGolfSignageNotificationSnoozeV1";
+
+    let notificationSnoozes =
+      {};
+
+    let notificationSnoozeTargetFingerprint =
+      null;
+
+
+    const NOTIFICATION_PREFERENCES_KEY =
+      "miniGolfSignageNotificationPreferencesV1";
+
+    const DEFAULT_NOTIFICATION_PREFERENCES =
+      {
+        health:
+          true,
+
+        players:
+          true,
+
+        schedules:
+          true,
+
+        images:
+          true,
+
+        recovery:
+          true,
+
+        appsScript:
+          true,
+
+        healthThreshold:
+          90
+      };
+
+    let notificationPreferences =
+      {
+        ...DEFAULT_NOTIFICATION_PREFERENCES
+      };
+
+
+    const NOTIFICATION_MEMORY_KEY =
+      "miniGolfSignageNotificationMemoryV1";
+
+    let notificationMemory =
+      {
+        reviewedAt:
+          null,
+
+        fingerprints:
+          {}
+      };
+
+
+    function loadNotificationHistory() {
+      try {
+        const raw = localStorage.getItem(NOTIFICATION_HISTORY_KEY);
+        if (!raw) return;
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) notificationHistory = parsed.slice(0,NOTIFICATION_HISTORY_LIMIT);
+      } catch (error) {
+        console.warn("Notification history could not be loaded.",error);
+      }
+    }
+
+    function saveNotificationHistory() {
+      try {
+        localStorage.setItem(NOTIFICATION_HISTORY_KEY,
+          JSON.stringify(notificationHistory.slice(0,NOTIFICATION_HISTORY_LIMIT)));
+      } catch (error) {
+        console.warn("Notification history could not be saved.",error);
+      }
+    }
+
+    function addNotificationHistoryEvent(notification,eventType,detail) {
+      if (!notification) return;
+      notificationHistory.unshift({
+        id:`${Date.now()}-${Math.random().toString(36).slice(2,8)}`,
+        fingerprint:notification.fingerprint || createNotificationFingerprint(notification),
+        eventType,
+        icon:notification.icon || "🔔",
+        title:notification.title || "Notification",
+        description:detail || notification.description || "",
+        severity:notification.severity || "information",
+        timestamp:new Date().toISOString()
+      });
+      notificationHistory=notificationHistory.slice(0,NOTIFICATION_HISTORY_LIMIT);
+      saveNotificationHistory();
+    }
+
+    function syncNotificationHistory(notifications) {
+      const next=new Set(notifications.map(item=>item.fingerprint));
+      notifications.forEach(item=>{
+        if(!currentNotificationFingerprints.has(item.fingerprint))
+          addNotificationHistoryEvent(item,"appeared",item.description);
+      });
+      currentNotificationFingerprints.forEach(fingerprint=>{
+        if(!next.has(fingerprint)){
+          const previous=notificationHistory.find(event=>event.fingerprint===fingerprint);
+          if(previous) addNotificationHistoryEvent({
+            fingerprint,icon:previous.icon,title:previous.title,
+            description:previous.description,severity:previous.severity
+          },"resolved","The alert is no longer active.");
+        }
+      });
+      currentNotificationFingerprints=next;
+    }
+
+    function getFilteredNotificationHistory() {
+      const query=notificationHistoryQuery.trim().toLowerCase();
+      return notificationHistory.filter(event=>{
+        const matchesFilter=notificationHistoryFilter==="all" ||
+          event.eventType===notificationHistoryFilter;
+        if(!matchesFilter) return false;
+        if(!query) return true;
+        return [event.title,event.description,event.eventType,event.severity]
+          .join(" ").toLowerCase().includes(query);
+      });
+    }
+
+    function renderNotificationHistoryInsights() {
+      const cutoff=Date.now()-24*60*60*1000;
+      const recent=notificationHistory.filter(event=>{
+        const time=new Date(event.timestamp).getTime();
+        return Number.isFinite(time) && time>=cutoff;
+      });
+      if(notificationHistory24HourCount) notificationHistory24HourCount.textContent=String(recent.length);
+      if(notificationHistoryAppearedCount) notificationHistoryAppearedCount.textContent=String(recent.filter(e=>e.eventType==="appeared").length);
+      if(notificationHistoryResolvedCount) notificationHistoryResolvedCount.textContent=String(recent.filter(e=>e.eventType==="resolved").length);
+      if(notificationHistorySnoozedCount) notificationHistorySnoozedCount.textContent=String(recent.filter(e=>e.eventType==="snoozed").length);
+    }
+
+    function exportNotificationHistory() {
+      try {
+        const payload={
+          application:"Mini Golf Signage Manager",
+          version:"1.1 Development",
+          build:82,
+          exportedAt:new Date().toISOString(),
+          totalEvents:notificationHistory.length,
+          events:notificationHistory
+        };
+        const blob=new Blob([JSON.stringify(payload,null,2)],{type:"application/json"});
+        const url=URL.createObjectURL(blob);
+        const link=document.createElement("a");
+        link.href=url;
+        link.download=`notification-history-build-82-${new Date().toISOString().replace(/[:.]/g,"-")}.json`;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        setTimeout(()=>URL.revokeObjectURL(url),1000);
+        if(typeof showToast==="function") showToast("Notification history exported.","success");
+      } catch(error) {
+        console.error("Notification history export failed.",error);
+        if(typeof showToast==="function") showToast(`History export failed: ${error.message}`,"error");
+      }
+    }
+
+
+    function renderNotificationHistory() {
+      if(!notificationHistoryList || !notificationHistorySummary) return;
+      renderNotificationHistoryInsights();
+      const filteredHistory=getFilteredNotificationHistory();
+
+      notificationHistorySummary.textContent=notificationHistory.length
+        ? `${filteredHistory.length} shown · ${notificationHistory.length} stored locally.`
+        : "No history recorded yet.";
+      if(clearNotificationHistoryButton)
+        clearNotificationHistoryButton.disabled=notificationHistory.length===0;
+      if(exportNotificationHistoryButton)
+        exportNotificationHistoryButton.disabled=notificationHistory.length===0;
+      if(!notificationHistory.length){
+        notificationHistoryList.innerHTML='<div class="notification-center-empty">No notification history has been recorded yet.</div>';
+        return;
+      }
+      if(!filteredHistory.length){
+        notificationHistoryList.innerHTML='<div class="notification-history-no-results">No history events match the current search or filter.</div>';
+        return;
+      }
+      notificationHistoryList.innerHTML=filteredHistory.map(event=>`
+        <article class="notification-history-item">
+          <div class="notification-history-icon">${escapeHtml(event.icon)}</div>
+          <div>
+            <div class="notification-history-title">${escapeHtml(event.title)}</div>
+            <div class="notification-history-description">${escapeHtml(event.description)}</div>
+            <div class="notification-history-event">${escapeHtml(event.eventType)}</div>
+          </div>
+          <div class="notification-history-time">${escapeHtml(new Date(event.timestamp).toLocaleString())}</div>
+        </article>`).join("");
+    }
+
+    function setNotificationCenterView(viewName) {
+      notificationCenterView=viewName==="history"?"history":"active";
+      const history=notificationCenterView==="history";
+      if(notificationCenterList) notificationCenterList.hidden=history;
+      if(notificationHistoryPanel) notificationHistoryPanel.hidden=!history;
+      if(notificationActiveTab){
+        notificationActiveTab.classList.toggle("active",!history);
+        notificationActiveTab.setAttribute("aria-selected",history?"false":"true");
+      }
+      if(notificationHistoryTab){
+        notificationHistoryTab.classList.toggle("active",history);
+        notificationHistoryTab.setAttribute("aria-selected",history?"true":"false");
+      }
+      if(history) renderNotificationHistory();
+    }
+
+    function clearNotificationHistory() {
+      notificationHistory=[];
+      currentNotificationFingerprints=new Set();
+      saveNotificationHistory();
+      renderNotificationHistory();
+      if(typeof showToast==="function") showToast("Notification history cleared.","success");
+    }
+
+
+    function loadNotificationSnoozes() {
+      try {
+        const savedValue =
+          localStorage.getItem(
+            NOTIFICATION_SNOOZE_KEY
+          );
+
+        if (!savedValue) {
+          return;
+        }
+
+        const parsedValue =
+          JSON.parse(
+            savedValue
+          );
+
+        if (
+          parsedValue &&
+          typeof parsedValue === "object"
+        ) {
+          notificationSnoozes =
+            parsedValue;
+        }
+      } catch (error) {
+        console.warn(
+          "Notification snoozes could not be loaded.",
+          error
+        );
+      }
+
+      removeExpiredNotificationSnoozes();
+    }
+
+
+    function saveNotificationSnoozes() {
+      try {
+        localStorage.setItem(
+          NOTIFICATION_SNOOZE_KEY,
+          JSON.stringify(
+            notificationSnoozes
+          )
+        );
+      } catch (error) {
+        console.warn(
+          "Notification snoozes could not be saved.",
+          error
+        );
+      }
+    }
+
+
+    function removeExpiredNotificationSnoozes() {
+      const now =
+        Date.now();
+
+      let changed =
+        false;
+
+      Object.keys(
+        notificationSnoozes
+      ).forEach(
+        fingerprint => {
+          const expiresAt =
+            Number(
+              notificationSnoozes[
+                fingerprint
+              ]
+            );
+
+          if (
+            !Number.isFinite(
+              expiresAt
+            ) ||
+            expiresAt <= now
+          ) {
+            delete notificationSnoozes[
+              fingerprint
+            ];
+
+            changed =
+              true;
+          }
+        }
+      );
+
+      if (changed) {
+        saveNotificationSnoozes();
+      }
+    }
+
+
+    function isNotificationSnoozed(
+      notification
+    ) {
+      const expiresAt =
+        Number(
+          notificationSnoozes[
+            notification.fingerprint
+          ]
+        );
+
+      return Number.isFinite(
+        expiresAt
+      ) &&
+      expiresAt > Date.now();
+    }
+
+
+    function calculateTomorrowMorningTimestamp() {
+      const tomorrow =
+        new Date();
+
+      tomorrow.setDate(
+        tomorrow.getDate() + 1
+      );
+
+      tomorrow.setHours(
+        8,
+        0,
+        0,
+        0
+      );
+
+      return tomorrow.getTime();
+    }
+
+
+    function snoozeNotification(
+      fingerprint,
+      expiresAt
+    ) {
+      if (
+        !fingerprint ||
+        !Number.isFinite(
+          expiresAt
+        )
+      ) {
+        return;
+      }
+
+      notificationSnoozes[
+        fingerprint
+      ] =
+        expiresAt;
+
+      const activeNotification=enrichDashboardNotifications(
+        buildDashboardNotifications()).find(item=>item.fingerprint===fingerprint);
+      if(activeNotification) addNotificationHistoryEvent(
+        activeNotification,"snoozed",`Snoozed until ${new Date(expiresAt).toLocaleString()}.`);
+
+      saveNotificationSnoozes();
+      closeNotificationSnoozeMenu();
+      renderNotificationCenter();
+
+      if (
+        typeof showToast === "function"
+      ) {
+        showToast(
+          "Notification snoozed.",
+          "success"
+        );
+      }
+    }
+
+
+    function openNotificationSnoozeMenu(
+      event,
+      fingerprint
+    ) {
+      if (!notificationSnoozeMenu) {
+        return;
+      }
+
+      event.preventDefault();
+      event.stopPropagation();
+
+      notificationSnoozeTargetFingerprint =
+        fingerprint;
+
+      const button =
+        event.currentTarget;
+
+      const rectangle =
+        button.getBoundingClientRect();
+
+      const menuWidth =
+        240;
+
+      const left =
+        Math.min(
+          window.innerWidth -
+            menuWidth -
+            12,
+          Math.max(
+            12,
+            rectangle.right -
+              menuWidth
+          )
+        );
+
+      const top =
+        Math.min(
+          window.innerHeight -
+            260,
+          rectangle.bottom + 7
+        );
+
+      notificationSnoozeMenu.style.left =
+        `${left}px`;
+
+      notificationSnoozeMenu.style.top =
+        `${Math.max(12, top)}px`;
+
+      notificationSnoozeMenu.hidden =
+        false;
+    }
+
+
+    function closeNotificationSnoozeMenu() {
+      if (!notificationSnoozeMenu) {
+        return;
+      }
+
+      notificationSnoozeMenu.hidden =
+        true;
+
+      notificationSnoozeTargetFingerprint =
+        null;
+    }
+
+
+    function setupNotificationSnoozeMenu() {
+      if (!notificationSnoozeMenu) {
+        return;
+      }
+
+      notificationSnoozeMenu
+        .querySelectorAll(
+          "[data-snooze-minutes]"
+        )
+        .forEach(
+          button => {
+            button.addEventListener(
+              "click",
+              function() {
+                const minutes =
+                  Number(
+                    button.dataset.snoozeMinutes
+                  );
+
+                snoozeNotification(
+                  notificationSnoozeTargetFingerprint,
+                  Date.now() +
+                    minutes *
+                    60000
+                );
+              }
+            );
+          }
+        );
+
+      const tomorrowButton =
+        notificationSnoozeMenu.querySelector(
+          '[data-snooze-until="tomorrow"]'
+        );
+
+      if (tomorrowButton) {
+        tomorrowButton.addEventListener(
+          "click",
+          function() {
+            snoozeNotification(
+              notificationSnoozeTargetFingerprint,
+              calculateTomorrowMorningTimestamp()
+            );
+          }
+        );
+      }
+
+      if (cancelNotificationSnoozeButton) {
+        cancelNotificationSnoozeButton.addEventListener(
+          "click",
+          closeNotificationSnoozeMenu
+        );
+      }
+
+      document.addEventListener(
+        "click",
+        function(event) {
+          if (
+            !notificationSnoozeMenu.hidden &&
+            !event.target.closest(
+              ".notification-snooze-menu"
+            ) &&
+            !event.target.closest(
+              ".notification-item-snooze"
+            )
+          ) {
+            closeNotificationSnoozeMenu();
+          }
+        }
+      );
+
+      document.addEventListener(
+        "keydown",
+        function(event) {
+          if (
+            event.key === "Escape" &&
+            !notificationSnoozeMenu.hidden
+          ) {
+            closeNotificationSnoozeMenu();
+          }
+        }
+      );
+    }
+
+
+    function loadNotificationPreferences() {
+      try {
+        const savedValue =
+          localStorage.getItem(
+            NOTIFICATION_PREFERENCES_KEY
+          );
+
+        if (!savedValue) {
+          return;
+        }
+
+        const parsedValue =
+          JSON.parse(
+            savedValue
+          );
+
+        if (
+          parsedValue &&
+          typeof parsedValue === "object"
+        ) {
+          notificationPreferences =
+            {
+              ...DEFAULT_NOTIFICATION_PREFERENCES,
+              ...parsedValue
+            };
+        }
+      } catch (error) {
+        console.warn(
+          "Notification preferences could not be loaded.",
+          error
+        );
+      }
+    }
+
+
+    function saveNotificationPreferences() {
+      try {
+        localStorage.setItem(
+          NOTIFICATION_PREFERENCES_KEY,
+          JSON.stringify(
+            notificationPreferences
+          )
+        );
+      } catch (error) {
+        console.warn(
+          "Notification preferences could not be saved.",
+          error
+        );
+      }
+    }
+
+
+    function populateNotificationPreferencesForm() {
+      if (notificationPreferenceHealth) {
+        notificationPreferenceHealth.checked =
+          notificationPreferences.health;
+      }
+
+      if (notificationPreferencePlayers) {
+        notificationPreferencePlayers.checked =
+          notificationPreferences.players;
+      }
+
+      if (notificationPreferenceSchedules) {
+        notificationPreferenceSchedules.checked =
+          notificationPreferences.schedules;
+      }
+
+      if (notificationPreferenceImages) {
+        notificationPreferenceImages.checked =
+          notificationPreferences.images;
+      }
+
+      if (notificationPreferenceRecovery) {
+        notificationPreferenceRecovery.checked =
+          notificationPreferences.recovery;
+      }
+
+      if (notificationPreferenceAppsScript) {
+        notificationPreferenceAppsScript.checked =
+          notificationPreferences.appsScript;
+      }
+
+      if (notificationHealthThreshold) {
+        notificationHealthThreshold.value =
+          String(
+            notificationPreferences.healthThreshold
+          );
+      }
+    }
+
+
+    function readNotificationPreferencesForm() {
+      return {
+        health:
+          notificationPreferenceHealth
+            ? notificationPreferenceHealth.checked
+            : true,
+
+        players:
+          notificationPreferencePlayers
+            ? notificationPreferencePlayers.checked
+            : true,
+
+        schedules:
+          notificationPreferenceSchedules
+            ? notificationPreferenceSchedules.checked
+            : true,
+
+        images:
+          notificationPreferenceImages
+            ? notificationPreferenceImages.checked
+            : true,
+
+        recovery:
+          notificationPreferenceRecovery
+            ? notificationPreferenceRecovery.checked
+            : true,
+
+        appsScript:
+          notificationPreferenceAppsScript
+            ? notificationPreferenceAppsScript.checked
+            : true,
+
+        healthThreshold:
+          notificationHealthThreshold
+            ? Number(
+                notificationHealthThreshold.value
+              )
+            : 90
+      };
+    }
+
+
+    function openNotificationPreferences() {
+      if (!notificationPreferencesPanel) {
+        return;
+      }
+
+      populateNotificationPreferencesForm();
+
+      notificationPreferencesPanel.hidden =
+        false;
+
+      if (notificationPreferenceHealth) {
+        setTimeout(
+          function() {
+            notificationPreferenceHealth.focus();
+          },
+          0
+        );
+      }
+    }
+
+
+    function closeNotificationPreferences() {
+      if (!notificationPreferencesPanel) {
+        return;
+      }
+
+      notificationPreferencesPanel.hidden =
+        true;
+
+      if (notificationPreferencesButton) {
+        notificationPreferencesButton.focus();
+      }
+    }
+
+
+    function applyNotificationPreferences() {
+      notificationPreferences =
+        readNotificationPreferencesForm();
+
+      saveNotificationPreferences();
+      closeNotificationPreferences();
+      renderNotificationCenter();
+
+      if (
+        typeof showToast === "function"
+      ) {
+        showToast(
+          "Notification preferences saved.",
+          "success"
+        );
+      }
+    }
+
+
+    function resetNotificationPreferences() {
+      notificationPreferences =
+        {
+          ...DEFAULT_NOTIFICATION_PREFERENCES
+        };
+
+      saveNotificationPreferences();
+      populateNotificationPreferencesForm();
+      renderNotificationCenter();
+
+      if (
+        typeof showToast === "function"
+      ) {
+        showToast(
+          "Notification preferences reset.",
+          "success"
+        );
+      }
+    }
+
+
+    function loadNotificationMemory() {
+      try {
+        const savedValue =
+          localStorage.getItem(
+            NOTIFICATION_MEMORY_KEY
+          );
+
+        if (!savedValue) {
+          return;
+        }
+
+        const parsedValue =
+          JSON.parse(
+            savedValue
+          );
+
+        if (
+          parsedValue &&
+          typeof parsedValue === "object"
+        ) {
+          notificationMemory =
+            {
+              reviewedAt:
+                parsedValue.reviewedAt ||
+                null,
+
+              fingerprints:
+                parsedValue.fingerprints &&
+                typeof parsedValue.fingerprints === "object"
+                  ? parsedValue.fingerprints
+                  : {}
+            };
+        }
+      } catch (error) {
+        console.warn(
+          "Notification memory could not be loaded.",
+          error
+        );
+      }
+    }
+
+
+    function saveNotificationMemory() {
+      try {
+        localStorage.setItem(
+          NOTIFICATION_MEMORY_KEY,
+          JSON.stringify(
+            notificationMemory
+          )
+        );
+      } catch (error) {
+        console.warn(
+          "Notification memory could not be saved.",
+          error
+        );
+      }
+    }
+
+
+    function createNotificationFingerprint(
+      notification
+    ) {
+      return [
+        notification.severity,
+        notification.title,
+        notification.description,
+        notification.workspace
+      ]
+        .join("|")
+        .toLowerCase();
+    }
+
+
+    function enrichDashboardNotifications(
+      notifications
+    ) {
+      return notifications.map(
+        notification => {
+          const fingerprint =
+            createNotificationFingerprint(
+              notification
+            );
+
+          return {
+            ...notification,
+
+            fingerprint:
+              fingerprint,
+
+            unread:
+              notificationMemory.fingerprints[
+                fingerprint
+              ] !== true
+          };
+        }
+      );
+    }
+
+
+    function markAllNotificationsAsRead() {
+      const notifications =
+        enrichDashboardNotifications(
+          buildDashboardNotifications()
+        );
+
+      notifications.forEach(
+        notification => {
+          notificationMemory.fingerprints[
+            notification.fingerprint
+          ] =
+            true;
+        }
+      );
+
+      notificationMemory.reviewedAt =
+        new Date().toISOString();
+
+      notifications.forEach(notification =>
+        addNotificationHistoryEvent(notification,"reviewed","Marked as reviewed."));
+
+      saveNotificationMemory();
+      renderNotificationCenter();
+
+      if (
+        typeof showToast === "function"
+      ) {
+        showToast(
+          "Notifications marked as read.",
+          "success"
+        );
+      }
+    }
+
+
+    function formatNotificationReviewTime() {
+      if (
+        !notificationMemory.reviewedAt
+      ) {
+        return "Not reviewed yet";
+      }
+
+      const reviewedDate =
+        new Date(
+          notificationMemory.reviewedAt
+        );
+
+      if (
+        !Number.isFinite(
+          reviewedDate.getTime()
+        )
+      ) {
+        return "Not reviewed yet";
+      }
+
+      return `Last reviewed ${reviewedDate.toLocaleString()}`;
+    }
+
+
+    function buildDashboardNotifications() {
+      const items = [];
+      const quiet = typeof isPlayerQuietHours === "function" ? isPlayerQuietHours() : false;
+      const score = latestHealthScoreResult && Number.isFinite(latestHealthScoreResult.score)
+        ? latestHealthScoreResult.score : null;
+
+      if (
+        notificationPreferences.health &&
+        score !== null &&
+        score <
+          notificationPreferences.healthThreshold
+      ) items.push({
+        severity: score < 75 ? "critical" : "warning",
+        icon: score < 75 ? "🔴" : "🟠",
+        title: `Health Score is ${score}/100`,
+        description: "Open System Health for the full explanation.",
+        workspace: "systemHealth"
+      });
+
+      const missingSchedules = Math.max(0, SCREEN_NAMES.length -
+        SCREEN_NAMES.filter(name => screenStates.has(name)).length);
+      if (
+        notificationPreferences.schedules &&
+        missingSchedules
+      ) items.push({
+        severity:"critical", icon:"📅",
+        title:`${missingSchedules} schedule(s) unavailable`,
+        description:"One or more configured screens do not have loaded schedule data.",
+        workspace:"manager"
+      });
+
+      const states = Array.from(screenStates.values()).filter(Boolean);
+      const missingImages = states.filter(state => state.imageMissing === true).length;
+      if (
+        notificationPreferences.images &&
+        missingImages
+      ) items.push({
+        severity:"critical", icon:"🖼️",
+        title:`${missingImages} active image(s) missing`,
+        description:"Open the Image Library to review unavailable signage assets.",
+        workspace:"images"
+      });
+
+      const cached = states.filter(state => state.offlineSnapshot === true).length;
+      if (
+        notificationPreferences.schedules &&
+        cached
+      ) items.push({
+        severity:"warning", icon:"💾",
+        title:`${cached} schedule(s) using cached data`,
+        description:"Fresh Apps Script data was not available for these screens.",
+        workspace:"systemHealth"
+      });
+
+      if (
+        notificationPreferences.players &&
+        !quiet
+      ) {
+        const online = latestPlayerHeartbeats.filter(player => player.status === "online").length;
+        const offline = Math.max(0, SCREEN_NAMES.length - online);
+        if (offline) items.push({
+          severity: offline === SCREEN_NAMES.length ? "critical" : "warning",
+          icon:"📺", title:`${offline} player(s) offline`,
+          description:"One or more players have not reported an active heartbeat.",
+          workspace:"systemHealth"
+        });
+      }
+
+      const savedAt = dashboardOfflineSnapshot && dashboardOfflineSnapshot.savedAt
+        ? new Date(dashboardOfflineSnapshot.savedAt) : null;
+      const snapshotValid = Boolean(savedAt && Number.isFinite(savedAt.getTime()) &&
+        Date.now() - savedAt.getTime() <= DASHBOARD_OFFLINE_MAX_AGE_MS);
+      if (
+        notificationPreferences.recovery &&
+        !snapshotValid
+      ) items.push({
+        severity:"warning", icon:"🛡️",
+        title:"Recovery snapshot needs attention",
+        description:"No recent offline recovery snapshot is currently available.",
+        workspace:"backup"
+      });
+
+      if (
+        notificationPreferences.appsScript &&
+        latestHealthTelemetry &&
+        latestHealthTelemetry.lastError
+      ) items.push({
+        severity:"warning", icon:"⚙️",
+        title:"Apps Script recorded an error",
+        description:String(latestHealthTelemetry.lastError),
+        workspace:"systemHealth"
+      });
+
+      return items;
+    }
+
+    function renderNotificationCenter() {
+      if (!notificationCenterBadge || !notificationCenterSummary || !notificationCenterList) return;
+      removeExpiredNotificationSnoozes();
+
+      const allItems =
+        enrichDashboardNotifications(
+          buildDashboardNotifications()
+        );
+
+      syncNotificationHistory(allItems);
+
+      const snoozedItems =
+        allItems.filter(
+          item =>
+            isNotificationSnoozed(
+              item
+            )
+        );
+
+      const items =
+        allItems.filter(
+          item =>
+            !isNotificationSnoozed(
+              item
+            )
+        );
+
+      const unreadCount =
+        items.filter(
+          item =>
+            item.unread
+        ).length;
+
+      notificationCenterBadge.textContent =
+        String(
+          unreadCount
+        );
+
+      notificationCenterBadge.hidden =
+        unreadCount === 0;
+
+      if (notificationCenterLastReviewed) {
+        notificationCenterLastReviewed.textContent =
+          formatNotificationReviewTime();
+      }
+
+      if (markNotificationsReadButton) {
+        markNotificationsReadButton.disabled =
+          unreadCount === 0;
+      }
+
+      if (!items.length) {
+        notificationCenterSummary.textContent =
+          snoozedItems.length > 0
+            ? `No visible alerts · ${snoozedItems.length} snoozed.`
+            : "No active alerts. Core monitoring checks are clear.";
+        notificationCenterList.innerHTML =
+          '<div class="notification-center-empty">✅ Everything currently looks good.<br>New alerts will appear here automatically.</div>';
+        return;
+      }
+
+      const critical =
+        items.filter(
+          item =>
+            item.severity === "critical"
+        ).length;
+
+      notificationCenterSummary.textContent =
+        unreadCount > 0
+          ? `${unreadCount} new · ${items.length} visible${snoozedItems.length ? ` · ${snoozedItems.length} snoozed` : ""}${critical ? ` · ${critical} critical` : ""}.`
+          : `${items.length} visible, all reviewed${snoozedItems.length ? ` · ${snoozedItems.length} snoozed` : ""}${critical ? ` · ${critical} critical` : ""}.`;
+
+      notificationCenterList.innerHTML = items.map((item,index) => `
+        <button
+          class="notification-item notification-item-${escapeHtml(item.severity)} ${item.unread ? "notification-item-unread" : "notification-item-read"}"
+          type="button"
+          data-notification-index="${index}"
+        >
+          <span class="notification-item-icon">${escapeHtml(item.icon)}</span>
+
+          <span>
+            <span class="notification-item-title">${escapeHtml(item.title)}</span>
+            <span class="notification-item-description">${escapeHtml(item.description)}</span>
+            <span class="notification-item-status">
+              ${item.unread ? "New" : "Reviewed"}
+            </span>
+          </span>
+
+          <span class="notification-item-actions">
+            <span
+              class="notification-item-open"
+              data-notification-open="${index}"
+            >
+              Open →
+            </span>
+
+            <span
+              class="notification-item-snooze"
+              data-notification-snooze="${index}"
+            >
+              Snooze
+            </span>
+          </span>
+        </button>`).join("");
+
+      notificationCenterList
+        .querySelectorAll(
+          "[data-notification-index]"
+        )
+        .forEach(
+          button => {
+            button.addEventListener(
+              "click",
+              function(event) {
+                const index =
+                  Number(
+                    button.dataset.notificationIndex
+                  );
+
+                const item =
+                  items[
+                    index
+                  ];
+
+                if (!item) {
+                  return;
+                }
+
+                const snoozeTarget =
+                  event.target.closest(
+                    "[data-notification-snooze]"
+                  );
+
+                if (snoozeTarget) {
+                  openNotificationSnoozeMenu(
+                    event,
+                    item.fingerprint
+                  );
+
+                  return;
+                }
+
+                notificationMemory.fingerprints[
+                  item.fingerprint
+                ] =
+                  true;
+
+                notificationMemory.reviewedAt =
+                  new Date().toISOString();
+
+                addNotificationHistoryEvent(
+                  item,
+                  "reviewed",
+                  "Opened from the Notification Center."
+                );
+
+                saveNotificationMemory();
+
+                closeNotificationCenter();
+                openWorkspace(
+                  item.workspace
+                );
+              }
+            );
+          }
+        );
+    }
+
+    function openNotificationCenter() {
+      if (!notificationCenterOverlay) return;
+      closeWorkspaceNavigationMenus();
+      closeCommandPalette();
+      renderNotificationCenter();
+      setNotificationCenterView("active");
+      notificationCenterOverlay.hidden = false;
+      document.body.style.overflow = "hidden";
+      setTimeout(() => closeNotificationCenterButton && closeNotificationCenterButton.focus(),0);
+    }
+
+    function closeNotificationCenter() {
+      if (!notificationCenterOverlay) return;
+
+      if (notificationPreferencesPanel) {
+        notificationPreferencesPanel.hidden =
+          true;
+      }
+
+      closeNotificationSnoozeMenu();
+
+      notificationCenterOverlay.hidden = true;
+      document.body.style.overflow = "";
+      if (notificationCenterButton) notificationCenterButton.focus();
+    }
+
+    function setupNotificationCenter() {
+      loadNotificationPreferences();
+      loadNotificationMemory();
+      loadNotificationSnoozes();
+      loadNotificationHistory();
+      setupNotificationSnoozeMenu();
+
+      if (!notificationCenterButton || !notificationCenterOverlay) return;
+
+      notificationCenterButton.addEventListener("click",openNotificationCenter);
+      if (closeNotificationCenterButton) closeNotificationCenterButton.addEventListener("click",closeNotificationCenter);
+      if (refreshNotificationCenterButton) {
+        refreshNotificationCenterButton.addEventListener(
+          "click",
+          renderNotificationCenter
+        );
+      }
+
+      if (markNotificationsReadButton) {
+        markNotificationsReadButton.addEventListener(
+          "click",
+          markAllNotificationsAsRead
+        );
+      }
+
+      if (notificationPreferencesButton) {
+        notificationPreferencesButton.addEventListener(
+          "click",
+          openNotificationPreferences
+        );
+      }
+
+      if (closeNotificationPreferencesButton) {
+        closeNotificationPreferencesButton.addEventListener(
+          "click",
+          closeNotificationPreferences
+        );
+      }
+
+      if (saveNotificationPreferencesButton) {
+        saveNotificationPreferencesButton.addEventListener(
+          "click",
+          applyNotificationPreferences
+        );
+      }
+
+      if (resetNotificationPreferencesButton) {
+        resetNotificationPreferencesButton.addEventListener(
+          "click",
+          resetNotificationPreferences
+        );
+      }
+
+      if (notificationActiveTab) notificationActiveTab.addEventListener(
+        "click",()=>setNotificationCenterView("active"));
+      if (notificationHistoryTab) notificationHistoryTab.addEventListener(
+        "click",()=>setNotificationCenterView("history"));
+      if (clearNotificationHistoryButton) clearNotificationHistoryButton.addEventListener(
+        "click",clearNotificationHistory);
+      if (exportNotificationHistoryButton) exportNotificationHistoryButton.addEventListener(
+        "click",exportNotificationHistory);
+      if (notificationHistorySearch) notificationHistorySearch.addEventListener(
+        "input",()=>{
+          notificationHistoryQuery=notificationHistorySearch.value;
+          renderNotificationHistory();
+        });
+      if (notificationHistoryFilters) notificationHistoryFilters.addEventListener(
+        "click",event=>{
+          const button=event.target.closest("[data-history-filter]");
+          if(!button) return;
+          notificationHistoryFilter=button.dataset.historyFilter || "all";
+          notificationHistoryFilters.querySelectorAll("[data-history-filter]").forEach(item=>
+            item.classList.toggle("active",item===button));
+          renderNotificationHistory();
+        });
+
+      notificationCenterOverlay.addEventListener("click",event => {
+        if (event.target === notificationCenterOverlay) closeNotificationCenter();
+      });
+      document.addEventListener("keydown",event => {
+        if (event.key === "Escape" && !notificationCenterOverlay.hidden) {
+          event.preventDefault(); closeNotificationCenter();
+        }
+      });
+      renderNotificationCenter();
     }
 
 
@@ -17685,6 +19317,7 @@
       renderMissionQuickActionStatuses();
       renderMissionConfidenceBanner();
       renderMissionRecentActivity();
+      renderNotificationCenter();
     }
 
 
@@ -19385,6 +21018,9 @@
     setupSystemHealth();
     initializeDraftRecovery();
     initializeScheduleTemplates();
+    setupHomeLayoutPreferences();
+    setupNotificationCenter();
+    setupDashboardScrollNavigation();
     renderApplicationEnvironment();
     setupDiagnosticsExport();
     setupApplicationInformationDialogs();
