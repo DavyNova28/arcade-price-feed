@@ -2,6 +2,101 @@
 
 All notable changes to Mini Golf Signage Manager are recorded here.
 
+## [1.1.0-dev.83] — Home Personalization
+
+### Added
+
+- Customize Home control.
+- Visibility preferences for Confidence Banner, Platform Status, Quick Actions, and Recent Activity.
+- Comfortable and Compact spacing.
+- Persistent local preferences and Restore defaults.
+
+## [1.1.0-dev.82] — Notification History Insights
+
+### Added
+
+- Search and event-type filters for Notification History.
+- Last-24-hours summary metrics.
+- JSON history export.
+- Filtered-result counts and no-results feedback.
+
+## [1.1.0-dev.81] — Notification History
+
+### Added
+
+- Active and History tabs in the Notification Center.
+- Persistent local history for alerts appearing, being reviewed, snoozed, and resolved.
+- Clear-history control and retention of the latest 100 events.
+
+## [1.1.0-dev.80] — Notification Snoozing
+
+### Added
+
+- Snooze individual alerts for 15 minutes, 1 hour, 4 hours, or until tomorrow.
+- Persistent snooze state stored locally in the browser.
+- Snoozed-alert count in the Notification Center summary.
+- Automatic reappearance when a snooze expires.
+
+### Behavior
+
+- Snoozed alerts remain tracked but are temporarily hidden.
+- Changed alert fingerprints appear immediately as new alerts.
+- Closing the Notification Center also closes the snooze menu.
+
+## [1.1.0-dev.79] — Notification Preferences
+
+### Added
+
+- Persistent notification-category preferences.
+- Individual controls for Health, Players, Schedules, Images, Recovery, and Apps Script alerts.
+- Configurable Health Score alert threshold: 95, 90, 85, 80, or 75.
+- Reset-defaults control.
+- Preferences stored locally in the browser.
+
+### Behavior
+
+- Disabled categories no longer create alerts or contribute to the badge.
+- Changing preferences updates the Notification Center immediately.
+
+## [1.1.0-dev.78] — Notification Memory
+
+### Added
+
+- Persistent read/unread notification state using local browser storage.
+- Badge now counts only new or changed notifications.
+- Mark all as read control.
+- Last-reviewed timestamp.
+- New and Reviewed labels inside each notification.
+
+### Behavior
+
+- Active issues remain visible until resolved.
+- Reviewed alerts stop contributing to the badge.
+- If an alert changes, it becomes new again automatically.
+
+## [1.1.0-dev.77] — Notification Center
+
+### Added
+
+- Proactive Notification Center with an active-alert badge.
+- Alerts for Health Score, offline players, unavailable schedules, missing images, cached data, recovery readiness, and Apps Script errors.
+- Direct navigation from each alert to the relevant workspace.
+
+## [1.1.0-dev.76] — Navigation Polish
+
+### Added
+
+- Floating Back to Top button.
+- Smooth page return with reduced-motion support.
+- Automatic visibility after 420 px of scrolling.
+- Expanded Top label near the bottom of long pages.
+- Thin page-scroll progress indicator.
+- Mobile safe-area positioning.
+
+### Development cycle
+
+- Began Version 1.1 Development after the Version 1.0.0 Stable release.
+
 ## [1.0.0] — Version 1.0 Stable — Build 75
 
 ### Added
