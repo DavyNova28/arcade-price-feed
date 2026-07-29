@@ -7969,3 +7969,1013 @@ html[data-theme="light"] .back-to-top-button {
  * RELEASE FINALIZATION
  * =========================================================
  */
+
+
+/*
+ * =========================================================
+ * VERSION 1.2 DEVELOPMENT — BUILD 85
+ * MONITORING ACCURACY + TIMELINE POLISH
+ * =========================================================
+ */
+
+.player-version-row.not-scheduled {
+  border-color: rgba(135, 148, 171, 0.42);
+  opacity: 0.78;
+}
+
+.player-version-badge.not-scheduled {
+  color: var(--muted);
+  border-color: var(--border);
+  background: var(--surface);
+}
+
+.mission-health-warming {
+  border-color: rgba(242, 170, 63, 0.62);
+  background:
+    linear-gradient(
+      145deg,
+      rgba(242, 170, 63, 0.13),
+      transparent 58%
+    ),
+    var(--surface-light);
+}
+
+.timeline-segment.timeline-fallback {
+  opacity: 0.92;
+}
+
+.timeline-segment.timeline-override {
+  z-index: 4;
+  border-color: rgba(255, 225, 135, 0.95);
+  box-shadow:
+    0 0 0 2px rgba(242, 170, 63, 0.2),
+    0 8px 18px rgba(0, 0, 0, 0.32);
+}
+
+.timeline-segment.timeline-override::after {
+  content: "Override";
+  position: absolute;
+  top: 4px;
+  right: 5px;
+  z-index: 5;
+
+  padding: 2px 5px;
+
+  border-radius: 999px;
+
+  color: #fff4d2;
+  background: rgba(111, 70, 13, 0.88);
+
+  font-size: 7px;
+  font-weight: 950;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.daily-calendar-legend {
+  margin: 14px 0 10px;
+  padding-left: 1px;
+}
+
+.daily-calendar-block {
+  inset-inline: auto;
+  border-radius: 9px;
+  box-shadow:
+    0 4px 12px rgba(0, 0, 0, 0.16);
+}
+
+.daily-calendar-block.overlap::after {
+  content: "Override";
+  position: absolute;
+  top: 5px;
+  right: 6px;
+
+  padding: 2px 5px;
+
+  border-radius: 999px;
+
+  color: #fff4d2;
+  background: rgba(111, 70, 13, 0.9);
+
+  font-size: 7px;
+  font-weight: 950;
+  text-transform: uppercase;
+}
+
+html[data-theme="light"] .daily-calendar-wrap,
+html[data-theme="light"] .daily-calendar-grid {
+  background: #f7f9fc;
+}
+
+html[data-theme="light"] .daily-calendar-corner,
+html[data-theme="light"] .daily-calendar-screen-header {
+  color: #1d2939;
+  background: #edf2f8;
+  border-color: #c8d3e1;
+}
+
+html[data-theme="light"] .daily-calendar-time-label,
+html[data-theme="light"] .daily-calendar-cell {
+  color: #526173;
+  background: #f7f9fc;
+  border-color: #d3dce8;
+}
+
+html[data-theme="light"] .daily-calendar-block.persistent {
+  color: #ffffff;
+  border-color: #257a58;
+  background: #2f6f57;
+}
+
+html[data-theme="light"] .daily-calendar-block.temporary {
+  color: #2f2515;
+  border-color: #c18a28;
+  background: #f2c46d;
+}
+
+html[data-theme="light"] .daily-calendar-block.fallback {
+  color: #ffffff;
+  border-color: #315e8b;
+  background: #3f73a8;
+}
+
+html[data-theme="light"] .daily-calendar-block.overlap {
+  border-color: #c13f3f;
+  box-shadow:
+    0 0 0 2px rgba(193, 63, 63, 0.18),
+    0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+html[data-theme="light"] .daily-calendar-legend .persistent {
+  color: #ffffff;
+  background: #2f6f57;
+}
+
+html[data-theme="light"] .daily-calendar-legend .temporary {
+  color: #2f2515;
+  background: #f2c46d;
+}
+
+html[data-theme="light"] .daily-calendar-legend .fallback {
+  color: #ffffff;
+  background: #3f73a8;
+}
+
+html[data-theme="light"] .daily-calendar-legend .overlap {
+  color: #ffffff;
+  background: #a63a3a;
+}
+
+html[data-theme="light"] .daily-calendar-now-line {
+  border-color: #ffffff;
+  box-shadow:
+    0 0 0 1px rgba(30, 41, 59, 0.45);
+}
+
+html[data-theme="light"] .daily-calendar-now-label {
+  color: #ffffff;
+  background: #24364d;
+}
+
+
+/*
+ * =========================================================
+ * VERSION 1.2 DEVELOPMENT — BUILD 86
+ * STATE RELIABILITY
+ * =========================================================
+ */
+
+.player-heartbeat-card.stale {
+  border-color: rgba(242, 170, 63, 0.6);
+  background:
+    linear-gradient(
+      145deg,
+      rgba(242, 170, 63, 0.09),
+      transparent 58%
+    ),
+    var(--surface-light);
+}
+
+.player-heartbeat-status.stale {
+  color: #ffe2a6;
+  border-color: rgba(242, 170, 63, 0.5);
+  background: rgba(105, 67, 15, 0.48);
+}
+
+.player-heartbeat-confirmation {
+  color: var(--muted);
+  font-size: 8px;
+  line-height: 1.4;
+}
+
+.rollout-live-readiness {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+
+  margin-top: 10px;
+  padding: 9px 10px;
+
+  border: 1px solid var(--border);
+  border-radius: 9px;
+
+  color: var(--muted);
+  background: var(--surface);
+
+  font-size: 9px;
+  font-weight: 850;
+}
+
+.rollout-stage-card-deployed {
+  box-shadow:
+    inset 3px 0 0 rgba(54, 201, 135, 0.72);
+}
+
+.rollout-stage-card-testing {
+  box-shadow:
+    inset 3px 0 0 rgba(93, 170, 255, 0.68);
+}
+
+.rollout-stage-card-not-started {
+  box-shadow:
+    inset 3px 0 0 rgba(135, 148, 171, 0.46);
+}
+
+html[data-theme="light"] .player-heartbeat-card.stale {
+  border-color: #c58a25;
+  background: #fff7e8;
+}
+
+html[data-theme="light"] .player-heartbeat-status.stale {
+  color: #704a0d;
+  border-color: #d6a34c;
+  background: #ffe8b8;
+}
+
+html[data-theme="light"] .rollout-live-readiness {
+  background: #f6f8fb;
+}
+
+
+/*
+ * =========================================================
+ * VERSION 1.2 DEVELOPMENT — BUILD 87
+ * OPERATIONAL AWARENESS
+ * =========================================================
+ */
+
+/*
+ * The card itself no longer changes border color according to
+ * Live Readiness. The left deployment accent is the only card
+ * outline indicator, preventing overlapping green/brown states.
+ */
+.rollout-card,
+.rollout-card.ready,
+.rollout-card.review,
+.rollout-card.blocked,
+.rollout-card.sleeping,
+.rollout-card.not-scheduled {
+  border-color: var(--border);
+}
+
+.rollout-stage-card-deployed,
+.rollout-stage-card-testing,
+.rollout-stage-card-not-started {
+  border-left-width: 4px;
+  box-shadow: none;
+}
+
+.rollout-stage-card-deployed {
+  border-left-color: rgba(54, 201, 135, 0.86);
+}
+
+.rollout-stage-card-testing {
+  border-left-color: rgba(93, 170, 255, 0.82);
+}
+
+.rollout-stage-card-not-started {
+  border-left-color: rgba(135, 148, 171, 0.68);
+}
+
+.rollout-state.sleeping {
+  color: #dfe8f5;
+  background: rgba(75, 94, 122, 0.76);
+}
+
+.rollout-state.not-scheduled {
+  color: #d9e1ec;
+  background: rgba(88, 101, 121, 0.64);
+}
+
+html[data-theme="light"] .rollout-state.sleeping {
+  color: #30445f;
+  background: #e2eaf4;
+}
+
+html[data-theme="light"] .rollout-state.not-scheduled {
+  color: #465568;
+  background: #e8edf3;
+}
+
+.rollout-live-readiness .rollout-state {
+  flex: 0 0 auto;
+}
+
+.rollout-progress-summary {
+  line-height: 1.45;
+}
+
+/* =========================================================
+   BUILD 88 — OPERATIONS INTELLIGENCE
+   ========================================================= */
+.operations-intelligence {
+  margin: 0 0 22px;
+  padding: 22px;
+  border: 1px solid var(--border);
+  border-left: 5px solid var(--blue);
+  border-radius: var(--radius);
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  transition: border-color 180ms ease, transform 180ms ease;
+}
+
+.operations-intelligence-healthy { border-left-color: var(--regular); }
+.operations-intelligence-warning { border-left-color: var(--warning); }
+.operations-intelligence-critical { border-left-color: var(--error); }
+.operations-intelligence-sleeping { border-left-color: var(--blue); }
+.operations-intelligence-waiting { border-left-color: var(--muted); }
+
+.operations-intelligence-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 18px;
+}
+
+.operations-intelligence-title {
+  margin: 4px 0 0;
+  font-size: clamp(22px, 3vw, 30px);
+}
+
+.operations-intelligence-summary {
+  margin: 8px 0 0;
+  color: var(--muted);
+}
+
+.operations-intelligence-badge {
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.operations-intelligence-badge.healthy { background: var(--regular-dark); color: var(--regular); }
+.operations-intelligence-badge.warning { background: var(--holiday-dark); color: var(--warning); }
+.operations-intelligence-badge.critical { background: var(--error-dark); color: var(--error); }
+.operations-intelligence-badge.sleeping { background: rgba(95, 168, 255, 0.15); color: var(--blue); }
+.operations-intelligence-badge.waiting { color: var(--muted); }
+
+.operations-intelligence-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.operations-intelligence-metric {
+  min-width: 0;
+  padding: 15px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface-light);
+}
+
+.operations-intelligence-metric-label {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+
+.operations-intelligence-metric strong {
+  display: block;
+  font-size: 24px;
+  line-height: 1.1;
+}
+
+.operations-intelligence-metric small {
+  display: block;
+  margin-top: 7px;
+  color: var(--muted);
+  line-height: 1.35;
+}
+
+.operations-deployment-track {
+  height: 9px;
+  margin-top: 16px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--timeline-background);
+}
+
+.operations-deployment-bar {
+  height: 100%;
+  border-radius: inherit;
+  background: var(--regular);
+  transition: width 500ms ease;
+}
+
+.operations-version-drift {
+  margin-top: 13px;
+  padding: 11px 13px;
+  border: 1px solid rgba(242, 207, 83, .35);
+  border-radius: 10px;
+  background: var(--holiday-dark);
+  color: var(--warning);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+@media (max-width: 1050px) {
+  .operations-intelligence-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 620px) {
+  .operations-intelligence { padding: 17px; }
+  .operations-intelligence-header { flex-direction: column; }
+  .operations-intelligence-grid { grid-template-columns: 1fr; }
+}
+
+/* =========================================================
+   BUILD 89 — PHASE 1: PREMIUM DASHBOARD
+   ========================================================= */
+.mission-hero {
+  position: relative;
+  overflow: hidden;
+}
+
+.mission-hero::after {
+  content: "";
+  position: absolute;
+  inset: auto -120px -160px auto;
+  width: 360px;
+  height: 360px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(95, 168, 255, .10), transparent 68%);
+  pointer-events: none;
+}
+
+.mission-hero-copy,
+.mission-hero-health {
+  position: relative;
+  z-index: 1;
+}
+
+.mission-hero-greeting {
+  max-width: 760px;
+  margin: 16px 0 0;
+  color: var(--text);
+  font-size: clamp(15px, 2vw, 19px);
+  font-weight: 850;
+  line-height: 1.45;
+}
+
+.mission-hero-description {
+  margin-top: 8px;
+}
+
+.mission-hero-metrics {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(90px, 1fr));
+  gap: 10px;
+  max-width: 760px;
+  margin-top: 22px;
+}
+
+.mission-hero-metric {
+  min-width: 0;
+  padding: 13px 14px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, .025);
+}
+
+.mission-hero-metric-value,
+.mission-hero-metric-label {
+  display: block;
+}
+
+.mission-hero-metric-value {
+  font-size: clamp(20px, 3vw, 28px);
+  font-weight: 950;
+  line-height: 1;
+}
+
+.mission-hero-metric-label {
+  margin-top: 7px;
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 850;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+
+html[data-theme="light"] .mission-hero-metric {
+  background: rgba(255, 255, 255, .58);
+}
+
+.operations-intelligence-heading-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-top: 5px;
+}
+
+.operations-intelligence-icon {
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  width: 48px;
+  height: 48px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--surface-light);
+  font-size: 23px;
+}
+
+.operations-intelligence-title {
+  margin-top: 0;
+}
+
+.operations-intelligence-healthy .operations-intelligence-icon {
+  border-color: rgba(54, 201, 135, .45);
+  background: var(--regular-dark);
+}
+
+.operations-intelligence-warning .operations-intelligence-icon {
+  border-color: rgba(242, 170, 63, .45);
+  background: var(--holiday-dark);
+}
+
+.operations-intelligence-critical .operations-intelligence-icon {
+  border-color: rgba(255, 104, 104, .45);
+  background: var(--error-dark);
+}
+
+.operations-intelligence-sleeping .operations-intelligence-icon {
+  border-color: rgba(95, 168, 255, .40);
+  background: rgba(95, 168, 255, .12);
+}
+
+.operations-intelligence-metric strong,
+.mission-health-score > span,
+.mission-hero-metric-value {
+  font-variant-numeric: tabular-nums;
+}
+
+.counter-animating {
+  will-change: contents;
+}
+
+@media (max-width: 700px) {
+  .mission-hero-metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .operations-deployment-bar,
+  .operations-intelligence,
+  .mission-hero-health {
+    transition: none;
+  }
+}
+
+
+/* =========================================================
+   BUILD 89 — PHASE 2: INTERACTIVE PLAYER EXPERIENCE
+   ========================================================= */
+
+.operations-intelligence-metric-interactive {
+  cursor: pointer;
+  position: relative;
+  transition:
+    transform 160ms ease,
+    border-color 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.operations-intelligence-metric-interactive:hover,
+.operations-intelligence-metric-interactive:focus-visible {
+  transform: translateY(-2px);
+  border-color: rgba(67, 130, 255, 0.45);
+  box-shadow: 0 12px 26px rgba(28, 60, 120, 0.12);
+  outline: none;
+}
+
+.operations-intelligence-metric-hint {
+  display: block;
+  margin-top: 8px;
+  color: var(--accent, #326dff);
+  font-size: 0.76rem;
+  font-weight: 700;
+}
+
+.player-heartbeat-card {
+  position: relative;
+  cursor: pointer;
+  transition:
+    transform 160ms ease,
+    box-shadow 160ms ease,
+    border-color 160ms ease,
+    background-color 160ms ease;
+}
+
+.player-heartbeat-card:hover,
+.player-heartbeat-card:focus-visible {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 30px rgba(22, 43, 82, 0.13);
+  outline: none;
+}
+
+.player-heartbeat-card::after {
+  content: "View details →";
+  display: block;
+  margin-top: 12px;
+  color: var(--accent, #326dff);
+  font-size: 0.76rem;
+  font-weight: 700;
+  opacity: 0;
+  transform: translateY(3px);
+  transition: opacity 160ms ease, transform 160ms ease;
+}
+
+.player-heartbeat-card:hover::after,
+.player-heartbeat-card:focus-visible::after {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.player-heartbeat-card.heartbeat-just-arrived {
+  animation: playerHeartbeatArrival 900ms ease-out;
+}
+
+@keyframes playerHeartbeatArrival {
+  0% {
+    box-shadow: 0 0 0 0 rgba(45, 181, 103, 0.42);
+    border-color: rgba(45, 181, 103, 0.88);
+  }
+  55% {
+    box-shadow: 0 0 0 9px rgba(45, 181, 103, 0);
+  }
+  100% {
+    box-shadow: none;
+  }
+}
+
+.player-details-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 9998;
+  background: rgba(6, 13, 28, 0.42);
+  backdrop-filter: blur(2px);
+  opacity: 0;
+  transition: opacity 220ms ease;
+}
+
+.player-details-backdrop.is-visible {
+  opacity: 1;
+}
+
+.player-details-drawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  z-index: 9999;
+  width: min(440px, 94vw);
+  height: 100dvh;
+  padding: 24px;
+  overflow-y: auto;
+  background: var(--surface);
+  color: var(--text, #172033);
+  border-left: 1px solid var(--border, rgba(20, 40, 80, 0.12));
+  box-shadow: -24px 0 52px rgba(5, 18, 44, 0.2);
+  transform: translateX(102%);
+  visibility: hidden;
+  transition: transform 260ms cubic-bezier(.22,.8,.28,1), visibility 260ms;
+}
+
+.player-details-drawer.is-open {
+  transform: translateX(0);
+  visibility: visible;
+}
+
+.player-details-drawer-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid var(--border, rgba(20, 40, 80, 0.12));
+}
+
+
+.player-details-heading {
+  min-width: 0;
+}
+
+.player-details-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin: 0 0 10px;
+  padding: 7px 10px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface-light);
+  color: var(--text);
+  font-size: .78rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.player-details-back:hover {
+  background: var(--surface-hover);
+}
+
+.player-details-back[hidden] {
+  display: none;
+}
+
+html:not([data-theme="light"]) .player-details-drawer {
+  background: #151a22;
+  color: #f4f7fb;
+  border-left-color: #2b3545;
+}
+
+html:not([data-theme="light"]) .player-details-status,
+html:not([data-theme="light"]) .player-details-field,
+html:not([data-theme="light"]) .player-details-event,
+html:not([data-theme="light"]) .player-version-drawer-row {
+  background: #1c2330;
+  border-color: #364154;
+  color: #f4f7fb;
+}
+
+html:not([data-theme="light"]) .player-version-drawer-row:hover {
+  background: #232c3a;
+}
+
+html:not([data-theme="light"]) .player-details-field-label,
+html:not([data-theme="light"]) .player-details-event small,
+html:not([data-theme="light"]) .player-version-drawer-row small,
+html:not([data-theme="light"]) .player-details-empty {
+  color: #aeb8c8;
+}
+
+.player-details-drawer-header h2 {
+  margin: 5px 0 0;
+  font-size: clamp(1.5rem, 3vw, 2rem);
+}
+
+.player-details-close {
+  width: 42px;
+  height: 42px;
+  border: 1px solid var(--border, rgba(20, 40, 80, 0.14));
+  border-radius: 12px;
+  background: var(--surface-light);
+  color: inherit;
+  font-size: 1.7rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.player-details-content {
+  display: grid;
+  gap: 16px;
+  padding: 20px 0 32px;
+}
+
+.player-details-status {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 16px;
+  border: 1px solid var(--border, rgba(20, 40, 80, 0.12));
+  border-radius: 16px;
+  background: var(--surface-light);
+}
+
+.player-details-status-main {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.player-details-status-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 999px;
+  background: #8c96a8;
+  box-shadow: 0 0 0 5px rgba(140, 150, 168, 0.13);
+}
+
+.player-details-status-dot.online { background: #26a65b; box-shadow: 0 0 0 5px rgba(38,166,91,.14); }
+.player-details-status-dot.stale { background: #e59b20; box-shadow: 0 0 0 5px rgba(229,155,32,.15); }
+.player-details-status-dot.offline { background: #d34b4b; box-shadow: 0 0 0 5px rgba(211,75,75,.14); }
+.player-details-status-dot.sleeping { background: #7583a6; box-shadow: 0 0 0 5px rgba(117,131,166,.14); }
+
+.player-details-badge {
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(50,109,255,.1);
+  color: var(--accent, #326dff);
+  font-size: .76rem;
+  font-weight: 800;
+  text-transform: capitalize;
+}
+
+.player-details-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.player-details-field {
+  min-width: 0;
+  padding: 14px;
+  border: 1px solid var(--border, rgba(20, 40, 80, 0.12));
+  border-radius: 14px;
+}
+
+.player-details-field.full {
+  grid-column: 1 / -1;
+}
+
+.player-details-field-label {
+  display: block;
+  margin-bottom: 7px;
+  color: var(--muted, #69758a);
+  font-size: .72rem;
+  font-weight: 750;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+
+.player-details-field-value {
+  display: block;
+  overflow-wrap: anywhere;
+  font-weight: 760;
+}
+
+.player-details-section-title {
+  margin: 6px 0 0;
+  font-size: .88rem;
+}
+
+.player-details-event-list,
+.player-version-drawer-list {
+  display: grid;
+  gap: 9px;
+}
+
+.player-details-event,
+.player-version-drawer-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 13px;
+  border: 1px solid var(--border, rgba(20, 40, 80, 0.1));
+  border-radius: 12px;
+}
+
+.player-version-drawer-row {
+  width: 100%;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.player-details-event small,
+.player-version-drawer-row small {
+  color: var(--muted, #69758a);
+}
+
+.player-version-drawer-row strong {
+  overflow-wrap: anywhere;
+  text-align: right;
+}
+
+.player-details-empty {
+  padding: 28px 16px;
+  color: var(--muted, #69758a);
+  text-align: center;
+}
+
+body.player-details-open {
+  overflow: hidden;
+}
+
+@media (max-width: 520px) {
+  .player-details-drawer {
+    width: 100vw;
+    padding: 19px;
+  }
+
+  .player-details-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .player-details-field.full {
+    grid-column: auto;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .player-details-drawer,
+  .player-details-backdrop,
+  .player-heartbeat-card,
+  .operations-intelligence-metric-interactive {
+    transition: none;
+  }
+
+  .player-heartbeat-card.heartbeat-just-arrived {
+    animation: none;
+  }
+}
+
+
+/* =========================================================
+ * BUILD 89 — PHASE 3: LIVE OPERATIONS POLISH
+ * ========================================================= */
+
+.mission-recent-item {
+  position: relative;
+  overflow: hidden;
+  transition: transform 160ms ease, border-color 160ms ease, background 160ms ease;
+}
+
+.mission-recent-item::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 3px;
+  background: var(--border);
+}
+
+.mission-recent-item:hover {
+  transform: translateY(-1px);
+}
+
+.mission-recent-category {
+  margin-bottom: 3px;
+  color: var(--muted);
+  font-size: 8px;
+  font-weight: 900;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+}
+
+.mission-recent-heartbeat::before { background: #38bdf8; }
+.mission-recent-health::before,
+.mission-recent-recovery::before { background: #34d399; }
+.mission-recent-warning::before { background: #f59e0b; }
+.mission-recent-deployment::before { background: #a78bfa; }
+.mission-recent-schedule::before { background: #60a5fa; }
+.mission-recent-content::before { background: #f472b6; }
+
+.mission-recent-heartbeat .mission-recent-icon { color: #38bdf8; }
+.mission-recent-health .mission-recent-icon,
+.mission-recent-recovery .mission-recent-icon { color: #34d399; }
+.mission-recent-warning .mission-recent-icon { color: #f59e0b; }
+.mission-recent-deployment .mission-recent-icon { color: #a78bfa; }
+.mission-recent-schedule .mission-recent-icon { color: #60a5fa; }
+.mission-recent-content .mission-recent-icon { color: #f472b6; }
+
+.player-heartbeat-card.heartbeat-just-arrived {
+  animation: build89Phase3HeartbeatGlow 1.1s ease-out;
+}
+
+@keyframes build89Phase3HeartbeatGlow {
+  0% { box-shadow: 0 0 0 0 rgba(56, 189, 248, 0.5); }
+  45% { box-shadow: 0 0 0 7px rgba(56, 189, 248, 0.12); }
+  100% { box-shadow: 0 0 0 0 rgba(56, 189, 248, 0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mission-recent-item,
+  .player-heartbeat-card.heartbeat-just-arrived {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+\n\n/* =========================================================\n * BUILD 89 — PHASE 4: RELEASE POLISH\n * ========================================================= */\n\n.player-details-drawer {\n  padding: 0;\n  overscroll-behavior: contain;\n}\n\n.player-details-drawer-header {\n  position: sticky;\n  top: 0;\n  z-index: 3;\n  padding: 22px 24px 18px;\n  background: color-mix(in srgb, var(--surface) 94%, transparent);\n  backdrop-filter: blur(14px);\n}\n\n.player-details-content {\n  padding: 20px 24px 36px;\n  transition: opacity 150ms ease, transform 180ms ease;\n}\n\n.player-details-content.is-content-changing {\n  opacity: 0;\n  transform: translateX(8px);\n}\n\n.player-details-content.is-content-ready {\n  opacity: 1;\n  transform: translateX(0);\n}\n\n.player-details-close:hover,\n.player-details-back:hover,\n.player-version-drawer-row:hover {\n  border-color: color-mix(in srgb, var(--accent, #326dff) 38%, var(--border));\n}\n\n.player-details-close:focus-visible,\n.player-details-back:focus-visible,\n.player-version-drawer-row:focus-visible,\n.player-heartbeat-card:focus-visible,\n.operations-intelligence-metric-interactive:focus-visible {\n  outline: 3px solid color-mix(in srgb, var(--accent, #326dff) 38%, transparent);\n  outline-offset: 3px;\n}\n\n.player-version-drawer-row {\n  align-items: center;\n  min-height: 58px;\n  transition: border-color 150ms ease, background 150ms ease, transform 150ms ease;\n}\n\n.player-version-drawer-row:hover {\n  transform: translateX(-2px);\n}\n\n.player-details-field small {\n  display: block;\n  margin-top: 6px;\n  color: var(--muted, #69758a);\n  line-height: 1.4;\n}\n\n.mission-recent-item {\n  transform: none;\n  transition: border-color 160ms ease, background 160ms ease, box-shadow 160ms ease;\n}\n\n.mission-recent-item:hover {\n  transform: none;\n  box-shadow: 0 8px 22px rgba(8, 20, 44, 0.07);\n}\n\n.mission-recent-time {\n  white-space: nowrap;\n  font-variant-numeric: tabular-nums;\n}\n\nhtml:not([data-theme="light"]) .player-details-drawer-header {\n  background: rgba(21, 26, 34, 0.94);\n  border-bottom-color: #2b3545;\n}\n\nhtml:not([data-theme="light"]) .player-details-back {\n  background: #1c2330;\n  border-color: #364154;\n  color: #f4f7fb;\n}\n\nhtml:not([data-theme="light"]) .player-details-close {\n  background: #1c2330;\n  border-color: #364154;\n}\n\n@media (max-width: 520px) {\n  .player-details-drawer { padding: 0; }\n  .player-details-drawer-header { padding: 18px 18px 15px; }\n  .player-details-content { padding: 18px 18px 30px; }\n  .player-details-status { align-items: flex-start; }\n}\n\n@media (prefers-reduced-motion: reduce) {\n  .player-details-content,\n  .player-version-drawer-row {\n    transition: none !important;\n    transform: none !important;\n  }\n}\n
