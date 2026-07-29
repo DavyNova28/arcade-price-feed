@@ -21,12 +21,12 @@
     href="favicon.png"
   >
 
-    <link rel="stylesheet" href="css/dashboard.css?build=89.4">
+    <link rel="stylesheet" href="css/dashboard.css?build=84">
 
   <meta name="application-name" content="Mini Golf Signage Manager">
-  <meta name="dashboard-version" content="1.2-development">
-  <meta name="dashboard-channel" content="development">
-  <meta name="dashboard-build" content="89.4">
+  <meta name="dashboard-version" content="1.0.0">
+  <meta name="dashboard-channel" content="stable-candidate">
+  <meta name="dashboard-build" content="84">
 </head>
 
 <body>
@@ -311,7 +311,7 @@
       <section class="mission-hero">
         <div class="mission-hero-copy">
           <div class="mission-version-badge">
-            Version 1.2 Development
+            Version 1.1 Development
           </div>
 
           <h2
@@ -321,36 +321,13 @@
             Mini Golf Signage Manager
           </h2>
 
-          <p id="missionHeroGreeting" class="mission-hero-greeting">
-            Preparing your operations summary…
-          </p>
-
           <p class="mission-hero-description">
             Your central workspace for schedules, content, player monitoring,
             diagnostics, and controlled deployments.
           </p>
 
-          <div class="mission-hero-metrics" aria-label="At-a-glance system summary">
-            <div class="mission-hero-metric">
-              <span class="mission-hero-metric-value" id="missionHeroPlayers">—</span>
-              <span class="mission-hero-metric-label">Players</span>
-            </div>
-            <div class="mission-hero-metric">
-              <span class="mission-hero-metric-value" id="missionHeroSchedules">—</span>
-              <span class="mission-hero-metric-label">Schedules</span>
-            </div>
-            <div class="mission-hero-metric">
-              <span class="mission-hero-metric-value" id="missionHeroImages">—</span>
-              <span class="mission-hero-metric-label">Images</span>
-            </div>
-            <div class="mission-hero-metric">
-              <span class="mission-hero-metric-value" id="missionHeroDeployment">—</span>
-              <span class="mission-hero-metric-label">Deployed</span>
-            </div>
-          </div>
-
           <div class="mission-build-line">
-            <span>Build 89</span>
+            <span>Build 84</span>
             <span aria-hidden="true">•</span>
             <span id="missionEnvironmentLabel">Detecting Environment</span>
           </div>
@@ -376,58 +353,6 @@
             Waiting for telemetry
           </div>
         </div>
-      </section>
-
-      <section id="operationsIntelligence" class="operations-intelligence operations-intelligence-waiting" aria-labelledby="operationsIntelligenceTitle">
-        <div class="operations-intelligence-header">
-          <div>
-            <div class="eyebrow">Operations intelligence</div>
-            <div class="operations-intelligence-heading-row">
-              <span id="operationsIntelligenceIcon" class="operations-intelligence-icon" aria-hidden="true">⏳</span>
-              <div>
-                <h3 id="operationsIntelligenceTitle" class="operations-intelligence-title">Preparing store status</h3>
-                <p id="operationsIntelligenceSummary" class="operations-intelligence-summary">Waiting for player heartbeat data.</p>
-              </div>
-            </div>
-          </div>
-          <div id="operationsIntelligenceBadge" class="operations-intelligence-badge waiting">Checking</div>
-        </div>
-
-        <div class="operations-intelligence-grid">
-          <article class="operations-intelligence-metric">
-            <span class="operations-intelligence-metric-label">Scheduled players</span>
-            <strong id="operationsScheduledPlayers">—</strong>
-            <small id="operationsScheduledPlayersDetail">Evaluating today’s schedule</small>
-          </article>
-          <article
-            id="operationsVersionComplianceCard"
-            class="operations-intelligence-metric operations-intelligence-metric-interactive"
-            role="button"
-            tabindex="0"
-            aria-label="Open player version compliance details"
-          >
-            <span class="operations-intelligence-metric-label">Version compliance</span>
-            <strong id="operationsVersionCompliance">—</strong>
-            <small id="operationsVersionComplianceDetail">Waiting for versions</small>
-            <span class="operations-intelligence-metric-hint">View players →</span>
-          </article>
-          <article class="operations-intelligence-metric">
-            <span class="operations-intelligence-metric-label">Latest heartbeat</span>
-            <strong id="operationsLatestHeartbeat">—</strong>
-            <small id="operationsLatestHeartbeatDetail">No check-in measured yet</small>
-          </article>
-          <article class="operations-intelligence-metric">
-            <span class="operations-intelligence-metric-label">Deployment progress</span>
-            <strong id="operationsDeploymentProgress">—</strong>
-            <small id="operationsDeploymentProgressDetail">Reading rollout stages</small>
-          </article>
-        </div>
-
-        <div class="operations-deployment-track" aria-label="Deployment progress">
-          <div id="operationsDeploymentBar" class="operations-deployment-bar" style="width:0%"></div>
-        </div>
-
-        <div id="operationsVersionDrift" class="operations-version-drift" hidden></div>
       </section>
 
       <!--
@@ -4108,7 +4033,7 @@
           </div>
 
           <div class="about-product-version">
-            Version 1.2 Development · Build 84
+            Version 1.1.0 Stable · Build 84
           </div>
 
           <div
@@ -4189,7 +4114,7 @@
       <div class="release-notes-current">
         <div>
           <div class="release-notes-version">
-            Version 1.2 Development
+            Version 1.1.0 Stable
           </div>
 
           <div class="release-notes-build">
@@ -4204,37 +4129,8 @@
 
       <div class="release-notes-list">
         <article class="release-note-entry">
-          <div class="release-note-build">Build 87</div>
-          <h3>Operational Awareness</h3>
-          <p>
-            Made rollout readiness aware of Quiet Hours, removed competing
-            card outlines, and clarified Sleeping and not-expected states.
-          </p>
-        </article>
-
-        <article class="release-note-entry">
-          <div class="release-note-build">Build 86</div>
-          <h3>State Reliability</h3>
-          <p>
-            Separated manual rollout stage from live readiness, added
-            heartbeat grace states, and preserved last-known player image
-            and version information.
-          </p>
-        </article>
-
-        <article class="release-note-entry">
-          <div class="release-note-build">Build 85</div>
-          <h3>Monitoring Accuracy</h3>
-          <p>
-            Added persistent player-version memory, day-aware compliance,
-            startup warm-up messaging, corrected timeline fallback rendering,
-            and Light Mode calendar polish.
-          </p>
-        </article>
-
-        <article class="release-note-entry">
           <div class="release-note-build">Build 84</div>
-          <h3>Version 1.2 Development</h3>
+          <h3>Version 1.1.0 Stable</h3>
           <p>
             Finalized stable release identity, synchronized all build labels,
             completed release documentation, and prepared the permanent
@@ -4400,46 +4296,7 @@
     <span class="back-to-top-label">Top</span>
   </button>
 
-    <script src="js/dashboard.js?build=89.4" defer></script>
-
-
-  <div id="playerDetailsBackdrop" class="player-details-backdrop" hidden></div>
-
-  <aside
-    id="playerDetailsDrawer"
-    class="player-details-drawer"
-    aria-hidden="true"
-    aria-labelledby="playerDetailsTitle"
-  >
-    <div class="player-details-drawer-header">
-      <div>
-        <button
-          id="backToPlayerListButton"
-          class="player-details-back"
-          type="button"
-          hidden
-        >
-          ← Back to players
-        </button>
-        <div id="playerDetailsEyebrow" class="eyebrow">Player details</div>
-        <h2 id="playerDetailsTitle">Player</h2>
-      </div>
-      <button
-        id="closePlayerDetailsButton"
-        class="player-details-close"
-        type="button"
-        aria-label="Close player details"
-      >
-        ×
-      </button>
-    </div>
-
-    <div id="playerDetailsContent" class="player-details-content">
-      <div class="player-details-empty">
-        Select a player to view its current image, heartbeat, version, and operational status.
-      </div>
-    </div>
-  </aside>
+    <script src="js/dashboard.js?build=84" defer></script>
 
 </body>
 </html>
