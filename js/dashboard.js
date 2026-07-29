@@ -1860,6 +1860,15 @@
         "rolloutAssistantMessage"
       );
 
+    /*
+     * Keep automatic telemetry refreshes from replacing Rollout Assistant
+     * buttons between pointer-down and click. A pending refresh is applied
+     * immediately after the interaction finishes.
+     */
+    let rolloutInteractionActive = false;
+    let rolloutRenderPending = false;
+    let rolloutInteractionReleaseTimer = null;
+
     const refreshPlayerVersionsButton =
       document.getElementById(
         "refreshPlayerVersionsButton"
@@ -21103,7 +21112,15 @@
         stage;
 
       persistRolloutProgress();
-      renderRolloutAssistant();
+
+      /*
+       * Let the current pointer/click event finish before rebuilding the cards.
+       * Replacing the clicked button synchronously can make the control feel as
+       * though the click did not register, especially in Chromium browsers.
+       */
+      window.requestAnimationFrame(function() {
+        renderRolloutAssistant(true);
+      });
 
       showRolloutMessage(
         `${screenName} deployment stage is now ${stage === "not-started" ? "Not started" : stage}. Live readiness is tracked separately.`,
@@ -21121,7 +21138,7 @@
 
       try {
         await loadPlayerVersions();
-        renderRolloutAssistant();
+        renderRolloutAssistant(true);
 
       } finally {
         refreshRolloutAssistantButton.disabled =
@@ -21385,13 +21402,20 @@
     }
 
 
-    function renderRolloutAssistant() {
+    function renderRolloutAssistant(forceRender = false) {
       if (
         !rolloutAssistantList ||
         !rolloutAssistantSummary
       ) {
         return;
       }
+
+      if (rolloutInteractionActive && !forceRender) {
+        rolloutRenderPending = true;
+        return;
+      }
+
+      rolloutRenderPending = false;
 
       const states =
         SCREEN_NAMES.map(
@@ -21608,81 +21632,117 @@
           )
           .join("");
 
-      rolloutAssistantList
-        .querySelectorAll(
-          "[data-rollout-copy]"
-        )
-        .forEach(
-          button => {
-            button.addEventListener(
-              "click",
-              async function() {
-                const screenName =
-                  button.getAttribute(
-                    "data-rollout-copy"
-                  );
+    }
 
-                await copyRolloutUrl(
-                  screenName
-                );
-              }
-            );
-          }
+
+    /*
+     * Use one delegated listener on the stable Rollout Assistant container.
+     * The cards may be rebuilt with innerHTML, but this listener remains intact.
+     */
+    function handleRolloutAssistantClick(event) {
+      const button = event.target.closest(
+        "[data-rollout-copy], [data-rollout-open], [data-rollout-stage]"
+      );
+
+      if (
+        !button ||
+        !rolloutAssistantList ||
+        !rolloutAssistantList.contains(button)
+      ) {
+        return;
+      }
+
+      event.preventDefault();
+      event.stopPropagation();
+
+      const copyScreen =
+        button.getAttribute("data-rollout-copy");
+
+      if (copyScreen) {
+        copyRolloutUrl(copyScreen);
+        return;
+      }
+
+      const openScreen =
+        button.getAttribute("data-rollout-open");
+
+      if (openScreen) {
+        window.open(
+          createRolloutPlayerUrl(openScreen),
+          "_blank",
+          "noopener"
         );
+        return;
+      }
 
-      rolloutAssistantList
-        .querySelectorAll(
-          "[data-rollout-open]"
-        )
-        .forEach(
-          button => {
-            button.addEventListener(
-              "click",
-              function() {
-                const screenName =
-                  button.getAttribute(
-                    "data-rollout-open"
-                  );
+      const stage =
+        button.getAttribute("data-rollout-stage");
 
-                window.open(
-                  createRolloutPlayerUrl(
-                    screenName
-                  ),
-                  "_blank",
-                  "noopener"
-                );
-              }
-            );
+      const stageScreen =
+        button.getAttribute("data-rollout-screen");
+
+      if (stage && stageScreen) {
+        setRolloutStage(stageScreen, stage);
+      }
+    }
+
+
+    function beginRolloutInteraction() {
+      rolloutInteractionActive = true;
+
+      if (rolloutInteractionReleaseTimer) {
+        clearTimeout(rolloutInteractionReleaseTimer);
+        rolloutInteractionReleaseTimer = null;
+      }
+    }
+
+
+    function endRolloutInteraction() {
+      if (rolloutInteractionReleaseTimer) {
+        clearTimeout(rolloutInteractionReleaseTimer);
+      }
+
+      /*
+       * Pointer-up happens before click. Keep the DOM stable briefly so the
+       * original button receives its click before any queued redraw occurs.
+       */
+      rolloutInteractionReleaseTimer = setTimeout(
+        function() {
+          rolloutInteractionActive = false;
+          rolloutInteractionReleaseTimer = null;
+
+          if (rolloutRenderPending) {
+            renderRolloutAssistant(true);
           }
-        );
+        },
+        180
+      );
+    }
 
-      rolloutAssistantList
-        .querySelectorAll(
-          "[data-rollout-stage]"
-        )
-        .forEach(
-          button => {
-            button.addEventListener(
-              "click",
-              function() {
-                const screenName =
-                  button.getAttribute(
-                    "data-rollout-screen"
-                  );
 
-                const stage =
-                  button.getAttribute(
-                    "data-rollout-stage"
-                  );
+    if (rolloutAssistantList) {
+      rolloutAssistantList.addEventListener(
+        "click",
+        handleRolloutAssistantClick
+      );
 
-                setRolloutStage(
-                  screenName,
-                  stage
-                );
-              }
-            );
-          }
-        );
+      rolloutAssistantList.addEventListener(
+        "pointerdown",
+        beginRolloutInteraction,
+        true
+      );
+
+      window.addEventListener(
+        "pointerup",
+        endRolloutInteraction,
+        true
+      );
+
+      window.addEventListener(
+        "pointercancel",
+        endRolloutInteraction,
+        true
+      );
     }
 
 
