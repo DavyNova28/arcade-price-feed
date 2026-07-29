@@ -1,10 +1,8 @@
 {
-  "name": "Mini Golf Signage Manager",
-  "version": "1.1.0",
-  "label": "Version 1.1.0 Stable",
-  "build": 84,
-  "channel": "stable",
-  "expectedPlayerVersion": "v3.1-heartbeat-1",
-  "milestone": "Version 1.1.0 Stable Release",
-  "releaseTag": "v1.1.0"
+  "version": "1.2 Development",
+  "build": "89.4",
+  "phase": "4",
+  "label": "Build 89 Phase 4 \u2014 Release Polish",
+  "releasedAt": "2026-07-29",
+  "name": "Build 89 Phase 4"
 }
