@@ -45,604 +45,6 @@
     const EXPECTED_PLAYER_VERSION =
       "v3.1-heartbeat-1";
 
-    const PLAYER_VERSION_MEMORY_KEY =
-      "miniGolfPlayerVersionMemoryV2";
-
-    const PLAYER_VERSION_MEMORY_MAX_AGE_MS =
-      24 * 60 * 60 * 1000;
-
-    const PLAYER_HEARTBEAT_MEMORY_KEY =
-      "miniGolfPlayerHeartbeatMemoryV1";
-
-    const PLAYER_HEARTBEAT_MEMORY_MAX_AGE_MS =
-      24 * 60 * 60 * 1000;
-
-    const PLAYER_HEARTBEAT_STALE_AFTER_SECONDS =
-      2 * 60;
-
-    const PLAYER_HEARTBEAT_OFFLINE_AFTER_SECONDS =
-      10 * 60;
-
-    let playerVersionMemory =
-      {};
-
-    let playerHeartbeatMemory =
-      {};
-
-    function isScreenExpectedToday(
-      screenName,
-      date = new Date()
-    ) {
-      const day =
-        date.getDay();
-
-      if (screenName === "ArcadeSunday") {
-        return day === 0;
-      }
-
-      if (screenName === "ArcadeWeek") {
-        return day >= 1 && day <= 4;
-      }
-
-      if (screenName === "Arcade") {
-        return day === 5 || day === 6;
-      }
-
-      return true;
-    }
-
-    function loadPlayerHeartbeatMemory() {
-      try {
-        const raw =
-          localStorage.getItem(
-            PLAYER_HEARTBEAT_MEMORY_KEY
-          );
-
-        if (!raw) {
-          return;
-        }
-
-        const parsed =
-          JSON.parse(
-            raw
-          );
-
-        if (
-          parsed &&
-          typeof parsed === "object"
-        ) {
-          playerHeartbeatMemory =
-            parsed;
-        }
-      } catch (error) {
-        console.warn(
-          "Player heartbeat memory could not be loaded.",
-          error
-        );
-      }
-    }
-
-
-    function savePlayerHeartbeatMemory() {
-      try {
-        localStorage.setItem(
-          PLAYER_HEARTBEAT_MEMORY_KEY,
-          JSON.stringify(
-            playerHeartbeatMemory
-          )
-        );
-      } catch (error) {
-        console.warn(
-          "Player heartbeat memory could not be saved.",
-          error
-        );
-      }
-    }
-
-
-    function rememberPlayerHeartbeatFields(
-      player
-    ) {
-      if (
-        !player ||
-        !player.screen
-      ) {
-        return;
-      }
-
-      const existing =
-        playerHeartbeatMemory[
-          player.screen
-        ] || {};
-
-      const lastSeenDate =
-        player.lastSeenAt
-          ? new Date(
-              player.lastSeenAt
-            )
-          : new Date();
-
-      const confirmedAt =
-        Number.isFinite(
-          lastSeenDate.getTime()
-        )
-          ? lastSeenDate.toISOString()
-          : new Date().toISOString();
-
-      const next =
-        {
-          ...existing,
-
-          lastSeenAt:
-            player.lastSeenAt ||
-            existing.lastSeenAt ||
-            "",
-
-          confirmedAt:
-            confirmedAt
-        };
-
-      const cleanImage =
-        String(
-          player.currentImage || ""
-        ).trim();
-
-      const cleanVersion =
-        String(
-          player.playerVersion || ""
-        ).trim();
-
-      if (cleanImage) {
-        next.currentImage =
-          cleanImage;
-
-        next.imageConfirmedAt =
-          confirmedAt;
-      }
-
-      if (cleanVersion) {
-        next.playerVersion =
-          cleanVersion;
-
-        next.versionConfirmedAt =
-          confirmedAt;
-      }
-
-      playerHeartbeatMemory[
-        player.screen
-      ] =
-        next;
-
-      savePlayerHeartbeatMemory();
-    }
-
-
-    function getRememberedHeartbeatFields(
-      screenName
-    ) {
-      const remembered =
-        playerHeartbeatMemory[
-          screenName
-        ];
-
-      if (
-        !remembered ||
-        !remembered.confirmedAt
-      ) {
-        return null;
-      }
-
-      const confirmedAt =
-        new Date(
-          remembered.confirmedAt
-        );
-
-      if (
-        !Number.isFinite(
-          confirmedAt.getTime()
-        ) ||
-        Date.now() -
-          confirmedAt.getTime() >
-          PLAYER_HEARTBEAT_MEMORY_MAX_AGE_MS
-      ) {
-        delete playerHeartbeatMemory[
-          screenName
-        ];
-
-        savePlayerHeartbeatMemory();
-        return null;
-      }
-
-      return remembered;
-    }
-
-
-    function calculateHeartbeatAgeSeconds(
-      player,
-      remembered
-    ) {
-      const suppliedAge =
-        Number(
-          player &&
-          player.ageSeconds
-        );
-
-      if (
-        Number.isFinite(
-          suppliedAge
-        ) &&
-        suppliedAge >= 0
-      ) {
-        return suppliedAge;
-      }
-
-      const lastSeenValue =
-        (
-          player &&
-          player.lastSeenAt
-        ) ||
-        (
-          remembered &&
-          remembered.lastSeenAt
-        );
-
-      if (!lastSeenValue) {
-        return null;
-      }
-
-      const lastSeen =
-        new Date(
-          lastSeenValue
-        );
-
-      if (
-        !Number.isFinite(
-          lastSeen.getTime()
-        )
-      ) {
-        return null;
-      }
-
-      return Math.max(
-        0,
-        Math.floor(
-          (
-            Date.now() -
-            lastSeen.getTime()
-          ) /
-          1000
-        )
-      );
-    }
-
-
-    function classifyPlayerHeartbeatStatus(
-      ageSeconds,
-      quietHours
-    ) {
-      if (
-        quietHours &&
-        (
-          ageSeconds === null ||
-          ageSeconds >
-            PLAYER_HEARTBEAT_STALE_AFTER_SECONDS
-        )
-      ) {
-        return "sleeping";
-      }
-
-      if (
-        ageSeconds === null
-      ) {
-        return "offline";
-      }
-
-      if (
-        ageSeconds <=
-        PLAYER_HEARTBEAT_STALE_AFTER_SECONDS
-      ) {
-        return "online";
-      }
-
-      if (
-        ageSeconds <=
-        PLAYER_HEARTBEAT_OFFLINE_AFTER_SECONDS
-      ) {
-        return "stale";
-      }
-
-      return "offline";
-    }
-
-
-    function normalizeHeartbeatPlayers(
-      players
-    ) {
-      const safePlayers =
-        Array.isArray(players)
-          ? players
-          : [];
-
-      const playerMap =
-        new Map(
-          safePlayers.map(
-            player => [
-              player.screen,
-              player
-            ]
-          )
-        );
-
-      const quietHours =
-        isPlayerQuietHours();
-
-      return SCREEN_NAMES.map(
-        screenName => {
-          const livePlayer =
-            playerMap.get(
-              screenName
-            ) || null;
-
-          if (livePlayer) {
-            rememberPlayerHeartbeatFields(
-              livePlayer
-            );
-          }
-
-          const remembered =
-            getRememberedHeartbeatFields(
-              screenName
-            );
-
-          const ageSeconds =
-            calculateHeartbeatAgeSeconds(
-              livePlayer,
-              remembered
-            );
-
-          const currentImage =
-            String(
-              (
-                livePlayer &&
-                livePlayer.currentImage
-              ) ||
-              (
-                remembered &&
-                remembered.currentImage
-              ) ||
-              ""
-            ).trim();
-
-          const playerVersion =
-            String(
-              (
-                livePlayer &&
-                livePlayer.playerVersion
-              ) ||
-              (
-                remembered &&
-                remembered.playerVersion
-              ) ||
-              ""
-            ).trim();
-
-          const imageConfirmedAt =
-            (
-              livePlayer &&
-              livePlayer.currentImage &&
-              livePlayer.lastSeenAt
-            ) ||
-            (
-              remembered &&
-              remembered.imageConfirmedAt
-            ) ||
-            "";
-
-          const versionConfirmedAt =
-            (
-              livePlayer &&
-              livePlayer.playerVersion &&
-              livePlayer.lastSeenAt
-            ) ||
-            (
-              remembered &&
-              remembered.versionConfirmedAt
-            ) ||
-            "";
-
-          return {
-            screen:
-              screenName,
-
-            status:
-              classifyPlayerHeartbeatStatus(
-                ageSeconds,
-                quietHours
-              ),
-
-            reportedStatus:
-              livePlayer &&
-              livePlayer.status
-                ? livePlayer.status
-                : "",
-
-            lastSeenAt:
-              (
-                livePlayer &&
-                livePlayer.lastSeenAt
-              ) ||
-              (
-                remembered &&
-                remembered.lastSeenAt
-              ) ||
-              "",
-
-            ageSeconds:
-              ageSeconds,
-
-            currentImage:
-              currentImage,
-
-            playerVersion:
-              playerVersion,
-
-            imageConfirmedAt:
-              imageConfirmedAt,
-
-            versionConfirmedAt:
-              versionConfirmedAt,
-
-            imageSource:
-              livePlayer &&
-              livePlayer.currentImage
-                ? "live"
-                : currentImage
-                  ? "remembered"
-                  : "unknown",
-
-            versionSource:
-              livePlayer &&
-              livePlayer.playerVersion
-                ? "live"
-                : playerVersion
-                  ? "remembered"
-                  : "unknown",
-
-            expectedToday:
-              isScreenExpectedToday(
-                screenName
-              )
-          };
-        }
-      );
-    }
-
-
-    function loadPlayerVersionMemory() {
-      try {
-        const raw =
-          localStorage.getItem(
-            PLAYER_VERSION_MEMORY_KEY
-          );
-
-        if (!raw) {
-          return;
-        }
-
-        const parsed =
-          JSON.parse(raw);
-
-        if (
-          parsed &&
-          typeof parsed === "object"
-        ) {
-          playerVersionMemory =
-            parsed;
-        }
-      } catch (error) {
-        console.warn(
-          "Player version memory could not be loaded.",
-          error
-        );
-      }
-    }
-
-    function savePlayerVersionMemory() {
-      try {
-        localStorage.setItem(
-          PLAYER_VERSION_MEMORY_KEY,
-          JSON.stringify(
-            playerVersionMemory
-          )
-        );
-      } catch (error) {
-        console.warn(
-          "Player version memory could not be saved.",
-          error
-        );
-      }
-    }
-
-    function rememberPlayerVersion(
-      screenName,
-      playerVersion,
-      confirmedAt
-    ) {
-      const cleanVersion =
-        String(
-          playerVersion || ""
-        ).trim();
-
-      if (!cleanVersion) {
-        return;
-      }
-
-      const date =
-        confirmedAt
-          ? new Date(confirmedAt)
-          : new Date();
-
-      const safeConfirmedAt =
-        Number.isFinite(
-          date.getTime()
-        )
-          ? date.toISOString()
-          : new Date().toISOString();
-
-      playerVersionMemory[
-        screenName
-      ] =
-        {
-          playerVersion:
-            cleanVersion,
-
-          confirmedAt:
-            safeConfirmedAt
-        };
-
-      savePlayerVersionMemory();
-    }
-
-    function getRememberedPlayerVersion(
-      screenName
-    ) {
-      const remembered =
-        playerVersionMemory[
-          screenName
-        ];
-
-      if (
-        !remembered ||
-        !remembered.playerVersion ||
-        !remembered.confirmedAt
-      ) {
-        return null;
-      }
-
-      const confirmedAt =
-        new Date(
-          remembered.confirmedAt
-        );
-
-      if (
-        !Number.isFinite(
-          confirmedAt.getTime()
-        ) ||
-        Date.now() -
-          confirmedAt.getTime() >
-          PLAYER_VERSION_MEMORY_MAX_AGE_MS
-      ) {
-        delete playerVersionMemory[
-          screenName
-        ];
-
-        savePlayerVersionMemory();
-        return null;
-      }
-
-      return remembered;
-    }
-
     const ROLLOUT_PROGRESS_STORAGE_KEY =
       "miniGolfRolloutProgressV1";
 
@@ -3072,7 +2474,6 @@
       updateOfflineModeBanner();
       updateScreenCard(state);
       updateDashboardSummary();
-      scheduleBuild89CoreCheckRefresh();
 
       if (
         imageLibraryWorkspace.classList.contains(
@@ -3425,22 +2826,17 @@
 
     function renderTimeline(state) {
       const safeId =
-        createSafeId(
-          state.screenName
-        );
+        createSafeId(state.screenName);
 
       const timeline =
         document.getElementById(
           `timeline-${safeId}`
         );
 
-      timeline.innerHTML =
-        "";
+      timeline.innerHTML = "";
 
-      const segments =
-        buildDailyCalendarSegments(
-          state.schedule
-        );
+      const schedule =
+        state.schedule;
 
       const currentTime =
         getCurrentHHMM(
@@ -3449,80 +2845,62 @@
 
       const activeItem =
         getActiveScheduleItem(
-          state.schedule,
+          schedule,
           currentTime
         );
 
-      segments.forEach(
-        segmentData => {
+      schedule.forEach(
+        (item, index) => {
           const startMinute =
-            timeToMinutes(
-              segmentData.start
-            );
+            timeToMinutes(item.time);
+
+          const nextItem =
+            schedule[index + 1];
+
+          const explicitEndMinute =
+            item.endTime
+              ? timeToMinutes(
+                  item.endTime
+                )
+              : null;
 
           const endMinute =
-            segmentData.end === "24:00"
-              ? 1440
-              : timeToMinutes(
-                  segmentData.end
-                );
+            explicitEndMinute !== null
+              ? explicitEndMinute
+              : nextItem
+                ? timeToMinutes(
+                    nextItem.time
+                  )
+                : 1440;
 
           const left =
-            (
-              startMinute /
-              1440
-            ) * 100;
+            (startMinute / 1440) * 100;
 
           const width =
             Math.max(
               (
-                (
-                  endMinute -
-                  startMinute
-                ) /
+                (endMinute - startMinute) /
                 1440
               ) * 100,
               0.25
             );
 
           const segment =
-            document.createElement(
-              "div"
-            );
+            document.createElement("div");
 
           segment.className =
-            `timeline-segment ${state.source} timeline-${segmentData.type}`;
+            `timeline-segment ${state.source}`;
 
-          if (
-            segmentData.type ===
-            "temporary"
-          ) {
+          if (item.endTime) {
             segment.classList.add(
               "has-explicit-end"
             );
           }
 
           if (
-            segmentData.overlap
-          ) {
-            segment.classList.add(
-              "timeline-override"
-            );
-          }
-
-          const currentMinute =
-            timeToMinutes(
-              currentTime
-            );
-
-          if (
-            currentMinute >=
-              startMinute &&
-            currentMinute <
-              endMinute &&
             activeItem &&
-            activeItem.image ===
-              segmentData.image
+            activeItem.time === item.time &&
+            activeItem.image === item.image
           ) {
             segment.classList.add(
               "active"
@@ -3548,31 +2926,29 @@
             `${width}%`;
 
           segment.title =
-            `${segmentData.start}–${segmentData.end} · ${segmentData.image}\n${segmentData.reason}`;
+            `${item.time} — ${item.image}` +
+            (
+              item.endTime
+                ? `\nEnds ${item.endTime}`
+                : nextItem
+                  ? `\nUntil ${nextItem.time}`
+                  : "\nUntil midnight"
+            );
 
           const thumbnail =
-            document.createElement(
-              "img"
-            );
+            document.createElement("img");
 
           thumbnail.className =
             "timeline-thumbnail";
 
-          thumbnail.alt =
-            "";
-
-          thumbnail.loading =
-            "lazy";
+          thumbnail.alt = "";
+          thumbnail.loading = "lazy";
 
           thumbnail.src =
-            buildImageUrl(
-              segmentData.image
-            );
+            buildImageUrl(item.image);
 
           const thumbnailFallback =
-            document.createElement(
-              "div"
-            );
+            document.createElement("div");
 
           thumbnailFallback.className =
             "timeline-thumbnail-fallback";
@@ -3591,38 +2967,30 @@
             };
 
           const content =
-            document.createElement(
-              "div"
-            );
+            document.createElement("div");
 
           content.className =
             "timeline-content";
 
           const timeLabel =
-            document.createElement(
-              "div"
-            );
+            document.createElement("div");
 
           timeLabel.className =
             "timeline-time";
 
           timeLabel.textContent =
-            segmentData.start;
+            item.time;
 
           const imageLabel =
-            document.createElement(
-              "div"
-            );
+            document.createElement("div");
 
           imageLabel.className =
             "timeline-image-name";
 
           imageLabel.textContent =
-            segmentData.type === "temporary"
-              ? `${segmentData.image} · override until ${segmentData.end}`
-              : segmentData.type === "fallback"
-                ? `${segmentData.image} · resumed`
-                : segmentData.image;
+            item.endTime
+              ? `${item.image} · ends ${item.endTime}`
+              : item.image;
 
           content.appendChild(
             timeLabel
@@ -3651,9 +3019,7 @@
       );
 
       const nowMarker =
-        document.createElement(
-          "div"
-        );
+        document.createElement("div");
 
       nowMarker.id =
         `timeline-now-${safeId}`;
@@ -3699,9 +3065,7 @@
       state
     ) {
       const safeId =
-        createSafeId(
-          state.screenName
-        );
+        createSafeId(state.screenName);
 
       const timeline =
         document.getElementById(
@@ -3712,54 +3076,46 @@
         return;
       }
 
-      const currentMinute =
-        timeToMinutes(
-          getCurrentHHMM(
-            new Date()
-          )
-        );
-
-      timeline
-        .querySelectorAll(
+      const segments =
+        timeline.querySelectorAll(
           ".timeline-segment"
-        )
-        .forEach(
-          segment => {
-            const left =
-              parseFloat(
-                segment.style.left
-              ) || 0;
-
-            const width =
-              parseFloat(
-                segment.style.width
-              ) || 0;
-
-            const startMinute =
-              (
-                left /
-                100
-              ) * 1440;
-
-            const endMinute =
-              (
-                (
-                  left +
-                  width
-                ) /
-                100
-              ) * 1440;
-
-            segment.classList.toggle(
-              "active",
-              currentMinute >=
-                startMinute &&
-              currentMinute <
-                endMinute
-            );
-          }
         );
+
+      const currentTime =
+        getCurrentHHMM(
+          new Date()
+        );
+
+      const activeItem =
+        getActiveScheduleItem(
+          state.schedule,
+          currentTime
+        );
+
+      segments.forEach(
+        (segment, index) => {
+          const item =
+            state.schedule[index];
+
+          const isActive =
+            activeItem &&
+            item &&
+            item.time === activeItem.time &&
+            item.image === activeItem.image;
+
+          segment.classList.toggle(
+            "active",
+            Boolean(isActive)
+          );
+        }
+      );
     }
+
+    /*
+     * =====================================================
+     * LIVE UPDATES
+     * =====================================================
+     */
 
     function updateLiveInformation() {
       screenStates.forEach(state => {
@@ -4628,8 +3984,10 @@
         runGoLiveReadinessCheck();
         renderRolloutAssistant();
         startAutomaticHealthChecks();
+        startPlayerHeartbeatAutoRefresh();
       } else {
         stopAutomaticHealthChecks();
+        stopPlayerHeartbeatAutoRefresh();
       }
     }
 
@@ -10517,7 +9875,7 @@
           error.message ||
           "The GitHub image scan failed.";
 
-        return [];
+        throw error;
 
       } finally {
         scanImageHealthButton.disabled =
@@ -13535,270 +12893,131 @@
     }
 
 
-    function minutesToHHMM(
-      value
-    ) {
-      const safeMinutes =
-        Math.max(
-          0,
-          Math.min(
-            1440,
-            Math.round(
-              Number(value) || 0
-            )
-          )
-        );
-
-      if (safeMinutes === 1440) {
-        return "24:00";
-      }
-
-      const hours =
-        Math.floor(
-          safeMinutes / 60
-        );
-
-      const minutes =
-        safeMinutes % 60;
-
-      return (
-        String(hours).padStart(2, "0") +
-        ":" +
-        String(minutes).padStart(2, "0")
-      );
-    }
-
-
     function buildDailyCalendarSegments(
       schedule
     ) {
-      const normalized =
-        (Array.isArray(schedule)
-          ? schedule
-          : []
-        )
-          .map(
-            (item, rowIndex) => ({
-              ...item,
+      const sorted =
+        schedule
+          .map(item => ({
+            ...item,
 
-              time:
-                String(item.time || ""),
+            time:
+              String(item.time || ""),
 
-              endTime:
-                String(item.endTime || ""),
-
-              rowIndex:
-                rowIndex
-            })
-          )
-          .filter(
-            item =>
-              /^\d{2}:\d{2}$/.test(
-                item.time
-              ) &&
-              item.image
-          )
-          .sort(
-            (a, b) =>
-              a.time.localeCompare(
-                b.time
+            endTime:
+              String(
+                item.endTime || ""
               )
-          );
-
-      if (normalized.length === 0) {
-        return [];
-      }
-
-      const boundaries =
-        new Set(
-          [
-            0,
-            1440
-          ]
-        );
-
-      normalized.forEach(
-        item => {
-          boundaries.add(
-            timeToMinutes(
-              item.time
+          }))
+          .sort((a, b) =>
+            a.time.localeCompare(
+              b.time
             )
           );
 
-          if (item.endTime) {
-            boundaries.add(
-              timeToMinutes(
-                item.endTime
-              )
+      const segments = [];
+
+      sorted.forEach(
+        (item, index) => {
+          const next =
+            sorted[index + 1];
+
+          const originalRowIndex =
+            schedule.findIndex(
+              sourceItem =>
+                sourceItem.time === item.time &&
+                sourceItem.image === item.image &&
+                String(sourceItem.endTime || "") ===
+                  String(item.endTime || "")
             );
-          }
-        }
-      );
 
-      const orderedBoundaries =
-        Array.from(
-          boundaries
-        )
-          .filter(
-            value =>
-              Number.isFinite(value) &&
-              value >= 0 &&
-              value <= 1440
-          )
-          .sort(
-            (a, b) =>
-              a - b
-          );
+          const end =
+            item.endTime ||
+            (
+              next
+                ? next.time
+                : "24:00"
+            );
 
-      const rawSegments =
-        [];
+          const overlap =
+            Boolean(
+              next &&
+              next.time <
+                end
+            );
 
-      for (
-        let index = 0;
-        index <
-          orderedBoundaries.length - 1;
-        index += 1
-      ) {
-        const intervalStart =
-          orderedBoundaries[index];
+          segments.push({
+            image:
+              item.image,
 
-        const intervalEnd =
-          orderedBoundaries[index + 1];
+            start:
+              item.time,
 
-        if (
-          intervalEnd <=
-          intervalStart
-        ) {
-          continue;
-        }
+            end:
+              end,
 
-        const midpoint =
-          intervalStart +
-          (
-            intervalEnd -
-            intervalStart
-          ) / 2;
-
-        const midpointTime =
-          minutesToHHMM(
-            Math.min(
-              1439,
-              Math.floor(midpoint)
-            )
-          );
-
-        const activeItem =
-          getActiveScheduleItem(
-            normalized,
-            midpointTime
-          );
-
-        if (!activeItem) {
-          continue;
-        }
-
-        const activeStartMinute =
-          timeToMinutes(
-            activeItem.time
-          );
-
-        const isTemporary =
-          Boolean(
-            activeItem.endTime
-          );
-
-        const isFallback =
-          !isTemporary &&
-          intervalStart !==
-            activeStartMinute;
-
-        const fallbackBehindTemporary =
-          isTemporary
-            ? findPersistentFallbackAtTime(
-                normalized,
-                activeItem.time
-              )
-            : null;
-
-        rawSegments.push({
-          image:
-            activeItem.image,
-
-          start:
-            minutesToHHMM(
-              intervalStart
-            ),
-
-          end:
-            intervalEnd === 1440
-              ? "24:00"
-              : minutesToHHMM(
-                  intervalEnd
-                ),
-
-          type:
-            isTemporary
-              ? "temporary"
-              : isFallback
-                ? "fallback"
+            type:
+              item.endTime
+                ? "temporary"
                 : "persistent",
 
-          overlap:
-            Boolean(
-              isTemporary &&
-              fallbackBehindTemporary
-            ),
+            overlap:
+              overlap,
 
-          reason:
-            isTemporary
-              ? fallbackBehindTemporary
-                ? `Temporary override active. ${fallbackBehindTemporary.image} resumes after ${activeItem.endTime}.`
-                : `Temporary row active from ${activeItem.time} until ${activeItem.endTime}.`
-              : isFallback
-                ? `${activeItem.image} resumed after the temporary override ended.`
-                : `Persistent row active until a temporary override or newer persistent row takes priority.`,
+            reason:
+              item.endTime
+                ? `Temporary row active from ${item.time} until ${item.endTime}.`
+                : `Persistent row active from ${item.time} until another row replaces it.`,
 
-          rowIndex:
-            activeItem.rowIndex
-        });
-      }
-
-      const merged =
-        [];
-
-      rawSegments.forEach(
-        segment => {
-          const previous =
-            merged[
-              merged.length - 1
-            ];
+            rowIndex:
+              originalRowIndex
+          });
 
           if (
-            previous &&
-            previous.image ===
-              segment.image &&
-            previous.type ===
-              segment.type &&
-            previous.overlap ===
-              segment.overlap &&
-            previous.rowIndex ===
-              segment.rowIndex &&
-            previous.end ===
-              segment.start
+            item.endTime &&
+            next &&
+            item.endTime <
+              next.time
           ) {
-            previous.end =
-              segment.end;
+            const fallback =
+              findPersistentFallbackAtTime(
+                sorted,
+                item.endTime
+              );
 
-            return;
+            if (fallback) {
+              segments.push({
+                image:
+                  fallback.image,
+
+                start:
+                  item.endTime,
+
+                end:
+                  next.time,
+
+                type:
+                  "fallback",
+
+                overlap:
+                  false,
+
+                reason:
+                  `No temporary row is active. The player falls back to ${fallback.image}.`,
+
+                rowIndex:
+                  schedule.findIndex(
+                    sourceItem =>
+                      sourceItem.time === fallback.time &&
+                      sourceItem.image === fallback.image
+                  )
+              });
+            }
           }
-
-          merged.push({
-            ...segment
-          });
         }
       );
 
-      return merged;
+      return segments;
     }
 
 
@@ -14597,24 +13816,19 @@
         EXPECTED_PLAYER_VERSION;
     }
 
-    function loadSystemHealth(options = {}) {
-      const background = options.background === true;
+    function loadSystemHealth() {
+      refreshSystemHealthButton.disabled = true;
+      refreshSystemHealthButton.textContent = "Loading…";
+      healthLastUpdated.textContent = "Reading Apps Script telemetry…";
+      healthErrorBox.className = "health-error-box";
+      healthErrorBox.textContent = "";
 
-      if (!background) {
-        refreshSystemHealthButton.disabled = true;
-        refreshSystemHealthButton.textContent = "Loading…";
-        healthLastUpdated.textContent = "Reading Apps Script telemetry…";
-        healthErrorBox.className = "health-error-box";
-        healthErrorBox.textContent = "";
-      }
+      const callbackName = `systemHealthCallback_${Date.now()}`;
+      const script = document.createElement("script");
+      const separator = SCHEDULE_FEED_URL.includes("?") ? "&" : "?";
 
-      return new Promise(function(resolve, reject) {
-        const callbackName = `systemHealthCallback_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
-        const script = document.createElement("script");
-        const separator = SCHEDULE_FEED_URL.includes("?") ? "&" : "?";
-
-        window[callbackName] = function(payload) {
-          try {
+      window[callbackName] = function(payload) {
+        try {
           if (!payload || payload.success !== true || !payload.telemetry) {
             if (
               payload &&
@@ -14648,48 +13862,35 @@
                 : "System Health returned no telemetry."
             );
           }
-            renderSystemHealth(payload.telemetry);
-            runGoLiveReadinessCheck();
-            renderRolloutAssistant();
-            renderOperationsIntelligence();
-            resolve(payload.telemetry);
-          } catch (error) {
-            showSystemHealthError(error.message || "System Health could not be loaded.");
-            resolve(null);
-          } finally {
-            cleanupSystemHealthRequest(callbackName, script, background);
-          }
-        };
+          renderSystemHealth(payload.telemetry);
+        } catch (error) {
+          showSystemHealthError(error.message || "System Health could not be loaded.");
+        } finally {
+          cleanupSystemHealthRequest(callbackName, script);
+        }
+      };
 
-        script.onerror = function() {
-          const error = new Error("Could not connect to the Apps Script health endpoint.");
-          showSystemHealthError(error.message);
-          cleanupSystemHealthRequest(callbackName, script, background);
-          resolve(null);
-        };
+      script.onerror = function() {
+        showSystemHealthError("Could not connect to the Apps Script health endpoint.");
+        cleanupSystemHealthRequest(callbackName, script);
+      };
 
-        script.src = `${SCHEDULE_FEED_URL}${separator}action=healthManager&callback=${encodeURIComponent(callbackName)}&_=${Date.now()}`;
-        document.head.appendChild(script);
+      script.src = `${SCHEDULE_FEED_URL}${separator}action=healthManager&callback=${encodeURIComponent(callbackName)}&_=${Date.now()}`;
+      document.head.appendChild(script);
 
-        setTimeout(function() {
-          if (typeof window[callbackName] === "function") {
-            const error = new Error("The Apps Script health request timed out.");
-            showSystemHealthError(error.message);
-            cleanupSystemHealthRequest(callbackName, script, background);
-            resolve(null);
-          }
-        }, 20000);
-      });
+      setTimeout(function() {
+        if (typeof window[callbackName] === "function") {
+          showSystemHealthError("The Apps Script health request timed out.");
+          cleanupSystemHealthRequest(callbackName, script);
+        }
+      }, 20000);
     }
 
-    function cleanupSystemHealthRequest(callbackName, script, background = false) {
+    function cleanupSystemHealthRequest(callbackName, script) {
       if (script && script.remove) script.remove();
       try { delete window[callbackName]; } catch (error) { window[callbackName] = undefined; }
-
-      if (!background) {
-        refreshSystemHealthButton.disabled = false;
-        refreshSystemHealthButton.textContent = "Refresh health";
-      }
+      refreshSystemHealthButton.disabled = false;
+      refreshSystemHealthButton.textContent = "Refresh health";
     }
 
     function renderSystemHealth(telemetry) {
@@ -14750,35 +13951,6 @@
           safeTelemetryForScore
         );
 
-      const warmingUp =
-        requestCount > 0 &&
-        requestCount < 5000 &&
-        scoreResult.score < 88 &&
-        safeTelemetryForScore.successRate >= 95;
-
-      if (warmingUp) {
-        scoreResult.state =
-          "warming";
-
-        scoreResult.label =
-          "Warming Up";
-
-        scoreResult.warmingUp =
-          true;
-
-        scoreResult.reasons =
-          [
-            {
-              icon:
-                "🌅",
-
-              text:
-                `Collecting stable operating telemetry: ${requestCount} request(s) recorded so far.`
-            },
-            ...(scoreResult.reasons || [])
-          ];
-      }
-
       latestHealthScoreResult =
         scoreResult;
 
@@ -14797,7 +13969,6 @@
       renderHealthScore(
         scoreResult
       );
-      scheduleBuild89Phase3ReactiveRender();
       healthLastUpdated.textContent =
         requestCount === 0
           ? "Telemetry is ready and waiting for live requests."
@@ -16160,19 +15331,15 @@
      * PLAYER HEARTBEAT
      */
 
-    async function loadPlayerHeartbeats(options = {}) {
-      const background = options.background === true;
+    async function loadPlayerHeartbeats() {
+      refreshPlayerHeartbeatsButton.disabled =
+        true;
 
-      if (!background) {
-        refreshPlayerHeartbeatsButton.disabled =
-          true;
+      refreshPlayerHeartbeatsButton.textContent =
+        "Loading…";
 
-        refreshPlayerHeartbeatsButton.textContent =
-          "Loading…";
-
-        playerHeartbeatSummary.textContent =
-          "Reading player heartbeat data…";
-      }
+      playerHeartbeatSummary.textContent =
+        "Reading player heartbeat data…";
 
       try {
         const payload =
@@ -16196,35 +15363,20 @@
           payload.players
         );
 
-        runGoLiveReadinessCheck();
-        renderRolloutAssistant();
-        renderOperationsIntelligence();
-
-        return payload.players;
-
       } catch (error) {
-        console.warn(
-          "Live heartbeat request failed; using last-known player state.",
-          error
-        );
+        playerHeartbeatSummary.textContent =
+          error.message ||
+          "Could not load player heartbeat data.";
 
-        renderPlayerHeartbeats(
-          []
-        );
-
-        playerHeartbeatMeta.textContent =
-          "Live heartbeat data could not be refreshed. Last-known player state is being shown.";
-
-        return [];
+        playerHeartbeatGrid.innerHTML =
+          "";
 
       } finally {
-        if (!background) {
-          refreshPlayerHeartbeatsButton.disabled =
-            false;
+        refreshPlayerHeartbeatsButton.disabled =
+          false;
 
-          refreshPlayerHeartbeatsButton.textContent =
-            "Refresh players";
-        }
+        refreshPlayerHeartbeatsButton.textContent =
+          "Refresh players";
       }
     }
 
@@ -16235,16 +15387,13 @@
       playerHeartbeatRefreshTimer =
         setInterval(
           function() {
-            const systemHealthVisible =
+            if (
               systemHealthWorkspace.classList.contains(
                 "active"
-              );
-
-            loadPlayerHeartbeats({
-              background: !systemHealthVisible
-            }).catch(function() {
-              // The last-known heartbeat memory remains visible when a refresh fails.
-            });
+              )
+            ) {
+              loadPlayerHeartbeats();
+            }
           },
           30 * 1000
         );
@@ -16318,498 +15467,65 @@
     }
 
 
-
-    const build89Phase2PlayerEvents = new Map();
-    let build89Phase2LastFocusedElement = null;
-    let build89CoreCheckRefreshTimer = null;
-    let build89DrawerReturnToList = false;
-    let build89Phase3HealthRefreshTimer = null;
-    let build89Phase3ReactiveRenderTimer = null;
-    const BUILD89_PHASE3_HEALTH_REFRESH_MS = 60 * 1000;
-
-    function scheduleBuild89Phase3ReactiveRender(options = {}) {
-      window.clearTimeout(build89Phase3ReactiveRenderTimer);
-
-      build89Phase3ReactiveRenderTimer = window.setTimeout(function() {
-        if (latestHealthScoreResult) {
-          renderHealthScore(latestHealthScoreResult);
-        }
-
-        runGoLiveReadinessCheck();
-        renderRolloutAssistant();
-        renderOperationsIntelligence();
-        renderMissionControlStatuses();
-        renderMissionRecentActivity();
-        renderNotificationCenter();
-      }, options.immediate === true ? 0 : 120);
-    }
-
-    function startBuild89Phase3HealthRefresh() {
-      if (build89Phase3HealthRefreshTimer) {
-        window.clearInterval(build89Phase3HealthRefreshTimer);
-      }
-
-      build89Phase3HealthRefreshTimer = window.setInterval(function() {
-        loadSystemHealth({ background: true })
-          .then(function() {
-            scheduleBuild89Phase3ReactiveRender();
-          })
-          .catch(function(error) {
-            console.warn(
-              "Background health refresh failed; keeping the last-known score.",
-              error
-            );
-          });
-      }, BUILD89_PHASE3_HEALTH_REFRESH_MS);
-    }
-
-    function getBuild89ActivityType(item) {
-      if (item.type) return item.type;
-
-      const title = String(item.title || "").toLowerCase();
-      if (title.includes("health") || title.includes("recovery")) return "health";
-      if (title.includes("offline") || title.includes("stale")) return "warning";
-      if (title.includes("checked in") || title.includes("heartbeat")) return "heartbeat";
-      if (title.includes("schedule")) return "schedule";
-      if (title.includes("image")) return "content";
-      if (title.includes("deployment") || title.includes("build")) return "deployment";
-      return "info";
-    }
-
-    function addBuild89PlayerEvent(screen, label, timestamp) {
-      if (!screen) return;
-
-      const events = build89Phase2PlayerEvents.get(screen) || [];
-      const eventTime = timestamp ? new Date(timestamp) : new Date();
-
-      events.unshift({
-        label: label,
-        at: Number.isNaN(eventTime.getTime()) ? new Date() : eventTime
-      });
-
-      build89Phase2PlayerEvents.set(screen, events.slice(0, 8));
-    }
-
-    function getBuild89PlayerByScreen(screen) {
-      return (latestPlayerHeartbeats || []).find(
-        item => item.screen === screen
-      ) || null;
-    }
-
-    function getBuild89StatusLabel(status) {
-      const labels = {
-        online: "Online",
-        stale: "Stale",
-        offline: "Offline",
-        sleeping: "Sleeping"
-      };
-
-      return labels[status] || "Unknown";
-    }
-
-    function getBuild89VersionState(player) {
-      if (!player) {
-        return {
-          label: "Unknown",
-          detail: "No heartbeat information has been received."
-        };
-      }
-
-      if (!isScreenExpectedToday(player.screen)) {
-        return {
-          label: "Not scheduled",
-          detail: "Excluded from today's version compliance check."
-        };
-      }
-
-      if (player.playerVersion === EXPECTED_PLAYER_VERSION) {
-        return {
-          label: "Current",
-          detail: `Matches ${EXPECTED_PLAYER_VERSION}.`
-        };
-      }
-
-      if (player.playerVersion) {
-        return {
-          label: "Outdated",
-          detail: `Expected ${EXPECTED_PLAYER_VERSION}.`
-        };
-      }
-
-      return {
-        label: "Unknown",
-        detail: `Waiting for ${EXPECTED_PLAYER_VERSION}.`
-      };
-    }
-
-    function setBuild89DrawerBackButton(visible) {
-      const backButton = document.getElementById("backToPlayerListButton");
-      if (!backButton) return;
-      backButton.hidden = !visible;
-    }
-
-    function replaceBuild89DrawerContent(content, markup) {
-      if (!content) return;
-      content.classList.remove("is-content-ready");
-      content.classList.add("is-content-changing");
-      content.innerHTML = markup;
-      requestAnimationFrame(function() {
-        content.classList.remove("is-content-changing");
-        content.classList.add("is-content-ready");
-      });
-    }
-
-    function getBuild89DrawerFocusableElements() {
-      const drawer = document.getElementById("playerDetailsDrawer");
-      if (!drawer || drawer.getAttribute("aria-hidden") === "true") return [];
-      return Array.from(
-        drawer.querySelectorAll(
-          'button:not([disabled]):not([hidden]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
-        )
-      ).filter(element => element.offsetParent !== null);
-    }
-
-    function scheduleBuild89CoreCheckRefresh() {
-      window.clearTimeout(build89CoreCheckRefreshTimer);
-      build89CoreCheckRefreshTimer = window.setTimeout(function() {
-        if (screenStates.size < SCREEN_NAMES.length) return;
-
-        runAutomaticHealthChecks();
-        runGoLiveReadinessCheck();
-        renderMissionConfidenceBanner();
-        renderMissionControlStatuses();
-        scheduleBuild89Phase3ReactiveRender();
-      }, 180);
-    }
-
-    function openBuild89PlayerDrawer(screen) {
-      const drawer = document.getElementById("playerDetailsDrawer");
-      const backdrop = document.getElementById("playerDetailsBackdrop");
-      const title = document.getElementById("playerDetailsTitle");
-      const eyebrow = document.getElementById("playerDetailsEyebrow");
-      const content = document.getElementById("playerDetailsContent");
-
-      if (!drawer || !backdrop || !content) return;
-
-      const player = getBuild89PlayerByScreen(screen);
-      if (!player) return;
-
-      const versionState = getBuild89VersionState(player);
-      const expectedToday = isScreenExpectedToday(player.screen);
-      const lastSeenText = player.lastSeenAt
-        ? new Date(player.lastSeenAt).toLocaleString()
-        : "Never seen";
-      const ageText = formatHeartbeatAge(player.ageSeconds);
-      const imageConfirmedText = player.imageConfirmedAt
-        ? new Date(player.imageConfirmedAt).toLocaleString()
-        : "Not confirmed";
-      const versionConfirmedText = player.versionConfirmedAt
-        ? new Date(player.versionConfirmedAt).toLocaleString()
-        : "Not confirmed";
-      const events = build89Phase2PlayerEvents.get(player.screen) || [];
-
-      title.textContent = player.screen;
-      eyebrow.textContent = expectedToday ? "Scheduled player" : "Not scheduled today";
-      build89DrawerReturnToList = true;
-      setBuild89DrawerBackButton(true);
-
-      replaceBuild89DrawerContent(content, `
-        <div class="player-details-status">
-          <div class="player-details-status-main">
-            <span class="player-details-status-dot ${escapeHtml(player.status)}" aria-hidden="true"></span>
-            <div>
-              <strong>${escapeHtml(getBuild89StatusLabel(player.status))}</strong>
-              <div><small>${escapeHtml(ageText)}</small></div>
-            </div>
-          </div>
-          <span class="player-details-badge">${escapeHtml(versionState.label)}</span>
-        </div>
-
-        <div class="player-details-grid">
-          <div class="player-details-field full">
-            <span class="player-details-field-label">Current image</span>
-            <span class="player-details-field-value">${escapeHtml(player.currentImage || "Unknown")}</span>
-          </div>
-
-          <div class="player-details-field">
-            <span class="player-details-field-label">Last heartbeat</span>
-            <span class="player-details-field-value">${escapeHtml(lastSeenText)}</span>
-          </div>
-
-          <div class="player-details-field">
-            <span class="player-details-field-label">Expected today</span>
-            <span class="player-details-field-value">${expectedToday ? "Yes" : "No"}</span>
-          </div>
-
-          <div class="player-details-field full">
-            <span class="player-details-field-label">Player version</span>
-            <span class="player-details-field-value">${escapeHtml(player.playerVersion || "Unknown")}</span>
-            <small>${escapeHtml(versionState.detail)}</small>
-          </div>
-
-          <div class="player-details-field">
-            <span class="player-details-field-label">Image confirmed</span>
-            <span class="player-details-field-value">${escapeHtml(imageConfirmedText)}</span>
-          </div>
-
-          <div class="player-details-field">
-            <span class="player-details-field-label">Version confirmed</span>
-            <span class="player-details-field-value">${escapeHtml(versionConfirmedText)}</span>
-          </div>
-        </div>
-
-        <h3 class="player-details-section-title">Recent session events</h3>
-        <div class="player-details-event-list">
-          ${
-            events.length
-              ? events.map(event => `
-                  <div class="player-details-event">
-                    <span>${escapeHtml(event.label)}</span>
-                    <small>${escapeHtml(formatMissionActivityTime(event.at))}</small>
-                  </div>
-                `).join("")
-              : `<div class="player-details-empty">New heartbeat and image changes will appear here while this dashboard remains open.</div>`
-          }
-        </div>
-      `);
-
-      build89Phase2LastFocusedElement = document.activeElement;
-      backdrop.hidden = false;
-      requestAnimationFrame(function() {
-        backdrop.classList.add("is-visible");
-        drawer.classList.add("is-open");
-      });
-      drawer.setAttribute("aria-hidden", "false");
-      document.body.classList.add("player-details-open");
-
-      const closeButton = document.getElementById("closePlayerDetailsButton");
-      if (closeButton) closeButton.focus();
-    }
-
-    function openBuild89VersionDrawer() {
-      const drawer = document.getElementById("playerDetailsDrawer");
-      const backdrop = document.getElementById("playerDetailsBackdrop");
-      const title = document.getElementById("playerDetailsTitle");
-      const eyebrow = document.getElementById("playerDetailsEyebrow");
-      const content = document.getElementById("playerDetailsContent");
-
-      if (!drawer || !backdrop || !content) return;
-
-      const players = normalizePlayerVersionRecords(latestPlayerHeartbeats || []);
-      const expected = players.filter(player => player.expectedToday);
-      const current = expected.filter(player => player.playerVersion === EXPECTED_PLAYER_VERSION).length;
-      const percentage = expected.length ? Math.round((current / expected.length) * 100) : 100;
-
-      title.textContent = "Version Compliance";
-      eyebrow.textContent = "Interactive player overview";
-      build89DrawerReturnToList = false;
-      setBuild89DrawerBackButton(false);
-
-      replaceBuild89DrawerContent(content, `
-        <div class="player-details-status">
-          <div>
-            <strong>${percentage}% compliant</strong>
-            <div><small>${current} of ${expected.length} scheduled players are current.</small></div>
-          </div>
-          <span class="player-details-badge">${escapeHtml(EXPECTED_PLAYER_VERSION)}</span>
-        </div>
-
-        <div class="player-version-drawer-list">
-          ${players.map(player => {
-            const state = getBuild89VersionState(player);
-            return `
-              <button
-                class="player-version-drawer-row"
-                type="button"
-                data-player-screen="${escapeHtml(player.screen)}"
-              >
-                <span>
-                  <strong>${escapeHtml(player.screen)}</strong><br>
-                  <small>${escapeHtml(state.label)}</small>
-                </span>
-                <strong>${escapeHtml(player.playerVersion || "Unknown")}</strong>
-              </button>
-            `;
-          }).join("")}
-        </div>
-      `);
-
-      build89Phase2LastFocusedElement = document.activeElement;
-      backdrop.hidden = false;
-      requestAnimationFrame(function() {
-        backdrop.classList.add("is-visible");
-        drawer.classList.add("is-open");
-      });
-      drawer.setAttribute("aria-hidden", "false");
-      document.body.classList.add("player-details-open");
-      const closeButton = document.getElementById("closePlayerDetailsButton");
-      if (closeButton) closeButton.focus();
-    }
-
-    function closeBuild89PlayerDrawer() {
-      const drawer = document.getElementById("playerDetailsDrawer");
-      const backdrop = document.getElementById("playerDetailsBackdrop");
-
-      if (!drawer || !backdrop) return;
-
-      drawer.classList.remove("is-open");
-      backdrop.classList.remove("is-visible");
-      drawer.setAttribute("aria-hidden", "true");
-      document.body.classList.remove("player-details-open");
-      build89DrawerReturnToList = false;
-      setBuild89DrawerBackButton(false);
-
-      window.setTimeout(function() {
-        backdrop.hidden = true;
-      }, 230);
-
-      if (
-        build89Phase2LastFocusedElement &&
-        typeof build89Phase2LastFocusedElement.focus === "function"
-      ) {
-        build89Phase2LastFocusedElement.focus();
-      }
-    }
-
-    function setupBuild89Phase2Interactions() {
-      const grid = document.getElementById("playerHeartbeatGrid");
-      const closeButton = document.getElementById("closePlayerDetailsButton");
-      const backButton = document.getElementById("backToPlayerListButton");
-      const backdrop = document.getElementById("playerDetailsBackdrop");
-      const drawerContent = document.getElementById("playerDetailsContent");
-      const versionCard = document.getElementById("operationsVersionComplianceCard");
-
-      if (grid) {
-        grid.addEventListener("click", function(event) {
-          const card = event.target.closest("[data-player-screen]");
-          if (card) openBuild89PlayerDrawer(card.dataset.playerScreen);
-        });
-
-        grid.addEventListener("keydown", function(event) {
-          if (event.key !== "Enter" && event.key !== " ") return;
-          const card = event.target.closest("[data-player-screen]");
-          if (!card) return;
-          event.preventDefault();
-          openBuild89PlayerDrawer(card.dataset.playerScreen);
-        });
-      }
-
-      if (drawerContent) {
-        drawerContent.addEventListener("click", function(event) {
-          const row = event.target.closest("[data-player-screen]");
-          if (row) openBuild89PlayerDrawer(row.dataset.playerScreen);
-        });
-      }
-
-      if (versionCard) {
-        versionCard.addEventListener("click", openBuild89VersionDrawer);
-        versionCard.addEventListener("keydown", function(event) {
-          if (event.key === "Enter" || event.key === " ") {
-            event.preventDefault();
-            openBuild89VersionDrawer();
-          }
-        });
-      }
-
-      if (backButton) {
-        backButton.addEventListener("click", function() {
-          openBuild89VersionDrawer();
-        });
-      }
-
-      if (closeButton) closeButton.addEventListener("click", closeBuild89PlayerDrawer);
-      if (backdrop) backdrop.addEventListener("click", closeBuild89PlayerDrawer);
-
-      document.addEventListener("keydown", function(event) {
-        const drawer = document.getElementById("playerDetailsDrawer");
-        const isOpen = drawer && drawer.getAttribute("aria-hidden") === "false";
-        if (!isOpen) return;
-
-        if (event.key === "Escape") {
-          closeBuild89PlayerDrawer();
-          return;
-        }
-
-        if (event.key !== "Tab") return;
-        const focusable = getBuild89DrawerFocusableElements();
-        if (!focusable.length) return;
-        const first = focusable[0];
-        const last = focusable[focusable.length - 1];
-
-        if (event.shiftKey && document.activeElement === first) {
-          event.preventDefault();
-          last.focus();
-        } else if (!event.shiftKey && document.activeElement === last) {
-          event.preventDefault();
-          first.focus();
-        }
-      });
-    }
-
-
-    function renderPlayerHeartbeats(
-      players
-    ) {
-      const previousPlayers =
+    function renderPlayerHeartbeats(players) {
+      latestPlayerHeartbeats =
+        Array.isArray(players)
+          ? players
+          : [];
+
+      const playerMap =
         new Map(
-          (latestPlayerHeartbeats || []).map(
-            item => [item.screen, item]
+          players.map(
+            item => [
+              item.screen,
+              item
+            ]
           )
         );
 
+      const quietHours =
+        isPlayerQuietHours();
+
       const normalized =
-        normalizeHeartbeatPlayers(
-          players
+        SCREEN_NAMES.map(
+          screenName => {
+            const source =
+              playerMap.get(
+                screenName
+              ) || {
+                screen:
+                  screenName,
+
+                status:
+                  "offline",
+
+                lastSeenAt:
+                  "",
+
+                ageSeconds:
+                  null,
+
+                currentImage:
+                  "",
+
+                playerVersion:
+                  ""
+              };
+
+            if (
+              quietHours &&
+              source.status !== "online"
+            ) {
+              return {
+                ...source,
+                status:
+                  "sleeping"
+              };
+            }
+
+            return source;
+          }
         );
-
-      const changedHeartbeatScreens =
-        new Set();
-
-      normalized.forEach(function(item) {
-        const previous = previousPlayers.get(item.screen);
-        const previousSeen = previous && previous.lastSeenAt
-          ? new Date(previous.lastSeenAt).getTime()
-          : 0;
-        const currentSeen = item.lastSeenAt
-          ? new Date(item.lastSeenAt).getTime()
-          : 0;
-
-        if (currentSeen && currentSeen > previousSeen) {
-          changedHeartbeatScreens.add(item.screen);
-          addBuild89PlayerEvent(item.screen, "Heartbeat received", item.lastSeenAt);
-        }
-
-        if (
-          previous &&
-          item.currentImage &&
-          previous.currentImage &&
-          item.currentImage !== previous.currentImage
-        ) {
-          addBuild89PlayerEvent(
-            item.screen,
-            `Image changed to ${item.currentImage}`,
-            item.imageConfirmedAt || item.lastSeenAt
-          );
-        }
-
-        if (
-          previous &&
-          item.status &&
-          previous.status &&
-          item.status !== previous.status
-        ) {
-          addBuild89PlayerEvent(
-            item.screen,
-            `Status changed to ${getBuild89StatusLabel(item.status)}`,
-            item.lastSeenAt
-          );
-        }
-      });
-
-      latestPlayerHeartbeats =
-        normalized;
-
-      renderOperationsIntelligence();
 
       try {
         renderPlayerVersionCompliance(
@@ -16841,10 +15557,10 @@
         ).length;
 
       const offlineCount =
-        normalized.filter(
-          item =>
-            item.status === "offline"
-        ).length;
+        normalized.length -
+        onlineCount -
+        staleCount -
+        sleepingCount;
 
       playerHeartbeatSummary.textContent =
         `${onlineCount} online · ` +
@@ -16853,335 +15569,75 @@
         `${offlineCount} offline`;
 
       playerHeartbeatMeta.textContent =
-        isPlayerQuietHours()
-          ? "Quiet hours are active. Missing check-ins are shown as Sleeping. Last-known image and version values remain available."
-          : "Online: confirmed within 2 minutes · Stale: 2–10 minutes · Offline: more than 10 minutes.";
+        quietHours
+          ? "Quiet hours are active. Inactive players are shown as Sleeping instead of Offline."
+          : "Active hours are in effect. Players should check in at least once every 90 seconds.";
 
       playerHeartbeatGrid.innerHTML =
-        normalized
-          .map(
-            item => {
-              const lastSeen =
-                item.lastSeenAt
-                  ? new Date(
-                      item.lastSeenAt
-                    ).toLocaleString()
-                  : "Never seen";
+        normalized.map(
+          item => {
+            const allowedStatuses = [
+              "online",
+              "stale",
+              "sleeping"
+            ];
 
-              const ageText =
-                formatHeartbeatAge(
-                  item.ageSeconds
-                );
+            const status =
+              allowedStatuses.includes(
+                item.status
+              )
+                ? item.status
+                : "offline";
 
-              const imageConfirmed =
-                item.imageConfirmedAt
-                  ? new Date(
-                      item.imageConfirmedAt
-                    ).toLocaleString()
-                  : "";
+            const lastSeen =
+              item.lastSeenAt
+                ? new Date(
+                    item.lastSeenAt
+                  ).toLocaleString()
+                : "Never seen";
 
-              const versionConfirmed =
-                item.versionConfirmedAt
-                  ? new Date(
-                      item.versionConfirmedAt
-                    ).toLocaleString()
-                  : "";
+            const ageText =
+              formatHeartbeatAge(
+                item.ageSeconds
+              );
 
-              const imageSourceText =
-                item.imageSource === "remembered"
-                  ? " · last known"
-                  : "";
-
-              const versionSourceText =
-                item.versionSource === "remembered"
-                  ? " · last known"
-                  : "";
-
-              return `
-                <article
-                  class="player-heartbeat-card ${escapeHtml(item.status)} ${changedHeartbeatScreens.has(item.screen) ? "heartbeat-just-arrived" : ""}"
-                  data-player-screen="${escapeHtml(item.screen)}"
-                  role="button"
-                  tabindex="0"
-                  aria-label="Open details for ${escapeHtml(item.screen)}"
-                >
-                  <div class="player-heartbeat-header">
-                    <div class="player-heartbeat-name">
-                      ${escapeHtml(item.screen)}
-                    </div>
-
-                    <div class="player-heartbeat-status ${escapeHtml(item.status)}">
-                      ${escapeHtml(item.status)}
-                    </div>
+            return `
+              <article class="player-heartbeat-card ${status}">
+                <div class="player-heartbeat-header">
+                  <div class="player-heartbeat-name">
+                    ${escapeHtml(item.screen)}
                   </div>
 
-                  <div class="player-heartbeat-details">
-                    <div>
-                      Last heartbeat:
-                      ${escapeHtml(lastSeen)}
-                    </div>
-
-                    <div>
-                      Heartbeat age:
-                      ${escapeHtml(ageText)}
-                    </div>
-
-                    <div>
-                      Current image:
-                      ${escapeHtml(item.currentImage || "Unknown")}
-                      ${escapeHtml(imageSourceText)}
-                    </div>
-
-                    ${
-                      imageConfirmed
-                        ? `
-                          <div class="player-heartbeat-confirmation">
-                            Image confirmed:
-                            ${escapeHtml(imageConfirmed)}
-                          </div>
-                        `
-                        : ""
-                    }
-
-                    <div>
-                      Player version:
-                      ${escapeHtml(item.playerVersion || "Unknown")}
-                      ${escapeHtml(versionSourceText)}
-                    </div>
-
-                    ${
-                      versionConfirmed
-                        ? `
-                          <div class="player-heartbeat-confirmation">
-                            Version confirmed:
-                            ${escapeHtml(versionConfirmed)}
-                          </div>
-                        `
-                        : ""
-                    }
+                  <div class="player-heartbeat-status ${status}">
+                    ${escapeHtml(status)}
                   </div>
-                </article>
-              `;
-            }
-          )
-          .join("");
-    }
+                </div>
 
+                <div class="player-heartbeat-details">
+                  <div>
+                    Last seen:
+                    ${escapeHtml(lastSeen)}
+                  </div>
 
-    const build89AnimatedValues = new WeakMap();
+                  <div>
+                    Age:
+                    ${escapeHtml(ageText)}
+                  </div>
 
-    function animateDashboardNumber(element, target, options = {}) {
-      if (!element || !Number.isFinite(Number(target))) return;
+                  <div>
+                    Current image:
+                    ${escapeHtml(item.currentImage || "Unknown")}
+                  </div>
 
-      const numericTarget = Number(target);
-      const suffix = options.suffix || "";
-      const prefix = options.prefix || "";
-      const duration = Number.isFinite(options.duration) ? options.duration : 650;
-      const decimals = Number.isFinite(options.decimals) ? options.decimals : 0;
-      const reducedMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-      const previous = build89AnimatedValues.has(element)
-        ? build89AnimatedValues.get(element)
-        : 0;
-
-      build89AnimatedValues.set(element, numericTarget);
-
-      if (reducedMotion || previous === numericTarget || duration <= 0) {
-        element.textContent = `${prefix}${numericTarget.toFixed(decimals)}${suffix}`;
-        return;
-      }
-
-      const startedAt = performance.now();
-      const difference = numericTarget - previous;
-      element.classList.add("counter-animating");
-
-      function frame(now) {
-        const progress = Math.min(1, (now - startedAt) / duration);
-        const eased = 1 - Math.pow(1 - progress, 3);
-        const value = previous + difference * eased;
-        element.textContent = `${prefix}${value.toFixed(decimals)}${suffix}`;
-
-        if (progress < 1) {
-          requestAnimationFrame(frame);
-        } else {
-          element.classList.remove("counter-animating");
-        }
-      }
-
-      requestAnimationFrame(frame);
-    }
-
-    function getBuild89Greeting(hour = new Date().getHours()) {
-      if (typeof isPlayerQuietHours === "function" && isPlayerQuietHours()) {
-        return {
-          icon: "🌙",
-          title: "Quiet Hours",
-          greeting: "Quiet Hours are active. Players will resume polling automatically at 10:00."
-        };
-      }
-
-      if (hour < 12) {
-        return { icon: "☀️", title: "Good morning", greeting: "Good morning. Here is today’s signage operations summary." };
-      }
-
-      if (hour < 18) {
-        return { icon: "🌤️", title: "Good afternoon", greeting: "Good afternoon. Here is the latest signage operations summary." };
-      }
-
-      return { icon: "🌆", title: "Good evening", greeting: "Good evening. Here is the latest signage operations summary." };
-    }
-
-    function renderBuild89HeroSummary() {
-      const greetingElement = document.getElementById("missionHeroGreeting");
-      const playersElement = document.getElementById("missionHeroPlayers");
-      const schedulesElement = document.getElementById("missionHeroSchedules");
-      const imagesElement = document.getElementById("missionHeroImages");
-      const deploymentElement = document.getElementById("missionHeroDeployment");
-      const greeting = getBuild89Greeting();
-
-      if (greetingElement) greetingElement.textContent = `${greeting.icon} ${greeting.greeting}`;
-
-      const loadedSchedules = SCREEN_NAMES.filter(name => screenStates.has(name)).length;
-      const imageCount = Array.isArray(imageLibraryIndex) ? imageLibraryIndex.length : 0;
-      const deployedCount = SCREEN_NAMES.filter(name => getRolloutStage(name) === "deployed").length;
-
-      animateDashboardNumber(playersElement, SCREEN_NAMES.length);
-      animateDashboardNumber(schedulesElement, loadedSchedules);
-      animateDashboardNumber(imagesElement, imageCount);
-      animateDashboardNumber(deploymentElement, deployedCount, { suffix: `/${SCREEN_NAMES.length}` });
-    }
-
-    function renderOperationsIntelligence() {
-      const panel = document.getElementById("operationsIntelligence");
-      if (!panel) return;
-
-      const players = Array.isArray(latestPlayerHeartbeats)
-        ? latestPlayerHeartbeats
-        : [];
-      const quietHours = isPlayerQuietHours();
-      const expectedToday = SCREEN_NAMES.filter(name => isScreenExpectedToday(name));
-      const expectedNow = quietHours ? [] : expectedToday;
-      const expectedPlayers = players.filter(player => expectedNow.includes(player.screen));
-      const onlineExpected = expectedPlayers.filter(player => player.status === "online");
-      const attentionPlayers = expectedPlayers.filter(player =>
-        player.status === "stale" || player.status === "offline"
-      );
-
-      const versionEligibleNames = quietHours ? expectedToday : expectedNow;
-      const versionEligible = players.filter(player => versionEligibleNames.includes(player.screen));
-      const currentVersionPlayers = versionEligible.filter(player =>
-        player.playerVersion === EXPECTED_PLAYER_VERSION
-      );
-      const versionPercent = versionEligible.length
-        ? Math.round((currentVersionPlayers.length / versionEligible.length) * 100)
-        : 0;
-
-      const validHeartbeatTimes = players
-        .map(player => player.lastSeenAt ? new Date(player.lastSeenAt).getTime() : NaN)
-        .filter(Number.isFinite);
-      const newestHeartbeat = validHeartbeatTimes.length
-        ? Math.max(...validHeartbeatTimes)
-        : null;
-      const newestAgeSeconds = newestHeartbeat
-        ? Math.max(0, Math.floor((Date.now() - newestHeartbeat) / 1000))
-        : null;
-
-      const deployedCount = SCREEN_NAMES.filter(name =>
-        getRolloutStage(name) === "deployed"
-      ).length;
-      const deploymentPercent = Math.round((deployedCount / SCREEN_NAMES.length) * 100);
-
-      const greeting = getBuild89Greeting();
-      let state = "healthy";
-      let badge = "Healthy";
-      let icon = "✅";
-      let title = greeting.title;
-      let summary = "Everything is operating normally. All scheduled players are healthy.";
-
-      if (quietHours) {
-        state = "sleeping";
-        badge = "Quiet hours";
-        icon = "🌙";
-        title = "Quiet Hours";
-        summary = "Players are sleeping. Monitoring resumes automatically at 10:00, while last-known data remains available.";
-      } else if (attentionPlayers.some(player => player.status === "offline")) {
-        state = "critical";
-        badge = "Attention";
-        icon = "🔴";
-        title = "Attention required";
-        const names = attentionPlayers.filter(player => player.status === "offline").map(player => player.screen);
-        summary = `${names.length} scheduled player${names.length === 1 ? "" : "s"} offline: ${names.join(", ")}.`;
-      } else if (attentionPlayers.length) {
-        state = "warning";
-        badge = "Review";
-        icon = "🟠";
-        title = "Review recommended";
-        summary = `${attentionPlayers.length} scheduled player${attentionPlayers.length === 1 ? "" : "s"} ${attentionPlayers.length === 1 ? "is" : "are"} stale.`;
-      } else if (expectedPlayers.length && onlineExpected.length < expectedPlayers.length) {
-        state = "warning";
-        badge = "Warming up";
-        icon = "⏳";
-        title = "Players warming up";
-        summary = "Scheduled players are still completing their first check-in.";
-      }
-
-      panel.className = `operations-intelligence operations-intelligence-${state}`;
-      document.getElementById("operationsIntelligenceBadge").className =
-        `operations-intelligence-badge ${state}`;
-      document.getElementById("operationsIntelligenceBadge").textContent = badge;
-      document.getElementById("operationsIntelligenceIcon").textContent = icon;
-      document.getElementById("operationsIntelligenceTitle").textContent = title;
-      document.getElementById("operationsIntelligenceSummary").textContent = summary;
-
-      document.getElementById("operationsScheduledPlayers").textContent = quietHours
-        ? `${expectedToday.length} sleeping`
-        : `${onlineExpected.length} / ${expectedNow.length}`;
-      document.getElementById("operationsScheduledPlayersDetail").textContent = quietHours
-        ? `${expectedToday.length} expected today · polling paused`
-        : `${onlineExpected.length} online now · ${attentionPlayers.length} need attention`;
-
-      const versionComplianceElement = document.getElementById("operationsVersionCompliance");
-      if (versionEligible.length) {
-        animateDashboardNumber(versionComplianceElement, versionPercent, { suffix: "%" });
-      } else {
-        versionComplianceElement.textContent = "—";
-      }
-      document.getElementById("operationsVersionComplianceDetail").textContent =
-        `${currentVersionPlayers.length} of ${versionEligible.length} report ${EXPECTED_PLAYER_VERSION}`;
-
-      document.getElementById("operationsLatestHeartbeat").textContent =
-        newestAgeSeconds === null ? "—" : formatHeartbeatAge(newestAgeSeconds);
-      document.getElementById("operationsLatestHeartbeatDetail").textContent = newestHeartbeat
-        ? `Latest check-in at ${new Date(newestHeartbeat).toLocaleTimeString([], {hour: "2-digit", minute: "2-digit", second: "2-digit"})}`
-        : "No check-in measured yet";
-
-      animateDashboardNumber(
-        document.getElementById("operationsDeploymentProgress"),
-        deploymentPercent,
-        { suffix: "%" }
-      );
-      document.getElementById("operationsDeploymentProgressDetail").textContent =
-        `${deployedCount} of ${SCREEN_NAMES.length} screens marked Deployed`;
-      document.getElementById("operationsDeploymentBar").style.width = `${deploymentPercent}%`;
-
-      const drift = versionEligible.filter(player =>
-        player.playerVersion && player.playerVersion !== EXPECTED_PLAYER_VERSION
-      );
-      const missing = versionEligibleNames.filter(name => {
-        const player = players.find(item => item.screen === name);
-        return !player || !player.playerVersion;
-      });
-      const driftBox = document.getElementById("operationsVersionDrift");
-      const driftParts = [];
-      if (drift.length) {
-        driftParts.push(`Version drift: ${drift.map(player => `${player.screen} (${player.playerVersion})`).join(", ")}`);
-      }
-      if (!quietHours && missing.length) {
-        driftParts.push(`Awaiting version: ${missing.join(", ")}`);
-      }
-      driftBox.hidden = driftParts.length === 0;
-      driftBox.textContent = driftParts.join(" · ");
-      renderBuild89HeroSummary();
-      scheduleBuild89Phase3ReactiveRender();
+                  <div>
+                    Player version:
+                    ${escapeHtml(item.playerVersion || "Unknown")}
+                  </div>
+                </div>
+              </article>
+            `;
+          }
+        ).join("");
     }
 
 
@@ -17983,13 +16439,13 @@
               "Mini Golf Signage Manager",
 
             version:
-              "1.2.0-dev",
+              "1.1.0",
 
             label:
-              "Version 1.2 Development",
+              "Version 1.1.0 Stable",
 
             build:
-              87,
+              84,
 
             environment:
               getApplicationEnvironment().key,
@@ -18135,7 +16591,7 @@
           objectUrl;
 
         link.download =
-          `mini-golf-signage-diagnostics-build-87-${dateStamp}.json`;
+          `mini-golf-signage-diagnostics-build-84-${dateStamp}.json`;
 
         document.body.appendChild(
           link
@@ -18537,8 +16993,8 @@
       try {
         const payload={
           application:"Mini Golf Signage Manager",
-          version:"1.2 Development",
-          build:87,
+          version:"1.1.0 Stable",
+          build:84,
           exportedAt:new Date().toISOString(),
           totalEvents:notificationHistory.length,
           events:notificationHistory
@@ -18547,7 +17003,7 @@
         const url=URL.createObjectURL(blob);
         const link=document.createElement("a");
         link.href=url;
-        link.download=`notification-history-v1.2-dev-build-87-${new Date().toISOString().replace(/[:.]/g,"-")}.json`;
+        link.download=`notification-history-v1.1.0-build-84-${new Date().toISOString().replace(/[:.]/g,"-")}.json`;
         document.body.appendChild(link);
         link.click();
         link.remove();
@@ -20216,7 +18672,6 @@
         )
       ) {
         activity.push({
-          type: "health",
           icon:
             "❤️",
 
@@ -20248,8 +18703,6 @@
                 : null;
 
             activity.push({
-              type:
-                player.status === "online" ? "heartbeat" : "warning",
               icon:
                 player.status === "online"
                   ? "📺"
@@ -20276,8 +18729,6 @@
           }
 
           activity.push({
-            type:
-              state.offlineSnapshot === true ? "recovery" : "schedule",
             icon:
               state.offlineSnapshot === true
                 ? "💾"
@@ -20308,7 +18759,6 @@
         imageLibraryIndex.length > 0
       ) {
         activity.push({
-          type: "content",
           icon:
             "🖼️",
 
@@ -20328,7 +18778,6 @@
         dashboardOfflineSnapshot.savedAt
       ) {
         activity.push({
-          type: "recovery",
           icon:
             "🛡️",
 
@@ -20397,7 +18846,7 @@
         activity
           .map(
             item => `
-              <article class="mission-recent-item mission-recent-${escapeHtml(getBuild89ActivityType(item))}">
+              <article class="mission-recent-item">
                 <div
                   class="mission-recent-icon"
                   aria-hidden="true"
@@ -20406,9 +18855,6 @@
                 </div>
 
                 <div class="mission-recent-copy">
-                  <div class="mission-recent-category">
-                    ${escapeHtml(getBuild89ActivityType(item))}
-                  </div>
                   <div class="mission-recent-title">
                     ${escapeHtml(item.title)}
                   </div>
@@ -20905,7 +19351,6 @@
 
         missionHeroHealthScore.textContent =
           "—";
-        build89AnimatedValues.delete(missionHeroHealthScore);
 
         missionHeroHealthState.textContent =
           "Waiting for telemetry";
@@ -20913,23 +19358,15 @@
         return;
       }
 
-      animateDashboardNumber(
-        missionHeroHealthScore,
-        safeResult.score,
-        { duration: 800 }
-      );
-
-      missionHeroHealthState.textContent =
-        safeResult.warmingUp
-          ? "Warming Up · collecting telemetry"
-          : safeResult.label || "Healthy";
-
-      if (safeResult.warmingUp) {
-        missionHeroHealth.classList.add(
-          "mission-health-warming"
+      missionHeroHealthScore.textContent =
+        String(
+          safeResult.score
         );
 
-      } else if (safeResult.score >= 88) {
+      missionHeroHealthState.textContent =
+        safeResult.label || "Healthy";
+
+      if (safeResult.score >= 88) {
         missionHeroHealth.classList.add(
           "mission-health-healthy"
         );
@@ -20982,9 +19419,7 @@
       healthScoreNumber.innerHTML =
         safeResult.score === null
           ? `Waiting <span>/100</span>`
-          : safeResult.warmingUp
-            ? `${safeResult.score} <span>/100 · Warming Up</span>`
-            : `${safeResult.score} <span>/100</span>`;
+          : `${safeResult.score} <span>/100</span>`;
 
       healthScoreReasons.innerHTML =
         (safeResult.reasons || [])
@@ -21106,7 +19541,7 @@
       renderRolloutAssistant();
 
       showRolloutMessage(
-        `${screenName} deployment stage is now ${stage === "not-started" ? "Not started" : stage}. Live readiness is tracked separately.`,
+        `${screenName} is now marked ${stage === "not-started" ? "Not started" : stage}.`,
         "success"
       );
     }
@@ -21181,20 +19616,6 @@
     function getRolloutStateForScreen(
       screenName
     ) {
-      const expectedToday =
-        isScreenExpectedToday(
-          screenName
-        );
-
-      const quietHours =
-        typeof isPlayerQuietHours === "function"
-          ? isPlayerQuietHours()
-          : false;
-
-      const expectedNow =
-        expectedToday &&
-        !quietHours;
-
       const scheduleState =
         screenStates.get(
           screenName
@@ -21202,13 +19623,6 @@
 
       const heartbeat =
         latestPlayerHeartbeats.find(
-          player =>
-            player.screen ===
-            screenName
-        ) ||
-        normalizeHeartbeatPlayers(
-          []
-        ).find(
           player =>
             player.screen ===
             screenName
@@ -21254,90 +19668,61 @@
       const notes =
         [];
 
-      /*
-       * Operational expectation takes priority over live checks.
-       * A player that is intentionally sleeping must not be sent
-       * to Review simply because it is no longer checking in.
-       */
-      if (!expectedToday) {
+      if (!hasSchedule) {
         state =
-          "not-scheduled";
+          "blocked";
 
         label =
-          "Not scheduled";
+          "Blocked";
 
         notes.push(
-          "This screen is not expected to operate today."
+          "Schedule data is missing."
         );
+      }
 
-      } else if (quietHours) {
+      if (activeImageMissing) {
         state =
-          "sleeping";
+          "blocked";
 
         label =
-          "Sleeping";
+          "Blocked";
 
         notes.push(
-          "Quiet Hours are active. The player is not expected to check in between 22:00 and 10:00."
+          "The active image is missing."
         );
+      }
 
-      } else {
-        if (!hasSchedule) {
-          state =
-            "blocked";
+      if (
+        state !== "blocked" &&
+        !hasFallback
+      ) {
+        state =
+          "review";
 
-          label =
-            "Blocked";
+        label =
+          "Review";
 
-          notes.push(
-            "Schedule data is missing."
-          );
-        }
+        notes.push(
+          "No blank-End-Time fallback row."
+        );
+      }
 
-        if (activeImageMissing) {
-          state =
-            "blocked";
+      if (
+        state !== "blocked" &&
+        !versionCurrent
+      ) {
+        state =
+          "review";
 
-          label =
-            "Blocked";
+        label =
+          "Review";
 
-          notes.push(
-            "The active image is missing."
-          );
-        }
-
-        if (
-          state !== "blocked" &&
-          !hasFallback
-        ) {
-          state =
-            "review";
-
-          label =
-            "Review";
-
-          notes.push(
-            "No blank-End-Time fallback row."
-          );
-        }
-
-        if (
-          state !== "blocked" &&
-          !versionCurrent
-        ) {
-          state =
-            "review";
-
-          label =
-            "Review";
-
-          notes.push(
-            heartbeat &&
-            heartbeat.playerVersion
-              ? `Reports ${heartbeat.playerVersion}.`
-              : "Approved player version has not checked in during operating hours."
-          );
-        }
+        notes.push(
+          heartbeat &&
+          heartbeat.playerVersion
+            ? `Reports ${heartbeat.playerVersion}.`
+            : "Approved player version has not checked in yet."
+        );
       }
 
       if (notes.length === 0) {
@@ -21352,26 +19737,6 @@
 
         label:
           label,
-
-        readinessState:
-          state,
-
-        readinessLabel:
-          label,
-
-        deploymentStage:
-          getRolloutStage(
-            screenName
-          ),
-
-        expectedToday:
-          expectedToday,
-
-        expectedNow:
-          expectedNow,
-
-        quietHours:
-          quietHours,
 
         notes:
           notes,
@@ -21423,18 +19788,6 @@
             item.state === "blocked"
         ).length;
 
-      const sleepingCount =
-        states.filter(
-          item =>
-            item.state === "sleeping"
-        ).length;
-
-      const notScheduledCount =
-        states.filter(
-          item =>
-            item.state === "not-scheduled"
-        ).length;
-
       const testingCount =
         SCREEN_NAMES.filter(
           screenName =>
@@ -21452,12 +19805,10 @@
         ).length;
 
       rolloutAssistantSummary.textContent =
-        `Live readiness: ${readyCount} ready · ` +
+        `${readyCount} ready · ` +
         `${reviewCount} review · ` +
         `${blockedCount} blocked · ` +
-        `${sleepingCount} sleeping · ` +
-        `${notScheduledCount} not scheduled · ` +
-        `Deployment: ${testingCount} testing · ` +
+        `${testingCount} testing · ` +
         `${deployedCount} deployed`;
 
       rolloutAssistantList.innerHTML =
@@ -21487,29 +19838,15 @@
                   : "Not reported";
 
               return `
-                <article class="rollout-card rollout-stage-card-${getRolloutStage(item.screenName)}">
+                <article class="rollout-card ${item.state}">
                   <div class="rollout-card-header">
                     <div class="rollout-screen-name">
                       ${escapeHtml(item.screenName)}
                     </div>
 
-                    <div class="rollout-stage rollout-stage-${getRolloutStage(item.screenName)}">
-                      ${
-                        getRolloutStage(item.screenName) === "not-started"
-                          ? "Not started"
-                          : getRolloutStage(item.screenName) === "testing"
-                            ? "Testing"
-                            : "Deployed"
-                      }
-                    </div>
-                  </div>
-
-                  <div class="rollout-live-readiness">
-                    <span>Live readiness</span>
-
-                    <span class="rollout-state ${item.state}">
+                    <div class="rollout-state ${item.state}">
                       ${escapeHtml(item.label)}
-                    </span>
+                    </div>
                   </div>
 
                   <div class="rollout-url">
@@ -21517,15 +19854,6 @@
                   </div>
 
                   <div class="rollout-details">
-                    <div>
-                      Player status:
-                      ${escapeHtml(
-                        heartbeat && heartbeat.status
-                          ? heartbeat.status
-                          : "unknown"
-                      )}
-                    </div>
-
                     <div>
                       Version: ${escapeHtml(version)}
                     </div>
@@ -21540,20 +19868,12 @@
                   </div>
 
                   <div class="rollout-progress-summary">
-                    ${
-                      getRolloutStage(item.screenName) === "deployed" &&
-                      (
-                        item.state === "sleeping" ||
-                        item.state === "not-scheduled"
-                      )
-                        ? `Deployment remains confirmed. ${escapeHtml(item.label)} is an expected operational state.`
-                        : getRolloutStage(item.screenName) === "deployed" &&
-                          item.state !== "ready"
-                          ? `Deployment remains confirmed. Live checks currently recommend ${escapeHtml(item.label.toLowerCase())}.`
-                          : getRolloutStage(item.screenName) === "deployed"
-                            ? "Deployment is confirmed and live checks are ready."
-                            : "Choose the manual deployment stage below."
-                    }
+                    Deployment stage:
+                    <span class="rollout-stage rollout-stage-${getRolloutStage(item.screenName)}">
+                      ${getRolloutStage(item.screenName) === "not-started"
+                        ? "Not started"
+                        : escapeHtml(getRolloutStage(item.screenName))}
+                    </span>
                   </div>
 
                   <div class="rollout-actions">
@@ -21839,89 +20159,23 @@
               screenName
             );
 
-          const liveVersion =
-            player &&
-            player.playerVersion
-              ? String(
-                  player.playerVersion
-                ).trim()
-              : "";
-
-          if (liveVersion) {
-            rememberPlayerVersion(
-              screenName,
-              liveVersion,
-              player.lastSeenAt ||
-                new Date().toISOString()
-            );
-          }
-
-          const heartbeatMemoryRecord =
-            !liveVersion && playerHeartbeatMemory
-              ? playerHeartbeatMemory[screenName]
-              : null;
-
-          const heartbeatMemoryVersion =
-            heartbeatMemoryRecord && heartbeatMemoryRecord.playerVersion
-              ? String(heartbeatMemoryRecord.playerVersion).trim()
-              : "";
-
-          if (heartbeatMemoryVersion) {
-            rememberPlayerVersion(
-              screenName,
-              heartbeatMemoryVersion,
-              heartbeatMemoryRecord.lastSeenAt ||
-                heartbeatMemoryRecord.confirmedAt ||
-                new Date().toISOString()
-            );
-          }
-
-          const remembered =
-            !liveVersion
-              ? getRememberedPlayerVersion(
-                  screenName
-                )
-              : null;
-
           return {
             screen:
               screenName,
 
             playerVersion:
-              liveVersion ||
-              (
-                remembered
-                  ? remembered.playerVersion
-                  : ""
-              ),
+              player &&
+              player.playerVersion
+                ? String(
+                    player.playerVersion
+                  ).trim()
+                : "",
 
             lastSeenAt:
               player &&
               player.lastSeenAt
                 ? player.lastSeenAt
                 : "",
-
-            versionConfirmedAt:
-              liveVersion
-                ? (
-                    player.lastSeenAt ||
-                    new Date().toISOString()
-                  )
-                : remembered
-                  ? remembered.confirmedAt
-                  : "",
-
-            versionSource:
-              liveVersion
-                ? "live"
-                : remembered
-                  ? "remembered"
-                  : "unknown",
-
-            expectedToday:
-              isScreenExpectedToday(
-                screenName
-              ),
 
             status:
               player &&
@@ -21949,27 +20203,15 @@
           players
         );
 
-      const expectedPlayers =
-        normalizedPlayers.filter(
-          player =>
-            player.expectedToday
-        );
-
-      const excludedPlayers =
-        normalizedPlayers.filter(
-          player =>
-            !player.expectedToday
-        );
-
       const currentCount =
-        expectedPlayers.filter(
+        normalizedPlayers.filter(
           player =>
             player.playerVersion ===
             EXPECTED_PLAYER_VERSION
         ).length;
 
       const outdatedCount =
-        expectedPlayers.filter(
+        normalizedPlayers.filter(
           player =>
             player.playerVersion &&
             player.playerVersion !==
@@ -21977,7 +20219,7 @@
         ).length;
 
       const unknownCount =
-        expectedPlayers.length -
+        normalizedPlayers.length -
         currentCount -
         outdatedCount;
 
@@ -21985,12 +20227,7 @@
         `Expected version: <strong>${escapeHtml(EXPECTED_PLAYER_VERSION)}</strong>` +
         ` · ${currentCount} current` +
         ` · ${outdatedCount} outdated` +
-        ` · ${unknownCount} unknown` +
-        (
-          excludedPlayers.length
-            ? ` · ${excludedPlayers.length} not scheduled today`
-            : ""
-        );
+        ` · ${unknownCount} unknown`;
 
       playerVersionList.innerHTML =
         normalizedPlayers
@@ -22002,14 +20239,7 @@
               let label =
                 "Unknown";
 
-              if (!player.expectedToday) {
-                status =
-                  "not-scheduled";
-
-                label =
-                  "Not scheduled today";
-
-              } else if (
+              if (
                 player.playerVersion ===
                 EXPECTED_PLAYER_VERSION
               ) {
@@ -22029,16 +20259,6 @@
                   "Outdated";
               }
 
-              const confirmedText =
-                player.versionConfirmedAt
-                  ? `Version confirmed ${new Date(player.versionConfirmedAt).toLocaleString()}`
-                  : "Version has not been confirmed";
-
-              const sourceText =
-                player.versionSource === "remembered"
-                  ? " · using last known valid version"
-                  : "";
-
               return `
                 <div class="player-version-row ${status}">
                   <div class="player-version-top">
@@ -22052,11 +20272,11 @@
                   </div>
 
                   <div class="player-version-detail">
-                    ${
-                      !player.expectedToday
-                        ? `Excluded from today's compliance check.${player.playerVersion ? ` Last known: ${escapeHtml(player.playerVersion)}.` : ""}`
-                        : `Reported: ${escapeHtml(player.playerVersion || "No version received yet")} · ${escapeHtml(confirmedText)}${escapeHtml(sourceText)}`
-                    }
+                    Reported:
+                    ${escapeHtml(player.playerVersion || "No version received yet")}
+                    ${player.lastSeenAt
+                      ? ` · Last seen ${escapeHtml(new Date(player.lastSeenAt).toLocaleString())}`
+                      : " · Player has not checked in"}
                   </div>
                 </div>
               `;
@@ -22280,16 +20500,8 @@
           )
         );
 
-      const expectedScreenNames =
-        SCREEN_NAMES.filter(
-          screenName =>
-            isScreenExpectedToday(
-              screenName
-            )
-        );
-
       const playersWithWrongVersion =
-        expectedScreenNames.filter(
+        SCREEN_NAMES.filter(
           screenName => {
             const player =
               heartbeatMap.get(
@@ -22306,7 +20518,7 @@
         );
 
       const playersWithUnknownVersion =
-        expectedScreenNames.filter(
+        SCREEN_NAMES.filter(
           screenName => {
             const player =
               heartbeatMap.get(
@@ -22343,7 +20555,7 @@
             ? `Outdated player version on: ${playersWithWrongVersion.join(", ")}.`
             : playersWithUnknownVersion.length > 0
               ? `No player version has been received yet from: ${playersWithUnknownVersion.join(", ")}. Open the new heartbeat-enabled index.html on each screen once.`
-              : `Every player expected today reports ${EXPECTED_PLAYER_VERSION}.`
+              : `Every player reports ${EXPECTED_PLAYER_VERSION}.`
       });
 
       const quietHours =
@@ -22352,7 +20564,7 @@
           : false;
 
       const unavailablePlayers =
-        expectedScreenNames.filter(
+        SCREEN_NAMES.filter(
           screenName => {
             if (quietHours) {
               return false;
@@ -22806,8 +21018,6 @@
     setupSystemHealth();
     initializeDraftRecovery();
     initializeScheduleTemplates();
-    loadPlayerHeartbeatMemory();
-    loadPlayerVersionMemory();
     setupHomeLayoutPreferences();
     setupNotificationCenter();
     setupDashboardScrollNavigation();
@@ -22819,48 +21029,10 @@
     setupMissionRecentActivity();
     setupMissionConfidenceBanner();
     setupMissionQuickActions();
-    setupBuild89Phase2Interactions();
-
-    function initializeOperationalData() {
-      const healthRequest =
-        loadSystemHealth({
-          background: true
-        }).catch(function(error) {
-          console.warn(
-            "Background System Health initialization failed.",
-            error
-          );
-        });
-
-      const heartbeatRequest =
-        loadPlayerHeartbeats({
-          background: true
-        }).catch(function(error) {
-          console.warn(
-            "Background heartbeat initialization failed.",
-            error
-          );
-        });
-
-      Promise.allSettled([
-        healthRequest,
-        heartbeatRequest
-      ]).then(function() {
-        runGoLiveReadinessCheck();
-        renderRolloutAssistant();
-        renderOperationsIntelligence();
-        renderMissionControlStatuses();
-        updateOperationsPanel();
-        scheduleBuild89Phase3ReactiveRender({ immediate: true });
-      });
-    }
 
     openWorkspace("home");
     refreshDashboard();
     updateOperationsPanel();
-    initializeOperationalData();
-    startPlayerHeartbeatAutoRefresh();
-    startBuild89Phase3HealthRefresh();
 
     setInterval(
       refreshDashboard,
@@ -22871,7 +21043,6 @@
       function() {
         updateLiveInformation();
         updateOperationsPanel();
-        renderOperationsIntelligence();
 
         if (
           getSavedThemePreference() ===
