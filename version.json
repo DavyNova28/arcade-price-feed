@@ -1,8 +1,9 @@
 {
-  "version": "1.2 Development",
-  "build": "90.4",
-  "phase": "4",
-  "label": "Build 90.4 — Animated Card Updates",
-  "releasedAt": "2026-07-30",
-  "name": "Build 90.4"
+  "version": "1.2.0",
+  "channel": "Stable",
+  "build": "100",
+  "releaseName": "Version 1.2 Stable",
+  "releaseDate": "2026-07-30",
+  "previousVersion": "1.1",
+  "basedOnDevelopment": "Builds 89.5-90.4"
 }
