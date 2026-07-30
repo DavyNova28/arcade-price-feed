@@ -1,9 +1,11 @@
 {
   "version": "1.2.0",
+  "displayVersion": "1.2",
   "channel": "Stable",
   "build": "100",
+  "status": "Release Candidate 1",
   "releaseName": "Version 1.2 Stable",
-  "releaseDate": "2026-07-30",
-  "previousVersion": "1.1",
-  "basedOnDevelopment": "Builds 89.5-90.4"
+  "tag": "v1.2.0",
+  "releasedAt": "2026-07-30",
+  "basedOnDevelopmentBuild": "90.4"
 }
