@@ -2495,6 +2495,9 @@
     const managerDrafts =
       new Map();
 
+    const managerSchedules =
+      new Map();
+
     let managerEditingEnabled =
       false;
 
@@ -3126,7 +3129,12 @@
               String(item.image).trim(),
 
             fade:
-              Number(item.fade) || 1500
+              Number(item.fade) || 1500,
+
+            activeDays:
+              normalizeManagerActiveDays(
+                item.activeDays
+              ) || ""
           }))
           .sort((a, b) =>
             a.time.localeCompare(b.time)
@@ -4754,6 +4762,295 @@
     }
 
 
+    function normalizeManagerActiveDays(
+      activeDaysValue
+    ) {
+      const value =
+        String(
+          activeDaysValue || ""
+        )
+          .trim()
+          .toLowerCase();
+
+      if (
+        !value ||
+        value === "everyday" ||
+        value === "daily" ||
+        value === "all"
+      ) {
+        return "";
+      }
+
+      if (
+        value === "weekday" ||
+        value === "weekdays"
+      ) {
+        return "Mon,Tue,Wed,Thu,Fri";
+      }
+
+      if (
+        value === "weekend" ||
+        value === "weekends"
+      ) {
+        return "Sat,Sun";
+      }
+
+      const dayMap = {
+        sun: "Sun",
+        mon: "Mon",
+        tue: "Tue",
+        wed: "Wed",
+        thu: "Thu",
+        fri: "Fri",
+        sat: "Sat"
+      };
+
+      const normalized =
+        value
+          .split(/[,\s;|/]+/)
+          .map(item =>
+            dayMap[
+              item
+                .trim()
+                .toLowerCase()
+                .slice(0, 3)
+            ]
+          )
+          .filter(Boolean);
+
+      const unique =
+        Array.from(
+          new Set(normalized)
+        );
+
+      if (unique.length === 0) {
+        return null;
+      }
+
+      const orderedDays = [
+        "Mon",
+        "Tue",
+        "Wed",
+        "Thu",
+        "Fri",
+        "Sat",
+        "Sun"
+      ];
+
+      return orderedDays
+        .filter(day =>
+          unique.includes(day)
+        )
+        .join(",");
+    }
+
+
+    function getManagerActiveDaySet(
+      activeDaysValue
+    ) {
+      const normalized =
+        normalizeManagerActiveDays(
+          activeDaysValue
+        );
+
+      if (normalized === null) {
+        return new Set();
+      }
+
+      return new Set(
+        normalized
+          ? normalized.split(",")
+          : [
+              "Mon",
+              "Tue",
+              "Wed",
+              "Thu",
+              "Fri",
+              "Sat",
+              "Sun"
+            ]
+      );
+    }
+
+
+    function managerScheduleDaysOverlap(
+      firstValue,
+      secondValue
+    ) {
+      const firstDays =
+        getManagerActiveDaySet(
+          firstValue
+        );
+
+      const secondDays =
+        getManagerActiveDaySet(
+          secondValue
+        );
+
+      return Array.from(
+        firstDays
+      ).some(day =>
+        secondDays.has(day)
+      );
+    }
+
+
+    function isManagerItemActiveToday(
+      item,
+      date = new Date()
+    ) {
+      const dayNames = [
+        "Sun",
+        "Mon",
+        "Tue",
+        "Wed",
+        "Thu",
+        "Fri",
+        "Sat"
+      ];
+
+      return getManagerActiveDaySet(
+        item && item.activeDays
+      ).has(
+        dayNames[date.getDay()]
+      );
+    }
+
+
+    function loadManagerSchedule(
+      screenName
+    ) {
+      const callbackName =
+        `scheduleManagerCallback_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+
+      const separator =
+        SCHEDULE_FEED_URL.includes("?")
+          ? "&"
+          : "?";
+
+      window[callbackName] =
+        function(payload) {
+          try {
+            if (
+              !payload ||
+              payload.success !== true ||
+              !Array.isArray(
+                payload.schedule
+              )
+            ) {
+              throw new Error(
+                payload &&
+                payload.error
+                  ? payload.error
+                  : "The complete schedule could not be loaded."
+              );
+            }
+
+            const schedule =
+              payload.schedule
+                .filter(
+                  isValidScheduleItem
+                )
+                .map(item => ({
+                  time:
+                    String(
+                      item.time
+                    ).trim(),
+
+                  endTime:
+                    normalizeOptionalDashboardTime(
+                      item.endTime
+                    ),
+
+                  image:
+                    String(
+                      item.image
+                    ).trim(),
+
+                  fade:
+                    Number(
+                      item.fade
+                    ) || 1500,
+
+                  activeDays:
+                    normalizeManagerActiveDays(
+                      item.activeDays
+                    ) || ""
+                }))
+                .sort((a, b) =>
+                  a.time.localeCompare(
+                    b.time
+                  ) ||
+                  a.activeDays.localeCompare(
+                    b.activeDays
+                  )
+                );
+
+            managerSchedules.set(
+              screenName,
+              schedule
+            );
+
+            if (
+              scheduleManagerWorkspace.classList.contains(
+                "active"
+              ) &&
+              managerScreenSelect.value ===
+                screenName &&
+              !managerEditingEnabled
+            ) {
+              updateScheduleManager();
+            }
+
+          } catch (error) {
+            console.warn(
+              `Complete schedule loading failed for ${screenName}.`,
+              error
+            );
+
+          } finally {
+            delete window[
+              callbackName
+            ];
+
+            script.remove();
+          }
+        };
+
+      const script =
+        document.createElement(
+          "script"
+        );
+
+      script.async =
+        true;
+
+      script.src =
+        `${SCHEDULE_FEED_URL}` +
+        `${separator}action=scheduleManager` +
+        `&screen=${encodeURIComponent(screenName)}` +
+        `&callback=${encodeURIComponent(callbackName)}` +
+        `&_=${Date.now()}`;
+
+      script.onerror =
+        function() {
+          delete window[
+            callbackName
+          ];
+
+          script.remove();
+
+          console.warn(
+            `Complete schedule loading failed for ${screenName}.`
+          );
+        };
+
+      document.head.appendChild(
+        script
+      );
+    }
+
+
     function setupScheduleManager() {
       managerScreenSelect.innerHTML =
         SCREEN_NAMES
@@ -4773,6 +5070,9 @@
           updateScheduleDraftRecoveryBanner();
           resetScheduleSimulation();
           resetScheduleIntegrityChecks();
+          loadManagerSchedule(
+            managerScreenSelect.value
+          );
           updateScheduleManager();
         }
       );
@@ -4919,6 +5219,9 @@
         );
 
       updateManagerEditingControls();
+      loadManagerSchedule(
+        managerScreenSelect.value
+      );
     }
 
 
@@ -4988,16 +5291,27 @@
       const state =
         screenStates.get(screenName);
 
+      const completeSchedule =
+        managerSchedules.get(
+          screenName
+        ) ||
+        (
+          state &&
+          Array.isArray(
+            state.schedule
+          )
+            ? state.schedule
+            : null
+        );
+
       if (
-        !state ||
-        state.error ||
-        !Array.isArray(state.schedule)
+        !completeSchedule
       ) {
         return null;
       }
 
       const draft =
-        state.schedule.map(item => ({
+        completeSchedule.map(item => ({
           time:
             item.time,
 
@@ -5008,7 +5322,12 @@
             item.image,
 
           fade:
-            item.fade
+            item.fade,
+
+          activeDays:
+            normalizeManagerActiveDays(
+              item.activeDays
+            ) || ""
         }));
 
       managerDrafts.set(
@@ -5037,7 +5356,8 @@
         time: "12:00",
         endTime: "",
         image: "",
-        fade: 1500
+        fade: 1500,
+        activeDays: ""
       });
 
       draft.sort((a, b) =>
@@ -5346,7 +5666,12 @@
                 String(item.image).trim(),
 
               fade:
-                Number(item.fade)
+                Number(item.fade),
+
+              activeDays:
+                normalizeManagerActiveDays(
+                  item.activeDays
+                ) || ""
             }))
             .sort((a, b) =>
               a.time.localeCompare(b.time)
@@ -5688,8 +6013,14 @@
            * usually need operator attention.
            */
           if (
-            first.endTime ||
-            second.endTime
+            (
+              first.endTime ||
+              second.endTime
+            ) &&
+            managerScheduleDaysOverlap(
+              first.activeDays,
+              second.activeDays
+            )
           ) {
             overlaps.push({
               first:
@@ -6141,7 +6472,7 @@
         managerScheduleBody.innerHTML = `
           <tr>
             <td
-              colspan="7"
+              colspan="9"
               class="manager-empty"
             >
               The selected schedule is still loading.
@@ -6169,7 +6500,7 @@
         managerScheduleBody.innerHTML = `
           <tr>
             <td
-              colspan="7"
+              colspan="9"
               class="manager-empty"
             >
               ${escapeHtml(state.error)}
@@ -6187,26 +6518,39 @@
       const currentTime =
         getCurrentHHMM(now);
 
+      const completeSchedule =
+        managerSchedules.get(
+          screenName
+        ) ||
+        state.schedule;
+
+      const todaySchedule =
+        completeSchedule.filter(
+          item =>
+            isManagerItemActiveToday(
+              item,
+              now
+            )
+        );
+
       const activeItem =
         getActiveScheduleItem(
-          state.schedule,
+          todaySchedule,
           currentTime
         );
 
       const nextItem =
         getNextScheduleItem(
-          state.schedule,
+          todaySchedule,
           now
         );
 
       const displayedSchedule =
         managerDrafts.get(screenName) ||
-        state.schedule;
+        completeSchedule;
 
       managerSource.textContent =
-        state.source === "holiday"
-          ? "Holiday Override"
-          : "Regular Schedule";
+        "Regular Schedule · All active days";
 
       managerEntryCount.textContent =
         String(displayedSchedule.length);
@@ -6274,6 +6618,17 @@
                       value="${escapeHtml(item.endTime || "")}"
                       data-row-index="${index}"
                       data-manager-field="endTime"
+                    >
+                  </td>
+
+                  <td>
+                    <input
+                      class="manager-input ${rowErrors.activeDays ? "invalid" : ""}"
+                      type="text"
+                      placeholder="Everyday or Mon,Tue"
+                      value="${escapeHtml(item.activeDays || "")}"
+                      data-row-index="${index}"
+                      data-manager-field="activeDays"
                     >
                   </td>
 
@@ -6387,6 +6742,10 @@
                   ${escapeHtml(item.endTime || "—")}
                 </td>
 
+                <td>
+                  ${escapeHtml(item.activeDays || "Everyday")}
+                </td>
+
                 <td class="manager-image-name">
                   ${escapeHtml(item.image)}
                 </td>
@@ -6434,7 +6793,7 @@
 
       const repositoryValidation =
         validateRepositoryFilenames(
-          schedule
+          displayedSchedule
         );
 
       renderRepositoryWarning(
@@ -6483,7 +6842,6 @@
     function validateManagerDraft(schedule) {
       const errors = [];
       const rowErrors = {};
-      const timeCounts = new Map();
 
       schedule.forEach((item, index) => {
         const rowNumber =
@@ -6501,6 +6859,24 @@
         const fade =
           Number(item.fade);
 
+        const normalizedActiveDays =
+          normalizeManagerActiveDays(
+            item.activeDays
+          );
+
+        if (
+          normalizedActiveDays === null
+        ) {
+          errors.push(
+            `Row ${rowNumber}: enter valid Active Days such as Everyday, Weekdays, Weekends, or Mon,Tue,Wed.`
+          );
+
+          rowErrors[index] = {
+            ...(rowErrors[index] || {}),
+            activeDays: true
+          };
+        }
+
         if (!/^\d{2}:\d{2}$/.test(time)) {
           errors.push(
             `Row ${rowNumber}: enter a valid start time.`
@@ -6510,11 +6886,6 @@
             ...(rowErrors[index] || {}),
             time: true
           };
-        } else {
-          timeCounts.set(
-            time,
-            (timeCounts.get(time) || 0) + 1
-          );
         }
 
         if (
@@ -6577,28 +6948,48 @@
         }
       });
 
-      timeCounts.forEach(
-        (count, time) => {
-          if (count <= 1) {
-            return;
+      for (
+        let firstIndex = 0;
+        firstIndex < schedule.length;
+        firstIndex += 1
+      ) {
+        for (
+          let secondIndex = firstIndex + 1;
+          secondIndex < schedule.length;
+          secondIndex += 1
+        ) {
+          const first =
+            schedule[firstIndex];
+
+          const second =
+            schedule[secondIndex];
+
+          if (
+            String(first.time || "").trim() ===
+              String(second.time || "").trim() &&
+            managerScheduleDaysOverlap(
+              first.activeDays,
+              second.activeDays
+            )
+          ) {
+            errors.push(
+              `Duplicate start time ${first.time}: Active Days overlap between rows ${firstIndex + 1} and ${secondIndex + 1}.`
+            );
+
+            rowErrors[firstIndex] = {
+              ...(rowErrors[firstIndex] || {}),
+              time: true,
+              activeDays: true
+            };
+
+            rowErrors[secondIndex] = {
+              ...(rowErrors[secondIndex] || {}),
+              time: true,
+              activeDays: true
+            };
           }
-
-          errors.push(
-            `Duplicate start time: ${time}.`
-          );
-
-          schedule.forEach(
-            (item, index) => {
-              if (item.time === time) {
-                rowErrors[index] = {
-                  ...(rowErrors[index] || {}),
-                  time: true
-                };
-              }
-            }
-          );
         }
-      );
+      }
 
       if (schedule.length === 0) {
         errors.push(
